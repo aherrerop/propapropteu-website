@@ -7,8 +7,8 @@
 const Layout = {
 
   navItems: [
-    { href: "index.html",        key: "nav.home" },
-    { href: "show.html",         key: "nav.catalog" },
+    { href: "./",                key: "nav.home" },     // clean root URL, no /index.html
+    { href: "shop.html",         key: "nav.catalog" },
     { href: "custom-props.html", key: "nav.custom" },
     { href: "packs.html",        key: "nav.packs" },
     { href: "about.html",        key: "nav.about" },
@@ -29,30 +29,35 @@ const Layout = {
 
   renderHeader() {
     const cur = this.currentPage();
-    const nav = this.navItems.map(i =>
-      `<a href="${i.href}" class="${cur === i.href ? "active" : ""}" data-i18n="${i.key}"></a>`
-    ).join("");
+    const isHome = c => c === "index.html" || c === "";
+    const nav = this.navItems.map(i => {
+      const active = (i.href === "./" ? isHome(cur) : cur === i.href) ? "active" : "";
+      return `<a href="${i.href}" class="${active}" data-i18n="${i.key}"></a>`;
+    }).join("");
     const langs = SITE_CONFIG.languages.map(l =>
       `<button data-lang="${l}" onclick="I18N.set('${l}')">${l.toUpperCase()}</button>`
     ).join("");
 
+    // Centered brand block (icon + wordmark) on top, nav + tools row below.
     document.getElementById("site-header").innerHTML = `
       <div class="container header-inner">
-        <a href="index.html" class="logo-link">
-          <img src="${SITE_CONFIG.logo}" alt="${SITE_CONFIG.businessName}">
+        <a href="./" class="logo-link" aria-label="${SITE_CONFIG.businessName}">
+          <img class="logo-mark" src="${SITE_CONFIG.logo}" alt="">
           <!-- TODO: wordmark SVG still uses "Palace Script MT" for its "eu" glyphs.
                That font is not embedded/web-safe, so it falls back to a generic serif
                on most machines. Re-export from Illustrator/Inkscape with the type
                converted to outlines (Type > Create Outlines). -->
           ${SITE_CONFIG.wordmark ? `<img class="wordmark" src="${SITE_CONFIG.wordmark}" alt="${SITE_CONFIG.businessName}">` : ""}
         </a>
-        <nav class="main-nav">${nav}</nav>
-        <div class="header-tools">
-          <div class="lang-switch">${langs}</div>
-          <button class="cart-btn snipcart-checkout" title="Cart">
-            <span data-i18n="nav.cart"></span>
-            <span class="cart-count snipcart-items-count">0</span>
-          </button>
+        <div class="header-bar">
+          <nav class="main-nav">${nav}</nav>
+          <div class="header-tools">
+            <div class="lang-switch">${langs}</div>
+            <button class="cart-btn snipcart-checkout" title="Cart">
+              <span data-i18n="nav.cart"></span>
+              <span class="cart-count snipcart-items-count">0</span>
+            </button>
+          </div>
         </div>
       </div>`;
   },
@@ -74,14 +79,14 @@ const Layout = {
           </div>
           <div>
             <h4 data-i18n="footer.shop"></h4>
-            <a href="show.html" data-i18n="nav.catalog"></a>
+            <a href="shop.html" data-i18n="nav.catalog"></a>
             <a href="custom-props.html" data-i18n="nav.custom"></a>
             <a href="packs.html" data-i18n="nav.packs"></a>
             <a href="faq.html" data-i18n="nav.faq"></a>
           </div>
           <div>
             <h4 data-i18n="footer.company"></h4>
-            <a href="index.html" data-i18n="nav.home"></a>
+            <a href="./" data-i18n="nav.home"></a>
             <a href="about.html" data-i18n="nav.about"></a>
             <a href="contact.html" data-i18n="nav.contact"></a>
           </div>

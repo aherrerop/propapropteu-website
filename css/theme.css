@@ -41,13 +41,14 @@
   --shadow-hover:  0 4px 14px rgba(32, 29, 24, 0.14);
 
   /* ---- LOGO ---- */
-  /* Icon mark + horizontal wordmark heights in the header. */
-  --logo-height:     48px;
-  --wordmark-height: 46px;
+  /* Icon mark + horizontal wordmark heights in the (centered) header.
+     Tweak these two to scale the whole brand block up or down. */
+  --logo-height:     92px;
+  --wordmark-height: 74px;
 
   /* ---- LAYOUT ---- */
   --max-width:     1200px;
-  --header-height: 72px;
+  --header-height: 150px;   /* approx height of the centered brand + nav header (sticky offset) */
 }
 
 /* ---- OPTIONAL DARK THEME ----

@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prop a Prop Teu â€” Attrezzo a mida</title>
-  <meta name="description" content="Fabriquem attrezzo a mida per a teatre, cinema, televisiÃ³ i esdeveniments. Demana pressupost.">
+  <title>Prop a Prop Teu — Attrezzo a mida</title>
+  <meta name="description" content="Fabriquem attrezzo a mida per a teatre, cinema, televisió i esdeveniments: impressió 3D, emmotllament, disseny i prototipatge, acabats i fabricació. Demana pressupost.">
+  <meta property="og:image" content="assets/logo_estandar_svg.svg">
   <link rel="icon" href="assets/logo_estandar_svg.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,41 +17,74 @@
 
   <main class="container">
     <h1 class="rule-title" data-i18n="custom.title"></h1>
-    <p class="muted" style="max-width:720px;margin-bottom:26px" data-i18n="custom.intro"></p>
+    <p class="mission-lead" data-i18n="custom.intro"></p>
 
-    <!-- ==============================================
-         GALLERY â€” replace the placeholder images with
-         photos of your work: put them in assets/img/
-         and update the src + captions below.
-         ============================================== -->
-    <section class="masonry" style="margin-bottom:40px">
-      <figure>
-        <img src="assets/img/placeholder.svg" alt="Custom prop example 1">
-        <figcaption data-i18n="custom.example1"></figcaption>
-      </figure>
-      <figure>
-        <img src="assets/img/placeholder.svg" alt="Custom prop example 2">
-        <figcaption data-i18n="custom.example2"></figcaption>
-      </figure>
-      <figure>
-        <img src="assets/img/placeholder.svg" alt="Custom prop example 3">
-        <figcaption data-i18n="custom.example3"></figcaption>
-      </figure>
-      <figure>
-        <img src="assets/img/placeholder.svg" alt="Custom prop example 4">
-        <figcaption data-i18n="custom.example4"></figcaption>
-      </figure>
-      <figure>
-        <img src="assets/img/placeholder.svg" alt="Custom prop example 5">
-        <figcaption data-i18n="custom.example5"></figcaption>
-      </figure>
-      <figure>
-        <img src="assets/img/placeholder.svg" alt="Custom prop example 6">
-        <figcaption data-i18n="custom.example6"></figcaption>
-      </figure>
+    <!-- CAPABILITY SECTIONS — each has room for one or more images.
+         Replace the placeholder graphics with real work photos at the
+         data-final paths below. -->
+
+    <!-- 3D printing -->
+    <section class="feature-section">
+      <div class="fs-media">
+        <div class="fs-gallery">
+          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/3d-printing-1.jpg"><span class="media-tag">assets/img/custom/3d-printing-1.jpg</span></div>
+          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/3d-printing-2.jpg"><span class="media-tag">assets/img/custom/3d-printing-2.jpg</span></div>
+        </div>
+      </div>
+      <div class="fs-body">
+        <span class="fs-eyebrow">01</span>
+        <h2 data-i18n="custom.cap3dTitle"></h2>
+        <p data-i18n="custom.cap3dText"></p>
+      </div>
     </section>
 
-    <h2 class="rule-title" data-i18n="custom.techniquesTitle"></h2>
+    <!-- Moulding & casting -->
+    <section class="feature-section reverse">
+      <div class="fs-media">
+        <div class="fs-gallery">
+          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/moulding-1.jpg"><span class="media-tag">assets/img/custom/moulding-1.jpg</span></div>
+          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/moulding-2.jpg"><span class="media-tag">assets/img/custom/moulding-2.jpg</span></div>
+        </div>
+      </div>
+      <div class="fs-body">
+        <span class="fs-eyebrow">02</span>
+        <h2 data-i18n="custom.capMouldTitle"></h2>
+        <p data-i18n="custom.capMouldText"></p>
+      </div>
+    </section>
+
+    <!-- Design & prototyping -->
+    <section class="feature-section">
+      <div class="fs-media">
+        <div class="fs-gallery">
+          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/design-1.jpg"><span class="media-tag">assets/img/custom/design-1.jpg</span></div>
+          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/design-2.jpg"><span class="media-tag">assets/img/custom/design-2.jpg</span></div>
+        </div>
+      </div>
+      <div class="fs-body">
+        <span class="fs-eyebrow">03</span>
+        <h2 data-i18n="custom.capDesignTitle"></h2>
+        <p data-i18n="custom.capDesignText"></p>
+      </div>
+    </section>
+
+    <!-- Finishing & fabrication -->
+    <section class="feature-section reverse">
+      <div class="fs-media">
+        <div class="fs-gallery">
+          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/finishing-1.jpg"><span class="media-tag">assets/img/custom/finishing-1.jpg</span></div>
+          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/finishing-2.jpg"><span class="media-tag">assets/img/custom/finishing-2.jpg</span></div>
+        </div>
+      </div>
+      <div class="fs-body">
+        <span class="fs-eyebrow">04</span>
+        <h2 data-i18n="custom.capFinishTitle"></h2>
+        <p data-i18n="custom.capFinishText"></p>
+      </div>
+    </section>
+
+    <!-- More capabilities already on the site -->
+    <h2 class="rule-title" data-i18n="custom.moreTitle"></h2>
     <section class="techniques" style="margin-bottom:40px">
       <div class="technique" data-i18n="custom.tech1"></div>
       <div class="technique" data-i18n="custom.tech2"></div>
@@ -62,6 +96,7 @@
       <div class="technique" data-i18n="custom.tech8"></div>
     </section>
 
+    <!-- QUOTE FORM (unchanged functionality) -->
     <div class="content-block page-narrow" id="quote">
       <h2 data-i18n="custom.quoteTitle"></h2>
       <p class="muted" data-i18n="custom.quoteIntro"></p>

@@ -1,0 +1,165 @@
+{
+  "_note": "EXAMPLE / DRAFT pack contents for building the interface. These pack compositions, durations and frequencies are placeholders assembled from real catalogue products (data/products.json) and are NOT final. Review and finalise contents, quantities and any pricing/payment rules before going live. 'items' quantities are the base quantity included per delivery; the customer can add extra units per delivery in the configurator.",
+
+  "categoryKeys": ["tools", "consumables", "duration", "production"],
+
+  "packs": [
+    {
+      "id": "tool-essentials",
+      "category": "tools",
+      "example": true,
+      "defaultFrequency": "biweekly",
+      "defaultDurationMonths": 3,
+      "image": "assets/img/packs/tool-essentials.jpg",
+      "name": { "ca": "Pack d'eines essencials", "es": "Pack de herramientas esenciales", "en": "Essential tool pack" },
+      "tagline": {
+        "ca": "Les eines de taller que un rodatge fa servir cada dia.",
+        "es": "Las herramientas de taller que un rodaje usa cada día.",
+        "en": "The workshop tools a shoot reaches for every day."
+      },
+      "items": [
+        { "id": "cutter-tallador-calent", "qty": 1 },
+        { "id": "pistola-cola-pro", "qty": 1 },
+        { "id": "penjaquadres-pro", "qty": 2 }
+      ]
+    },
+    {
+      "id": "consumables-basic",
+      "category": "consumables",
+      "example": true,
+      "defaultFrequency": "biweekly",
+      "defaultDurationMonths": 3,
+      "image": "assets/img/packs/consumables-basic.jpg",
+      "name": { "ca": "Pack de consumibles bàsic", "es": "Pack de consumibles básico", "en": "Basic consumables pack" },
+      "tagline": {
+        "ca": "El material fungible que s'acaba primer al set.",
+        "es": "El material fungible que se acaba primero en el set.",
+        "en": "The fungibles that run out first on set."
+      },
+      "items": [
+        { "id": "sang-escenica", "qty": 2 },
+        { "id": "kit-envelliment", "qty": 1 },
+        { "id": "eva-foam-10mm", "qty": 3 }
+      ]
+    },
+    {
+      "id": "quarter-3m",
+      "category": "duration",
+      "example": true,
+      "defaultFrequency": "biweekly",
+      "defaultDurationMonths": 3,
+      "image": "assets/img/packs/quarter-3m.jpg",
+      "name": { "ca": "Pack de 3 mesos", "es": "Pack de 3 meses", "en": "Three-month pack" },
+      "tagline": {
+        "ca": "Cobreix una producció curta de principi a fi.",
+        "es": "Cubre una producción corta de principio a fin.",
+        "en": "Covers a short production from start to finish."
+      },
+      "items": [
+        { "id": "penjaquadres-pro", "qty": 2 },
+        { "id": "eva-foam-10mm", "qty": 2 },
+        { "id": "sang-escenica", "qty": 1 },
+        { "id": "pistola-cola-pro", "qty": 1 }
+      ]
+    },
+    {
+      "id": "nine-month",
+      "category": "duration",
+      "example": true,
+      "defaultFrequency": "monthly",
+      "defaultDurationMonths": 9,
+      "image": "assets/img/packs/nine-month.jpg",
+      "name": { "ca": "Pack de 9 mesos", "es": "Pack de 9 meses", "en": "Nine-month pack" },
+      "tagline": {
+        "ca": "Per a rodatges llargs i sèries: subministrament continu.",
+        "es": "Para rodajes largos y series: suministro continuo.",
+        "en": "For long shoots and series: a continuous supply."
+      },
+      "items": [
+        { "id": "penjaquadres-pro", "qty": 3 },
+        { "id": "eva-foam-10mm", "qty": 3 },
+        { "id": "kit-envelliment", "qty": 1 },
+        { "id": "sang-escenica", "qty": 2 },
+        { "id": "pistola-cola-pro", "qty": 1 }
+      ]
+    },
+    {
+      "id": "paint-finishing",
+      "category": "production",
+      "example": true,
+      "defaultFrequency": "monthly",
+      "defaultDurationMonths": 3,
+      "image": "assets/img/packs/paint-finishing.jpg",
+      "name": { "ca": "Pack de pintura i acabats", "es": "Pack de pintura y acabados", "en": "Paint & finishing pack" },
+      "tagline": {
+        "ca": "Pàtines, envelliment i acabats escènics.",
+        "es": "Pátinas, envejecido y acabados escénicos.",
+        "en": "Patinas, aging and scenic finishes."
+      },
+      "items": [
+        { "id": "kit-envelliment", "qty": 2 },
+        { "id": "sang-escenica", "qty": 1 }
+      ]
+    },
+    {
+      "id": "foam-fabrication",
+      "category": "production",
+      "example": true,
+      "defaultFrequency": "biweekly",
+      "defaultDurationMonths": 3,
+      "image": "assets/img/packs/foam-fabrication.jpg",
+      "name": { "ca": "Pack d'escuma i fabricació", "es": "Pack de espuma y fabricación", "en": "Foam & fabrication pack" },
+      "tagline": {
+        "ca": "Escuma, tall i muntatge per a volums d'escenografia.",
+        "es": "Espuma, corte y montaje para volúmenes de escenografía.",
+        "en": "Foam, cutting and assembly for scenery builds."
+      },
+      "items": [
+        { "id": "eva-foam-10mm", "qty": 4 },
+        { "id": "cutter-tallador-calent", "qty": 1 },
+        { "id": "pistola-cola-pro", "qty": 1 }
+      ]
+    },
+    {
+      "id": "set-dressing",
+      "category": "production",
+      "example": true,
+      "defaultFrequency": "monthly",
+      "defaultDurationMonths": 3,
+      "image": "assets/img/packs/set-dressing.jpg",
+      "name": { "ca": "Pack d'ambientació de set", "es": "Pack de ambientación de set", "en": "Set-dressing pack" },
+      "tagline": {
+        "ca": "Attrezzo i sistemes de muntatge ràpid per a decorats.",
+        "es": "Atrezo y sistemas de montaje rápido para decorados.",
+        "en": "Props and quick-mount systems for dressing sets."
+      },
+      "items": [
+        { "id": "penjaquadres-pro", "qty": 3 },
+        { "id": "llibre-secret", "qty": 1 },
+        { "id": "espelma-led", "qty": 2 }
+      ]
+    },
+    {
+      "id": "all-round",
+      "category": "production",
+      "example": true,
+      "defaultFrequency": "monthly",
+      "defaultDurationMonths": 6,
+      "image": "assets/img/packs/all-round.jpg",
+      "name": { "ca": "Pack integral de producció", "es": "Pack integral de producción", "en": "All-round production pack" },
+      "tagline": {
+        "ca": "Una mica de tot per a un departament d'art complet.",
+        "es": "Un poco de todo para un departamento de arte completo.",
+        "en": "A bit of everything for a full art department."
+      },
+      "items": [
+        { "id": "penjaquadres-pro", "qty": 2 },
+        { "id": "eva-foam-10mm", "qty": 2 },
+        { "id": "kit-envelliment", "qty": 1 },
+        { "id": "sang-escenica", "qty": 1 },
+        { "id": "espelma-led", "qty": 1 },
+        { "id": "cutter-tallador-calent", "qty": 1 }
+      ]
+    }
+  ]
+}

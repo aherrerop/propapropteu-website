@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100" role="img" aria-label="Portrait placeholder">
+  <rect width="900" height="1100" fill="#eceae3"/>
+  <g fill="none" stroke="#c3bfb4" stroke-width="6">
+    <circle cx="450" cy="430" r="150"/>
+    <path d="M450 300a95 95 0 1 0 0 190 95 95 0 0 0 0-190z"/>
+    <path d="M250 760c0-110 90-190 200-190s200 80 200 190"/>
+  </g>
+  <text x="450" y="960" text-anchor="middle" font-family="Oswald, Arial Narrow, sans-serif" font-size="42" letter-spacing="3" fill="#b3afa4">PHOTO COMING SOON</text>
+</svg>
