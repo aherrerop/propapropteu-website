@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prop a Prop Teu — Packs de producció</title>
+  <meta name="description" content="Packs recurrents d'eines, consumibles i materials per a equips de producció de cinema i televisió. Configura la teva subscripció i rep-la al plató.">
+  <meta property="og:title" content="Prop a Prop Teu — Packs de producció">
+  <meta property="og:description" content="Packs recurrents d'eines, consumibles i materials per a equips de producció audiovisual.">
+  <meta property="og:image" content="assets/logo_estandar_svg.svg">
+  <link rel="icon" href="assets/logo_estandar_svg.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main class="container">
+    <h1 class="rule-title" data-i18n="packs.title"></h1>
+    <p class="muted" style="max-width:760px;margin-bottom:26px" data-i18n="packs.intro"></p>
+
+    <!-- HOW IT WORKS -->
+    <section class="qualities" style="margin-bottom:40px">
+      <div class="quality">
+        <span class="quality-mark quality-mark-1">01</span>
+        <h3 data-i18n="packs.how1title"></h3>
+        <p data-i18n="packs.how1text"></p>
+      </div>
+      <div class="quality">
+        <span class="quality-mark quality-mark-2">02</span>
+        <h3 data-i18n="packs.how2title"></h3>
+        <p data-i18n="packs.how2text"></p>
+      </div>
+      <div class="quality">
+        <span class="quality-mark quality-mark-3">03</span>
+        <h3 data-i18n="packs.how3title"></h3>
+        <p data-i18n="packs.how3text"></p>
+      </div>
+    </section>
+
+    <!-- CONFIGURATOR -->
+    <div class="content-block">
+      <h2 data-i18n="packs.configTitle"></h2>
+      <p class="muted" data-i18n="packs.configIntro"></p>
+
+      <div class="pack-config">
+        <label class="pack-field">
+          <span data-i18n="packs.frequencyLabel"></span>
+          <select id="pack-frequency">
+            <option value="weekly" data-i18n="packs.freqWeekly"></option>
+            <option value="biweekly" selected data-i18n="packs.freqBiweekly"></option>
+            <option value="monthly" data-i18n="packs.freqMonthly"></option>
+          </select>
+        </label>
+        <label class="pack-field">
+          <span data-i18n="packs.durationLabel"></span>
+          <select id="pack-duration">
+            <option value="1" data-i18n="packs.dur1"></option>
+            <option value="3" selected data-i18n="packs.dur3"></option>
+            <option value="6" data-i18n="packs.dur6"></option>
+          </select>
+        </label>
+      </div>
+
+      <!-- product picker (Windows-Explorer-style detail list) rendered by js/packs.js -->
+      <div class="pack-list-head">
+        <span class="pl-name" data-i18n="packs.colProduct"></span>
+        <span class="pl-type" data-i18n="packs.colType"></span>
+        <span class="pl-price" data-i18n="packs.colPrice"></span>
+        <span class="pl-qty" data-i18n="packs.colQty"></span>
+        <span class="pl-sub" data-i18n="packs.colSubtotal"></span>
+      </div>
+      <div id="pack-list"></div>
+
+      <div class="pack-summary">
+        <div>
+          <span class="muted" data-i18n="packs.perShipment"></span>
+          <strong id="pack-shipment-total">—</strong>
+        </div>
+        <div>
+          <span class="muted" data-i18n="packs.estTotal"></span>
+          <strong id="pack-grand-total">—</strong>
+        </div>
+      </div>
+
+      <div class="buy-row">
+        <button class="btn" id="pack-request" data-i18n="packs.requestBtn"></button>
+        <span class="muted" style="font-size:0.85rem" data-i18n="packs.requestHint"></span>
+      </div>
+    </div>
+
+    <!-- ACCOUNTS / BILLING NOTE -->
+    <div class="content-block pack-account-note">
+      <h2 data-i18n="packs.accountTitle"></h2>
+      <p data-i18n="packs.accountText"></p>
+    </div>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/packs.js"></script>
+</body>
+</html>

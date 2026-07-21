@@ -7,9 +7,11 @@ const SITE_CONFIG = {
   businessName: "Prop a Prop Teu",
   tagline: "Props, tools & materials", // shown next to logo on wide screens
 
-  // Path to the logo file. Replace assets/logo.svg with your real logo
-  // (keep the same filename, or change this path).
-  logo: "assets/logo.svg",
+  // Brand logo files (both live in assets/, no spaces in filenames).
+  //  logo     = the icon mark (also used as favicon + og:image + header icon)
+  //  wordmark = the horizontal lettering shown next to the icon in the header
+  logo: "assets/logo_estandar_svg.svg",
+  wordmark: "assets/logo_lletras_v1_horitzontal.svg",
 
   // --- SNIPCART (cart & checkout) ---
   // 1. Create a free account at https://snipcart.com
@@ -20,9 +22,9 @@ const SITE_CONFIG = {
   currency: "eur",
 
   // --- CONTACT ---
-  email: "hola@propaproteu.com",           // change to real address
-  whatsapp: "34600000000",                 // international format, digits only ("" hides button)
-  phoneDisplay: "+34 600 00 00 00",
+  email: "info@propapropteu.com",          // change to real address
+  whatsapp: "34638003367",                 // international format, digits only ("" hides button)
+  phoneDisplay: "+34 638 00 33 67",
   address: "Barcelona, Catalunya",
 
   // --- CONTACT / QUOTE FORMS ---

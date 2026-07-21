@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prop a Prop Teu — Product builder</title>
+  <link rel="icon" href="../assets/logo_estandar_svg.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/styles.css">
+  <style>
+    body { padding: 24px 0; }
+    .tool-wrap { max-width: 920px; }
+    .tool-wrap fieldset {
+      border: var(--border-w) solid var(--color-line);
+      border-radius: var(--radius);
+      background: var(--color-surface);
+      padding: 16px 18px;
+      margin-bottom: 18px;
+    }
+    .tool-wrap legend { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.05em; padding: 0 8px; }
+    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .tool-wrap label { display: grid; gap: 4px; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; }
+    .tool-wrap input, .tool-wrap textarea, .tool-wrap select {
+      padding: 8px 10px; border: var(--border-w) solid var(--color-line);
+      border-radius: var(--radius); background: var(--color-bg);
+      font-family: var(--font-body); font-size: 0.9rem; color: var(--color-ink); width: 100%;
+    }
+    .labels-check { display: flex; flex-wrap: wrap; gap: 12px; }
+    .labels-check label { flex-direction: row; align-items: center; gap: 6px; font-weight: 400; }
+    .labels-check input { width: auto; }
+    .spec-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 8px; margin-bottom: 8px; align-items: end; }
+    .out { width: 100%; min-height: 260px; font-family: monospace; font-size: 0.82rem; white-space: pre; }
+    .row-btns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .note { background: var(--color-surface); border-left: 4px solid var(--color-accent3);
+            border-radius: var(--radius); padding: 12px 16px; font-size: 0.9rem; margin-bottom: 18px; }
+  </style>
+</head>
+<body>
+  <main class="container tool-wrap">
+    <h1 class="rule-title">Product builder</h1>
+    <div class="note">
+      This is a helper tool, not a live upload. GitHub Pages is a static host, so
+      products can't be written to the server from the browser. Fill in the form,
+      click <strong>Generate JSON</strong>, copy the block, and paste it into the
+      <code>"products"</code> array in <code>data/products.json</code>, then commit.
+      Put your images in <code>assets/img/products/</code> first.
+    </div>
+
+    <form id="pform">
+      <fieldset>
+        <legend>Basics</legend>
+        <div class="grid3">
+          <label>id (unique, no spaces)<input name="id" placeholder="my-new-product" required></label>
+          <label>type
+            <select name="type">
+              <option value="own">own — our design</option>
+              <option value="std">std — bought product</option>
+              <option value="tool">tool</option>
+            </select>
+          </label>
+          <label>price (EUR, IVA incl.)<input name="price" type="number" step="0.01" placeholder="14.90" required></label>
+        </div>
+        <div class="grid3">
+          <label>stock (blank = always available)<input name="stock" type="number" min="0" placeholder="42"></label>
+          <label>featured<select name="featured"><option value="false">no</option><option value="true">yes</option></select></label>
+          <label>images (comma-separated paths)<input name="images" placeholder="assets/img/products/my-new-product.jpg"></label>
+        </div>
+        <div>
+          <div style="font-size:0.85rem;font-weight:600;margin-bottom:6px">labels</div>
+          <div class="labels-check" id="labels"></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Name</legend>
+        <div class="grid3">
+          <label>ca<input name="name_ca" required></label>
+          <label>es<input name="name_es" required></label>
+          <label>en<input name="name_en" required></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Short (one line)</legend>
+        <div class="grid3">
+          <label>ca<input name="short_ca"></label>
+          <label>es<input name="short_es"></label>
+          <label>en<input name="short_en"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Description</legend>
+        <div class="grid3">
+          <label>ca<textarea name="desc_ca" rows="4"></textarea></label>
+          <label>es<textarea name="desc_es" rows="4"></textarea></label>
+          <label>en<textarea name="desc_en" rows="4"></textarea></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Specs (datasheet rows)</legend>
+        <div id="specs"></div>
+        <button type="button" class="btn btn-outline" id="add-spec">+ Add spec row</button>
+      </fieldset>
+
+      <div class="row-btns" style="margin-bottom:18px">
+        <button type="button" class="btn" id="gen">Generate JSON</button>
+        <button type="button" class="btn btn-outline" id="copy">Copy</button>
+        <span id="copied" class="muted" style="font-size:0.85rem"></span>
+      </div>
+    </form>
+
+    <textarea class="out" id="out" readonly placeholder="Generated JSON appears here..."></textarea>
+  </main>
+
+  <script>
+    const specsEl = document.getElementById("specs");
+    function addSpec() {
+      const row = document.createElement("div");
+      row.className = "spec-row";
+      row.innerHTML =
+        '<label>label ca<input class="s-ca"></label>' +
+        '<label>label es<input class="s-es"></label>' +
+        '<label>label en<input class="s-en"></label>' +
+        '<label>value<input class="s-val"></label>' +
+        '<button type="button" class="btn btn-outline s-del">✕</button>';
+      row.querySelector(".s-del").addEventListener("click", () => row.remove());
+      specsEl.appendChild(row);
+    }
+    document.getElementById("add-spec").addEventListener("click", addSpec);
+    addSpec();
+
+    // Load labels from products.json so the checkboxes always match the catalogue
+    fetch("../data/products.json")
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById("labels").innerHTML = data.labels.map(l =>
+          `<label><input type="checkbox" value="${l.id}"> ${l.name.en} (${l.id})</label>`).join("");
+      })
+      .catch(() => {
+        document.getElementById("labels").innerHTML =
+          '<span class="muted">Could not load data/products.json — type label ids manually in the JSON.</span>';
+      });
+
+    function tri(f, name) {
+      return { ca: f[name + "_ca"].value, es: f[name + "_es"].value, en: f[name + "_en"].value };
+    }
+
+    document.getElementById("gen").addEventListener("click", () => {
+      const f = document.getElementById("pform");
+      const obj = {
+        id: f.id.value.trim(),
+        type: f.type.value,
+        price: parseFloat(f.price.value) || 0
+      };
+      if (f.stock.value !== "") obj.stock = parseInt(f.stock.value, 10);
+      if (f.featured.value === "true") obj.featured = true;
+      obj.labels = [...document.querySelectorAll("#labels input:checked")].map(c => c.value);
+      obj.images = f.images.value.split(",").map(s => s.trim()).filter(Boolean);
+      obj.name = tri(f, "name");
+      obj.short = tri(f, "short");
+      obj.description = tri(f, "desc");
+      obj.specs = [...document.querySelectorAll(".spec-row")].map(r => ({
+        label: {
+          ca: r.querySelector(".s-ca").value,
+          es: r.querySelector(".s-es").value,
+          en: r.querySelector(".s-en").value
+        },
+        value: r.querySelector(".s-val").value
+      })).filter(s => s.value || s.label.en || s.label.ca || s.label.es);
+
+      document.getElementById("out").value = JSON.stringify(obj, null, 2);
+    });
+
+    document.getElementById("copy").addEventListener("click", async () => {
+      const out = document.getElementById("out");
+      out.select();
+      try { await navigator.clipboard.writeText(out.value); }
+      catch (e) { document.execCommand("copy"); }
+      document.getElementById("copied").textContent = "Copied — paste into data/products.json";
+    });
+  </script>
+</body>
+</html>

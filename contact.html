@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prop a Prop Teu — Contacte</title>
-  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <title>Prop a Prop Teu â€” Contacte</title>
+  <link rel="icon" href="assets/logo_estandar_svg.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/theme.css">
@@ -24,10 +24,14 @@
 
     <div class="content-block">
       <h2 data-i18n="contact.formTitle"></h2>
-      <form class="std-form" id="contact-form" method="POST" style="margin-top:14px">
+      <!-- NOTE: Formspree only processes file uploads on PAID plans. On the free
+           tier this "attachment" field is silently ignored (the rest of the form
+           still works). Verify current pricing at formspree.io/plans. -->
+      <form class="std-form" id="contact-form" method="POST" enctype="multipart/form-data" style="margin-top:14px">
         <label><span data-i18n="form.name"></span><input type="text" name="name" required></label>
         <label><span data-i18n="form.email"></span><input type="email" name="email" required></label>
         <label><span data-i18n="form.message"></span><textarea name="message" required></textarea></label>
+        <label><span data-i18n="form.attachment"></span><input type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.zip"></label>
         <button class="btn" type="submit" data-i18n="form.send"></button>
       </form>
     </div>

@@ -13,7 +13,7 @@ const ProductPage = {
 
     if (!this.product) {
       document.getElementById("detail").innerHTML =
-        `<p>${I18N.t("product.notFound")} <a href="index.html">${I18N.t("nav.catalog")}</a></p>`;
+        `<p>${I18N.t("product.notFound")} <a href="show.html">${I18N.t("nav.catalog")}</a></p>`;
       return;
     }
     document.addEventListener("langchange", () => this.render());
@@ -62,7 +62,7 @@ const ProductPage = {
             <button class="btn snipcart-add-item" ${out ? "disabled" : Catalog.snipcartAttrs(p)}>
               ${I18N.t(out ? "stock.out" : "catalog.addToCart")}
             </button>
-            <a class="btn btn-outline" href="index.html">${I18N.t("product.backToCatalog")}</a>
+            <a class="btn btn-outline" href="show.html">${I18N.t("product.backToCatalog")}</a>
           </div>
           <p class="description">${I18N.pick(p.description)}</p>
           ${specs}
