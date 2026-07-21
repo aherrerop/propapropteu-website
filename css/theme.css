@@ -1,0 +1,65 @@
+/* ============================================================
+   PROP A PROP TEU — THEME
+   Everything about the site's look lives in this file.
+   Change these variables and the whole site follows.
+   ============================================================ */
+
+:root {
+  /* ---- BRAND COLORS ---- */
+  --color-bg:          #f5f0e6;  /* page background (warm paper) */
+  --color-surface:     #fffdf8;  /* cards, panels */
+  --color-ink:         #201d18;  /* main text */
+  --color-muted:       #6f675a;  /* secondary text */
+  --color-line:        #ddd2bd;  /* borders, rules */
+  --color-accent:      #c0332b;  /* stage red: prices, CTAs, active states */
+  --color-accent-ink:  #fffdf8;  /* text on top of accent */
+  --color-accent-dark: #93251f;  /* hover state of accent */
+
+  /* ---- BADGE COLORS (product types) ---- */
+  --color-badge-own:   #c0332b;  /* own design */
+  --color-badge-std:   #6f675a;  /* standard product */
+  --color-badge-tool:  #2f5d50;  /* tool */
+
+  /* ---- STATUS ---- */
+  --color-ok:          #2f5d50;
+  --color-warn:        #b07716;
+  --color-out:         #8a8378;
+
+  /* ---- TYPOGRAPHY ---- */
+  /* Display: condensed poster type. Body: clean sans. */
+  --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+  --font-body:    'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+  /* ---- SHAPES ---- */
+  --radius:        3px;    /* corner rounding everywhere */
+  --radius-img:    3px;    /* product image corners */
+  --border-w:      1px;
+  --shadow-card:   0 1px 3px rgba(32, 29, 24, 0.08);
+  --shadow-hover:  0 4px 14px rgba(32, 29, 24, 0.14);
+
+  /* ---- LOGO ---- */
+  /* Replace assets/logo.svg with your real logo file and
+     adjust the height here if needed. */
+  --logo-height:   46px;
+
+  /* ---- LAYOUT ---- */
+  --max-width:     1200px;
+  --header-height: 72px;
+}
+
+/* ---- OPTIONAL DARK THEME ----
+   To try a "dark theater" look, uncomment this block and add
+   class="theme-dark" to the <html> tag of every page.
+html.theme-dark {
+  --color-bg:         #17140f;
+  --color-surface:    #221e17;
+  --color-ink:        #f0e9dc;
+  --color-muted:      #a89e8d;
+  --color-line:       #3a352b;
+  --color-accent:     #e0a83c;
+  --color-accent-ink: #17140f;
+  --color-accent-dark:#c08c26;
+  --shadow-card:      0 1px 3px rgba(0,0,0,0.4);
+  --shadow-hover:     0 4px 14px rgba(0,0,0,0.5);
+}
+*/

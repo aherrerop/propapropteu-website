@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prop a Prop Teu — L'equip</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main class="container">
+    <h1 class="rule-title" data-i18n="team.title"></h1>
+    <p class="muted" style="margin-bottom:24px" data-i18n="team.intro"></p>
+
+    <!-- ==============================================
+         TEAM — duplicate a card per person. Replace the
+         placeholder image with a real photo in assets/img/
+         and edit name/role/bio in the lang/*.json files
+         (keys team.member1name etc.) or write them directly
+         here if you prefer.
+         ============================================== -->
+    <section class="team-grid">
+      <article class="team-card">
+        <img src="assets/img/placeholder.svg" alt="Team member">
+        <h3 data-i18n="team.member1name"></h3>
+        <div class="role" data-i18n="team.member1role"></div>
+        <p data-i18n="team.member1bio"></p>
+      </article>
+      <article class="team-card">
+        <img src="assets/img/placeholder.svg" alt="Team member">
+        <h3 data-i18n="team.member2name"></h3>
+        <div class="role" data-i18n="team.member2role"></div>
+        <p data-i18n="team.member2bio"></p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/layout.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", () => Layout.init());</script>
+</body>
+</html>

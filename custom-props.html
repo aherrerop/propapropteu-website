@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prop a Prop Teu — Attrezzo a mida</title>
+  <meta name="description" content="Fabriquem attrezzo a mida per a teatre, cinema, televisió i esdeveniments. Demana pressupost.">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main class="container">
+    <h1 class="rule-title" data-i18n="custom.title"></h1>
+    <p class="muted" style="max-width:720px;margin-bottom:26px" data-i18n="custom.intro"></p>
+
+    <!-- ==============================================
+         GALLERY — replace the placeholder images with
+         photos of your work: put them in assets/img/
+         and update the src + captions below.
+         ============================================== -->
+    <section class="masonry" style="margin-bottom:40px">
+      <figure>
+        <img src="assets/img/placeholder.svg" alt="Custom prop example 1">
+        <figcaption data-i18n="custom.example1"></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/img/placeholder.svg" alt="Custom prop example 2">
+        <figcaption data-i18n="custom.example2"></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/img/placeholder.svg" alt="Custom prop example 3">
+        <figcaption data-i18n="custom.example3"></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/img/placeholder.svg" alt="Custom prop example 4">
+        <figcaption data-i18n="custom.example4"></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/img/placeholder.svg" alt="Custom prop example 5">
+        <figcaption data-i18n="custom.example5"></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/img/placeholder.svg" alt="Custom prop example 6">
+        <figcaption data-i18n="custom.example6"></figcaption>
+      </figure>
+    </section>
+
+    <h2 class="rule-title" data-i18n="custom.techniquesTitle"></h2>
+    <section class="techniques" style="margin-bottom:40px">
+      <div class="technique" data-i18n="custom.tech1"></div>
+      <div class="technique" data-i18n="custom.tech2"></div>
+      <div class="technique" data-i18n="custom.tech3"></div>
+      <div class="technique" data-i18n="custom.tech4"></div>
+      <div class="technique" data-i18n="custom.tech5"></div>
+      <div class="technique" data-i18n="custom.tech6"></div>
+      <div class="technique" data-i18n="custom.tech7"></div>
+      <div class="technique" data-i18n="custom.tech8"></div>
+    </section>
+
+    <div class="content-block page-narrow" id="quote">
+      <h2 data-i18n="custom.quoteTitle"></h2>
+      <p class="muted" data-i18n="custom.quoteIntro"></p>
+      <form class="std-form" id="quote-form" method="POST" style="margin-top:16px">
+        <label><span data-i18n="form.name"></span><input type="text" name="name" required></label>
+        <label><span data-i18n="form.email"></span><input type="email" name="email" required></label>
+        <label><span data-i18n="form.phone"></span><input type="tel" name="phone"></label>
+        <label><span data-i18n="custom.quoteWhat"></span><textarea name="message" required></textarea></label>
+        <label><span data-i18n="custom.quoteDeadline"></span><input type="text" name="deadline"></label>
+        <button class="btn" type="submit" data-i18n="custom.quoteSend"></button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/layout.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      await Layout.init();
+      document.getElementById("quote-form").action = SITE_CONFIG.formEndpoint;
+    });
+  </script>
+</body>
+</html>

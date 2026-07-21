@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#efe8d8"/>
+  <rect x="10" y="10" width="380" height="380" fill="none" stroke="#ddd2bd" stroke-width="2"/>
+  <g stroke="#b07716" stroke-width="5" fill="none"><rect x="165" y="150" width="70" height="130" rx="8"/><path d="M200 145 q-22 -30 0 -52 q22 22 0 52" fill="#e0a83c" stroke="none"/></g>
+  <text x="200" y="360" text-anchor="middle" font-family="Arial" font-size="17" fill="#6f675a">Espelma LED</text>
+</svg>

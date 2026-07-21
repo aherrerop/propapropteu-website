@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prop a Prop Teu — Attrezzo, eines i materials</title>
+  <meta name="description" content="Attrezzo per a teatre, cinema i esdeveniments. Productes de disseny propi, eines i materials de taller. Enviaments a tot Espanya.">
+  <meta property="og:title" content="Prop a Prop Teu">
+  <meta property="og:description" content="Attrezzo, eines i materials per a teatre, cinema i esdeveniments.">
+  <meta property="og:image" content="assets/logo.svg">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header" id="site-header"></header>
+
+  <main class="container">
+    <section class="hero">
+      <h1 data-i18n="home.heroTitle"></h1>
+      <p data-i18n="home.heroText"></p>
+      <a href="custom-props.html" class="btn" data-i18n="home.heroCta"></a>
+    </section>
+
+    <div class="catalog-layout">
+      <aside class="filters" id="filters"></aside>
+      <section>
+        <div class="catalog-toolbar">
+          <input type="search" id="search-box" data-i18n-placeholder="catalog.searchPlaceholder">
+          <select id="sort-select">
+            <option value="featured" data-i18n="catalog.sortFeatured"></option>
+            <option value="price-asc" data-i18n="catalog.sortPriceAsc"></option>
+            <option value="price-desc" data-i18n="catalog.sortPriceDesc"></option>
+            <option value="name" data-i18n="catalog.sortName"></option>
+          </select>
+          <span class="result-count" id="result-count"></span>
+        </div>
+        <div class="product-grid" id="product-grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer" id="site-footer"></footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/layout.js"></script>
+  <script src="js/catalog.js"></script>
+</body>
+</html>

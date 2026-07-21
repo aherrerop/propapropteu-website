@@ -1,0 +1,142 @@
+{
+  "nav": {
+    "catalog": "Botiga",
+    "custom": "Attrezzo a mida",
+    "about": "Qui som",
+    "team": "L'equip",
+    "faq": "FAQ",
+    "contact": "Contacte",
+    "cart": "Cistella"
+  },
+  "home": {
+    "heroTitle": "Attrezzo, eines i materials per fer possible qualsevol escena",
+    "heroText": "Dissenyem i fabriquem attrezzo al nostre taller, i seleccionem les eines i materials que fem servir nosaltres mateixos. Si no ho tenim, t'ho fabriquem.",
+    "heroCta": "Demana attrezzo a mida"
+  },
+  "catalog": {
+    "filters": "Filtres",
+    "byLabel": "Per etiqueta",
+    "byType": "Per tipus",
+    "clear": "Esborra els filtres",
+    "searchPlaceholder": "Cerca productes...",
+    "sortFeatured": "Destacats",
+    "sortPriceAsc": "Preu: de menor a major",
+    "sortPriceDesc": "Preu: de major a menor",
+    "sortName": "Nom (A-Z)",
+    "results": "productes",
+    "empty": "Cap producte no coincideix amb els filtres.",
+    "addToCart": "Afegeix",
+    "iva": "IVA incl."
+  },
+  "badge": {
+    "own": "Disseny propi",
+    "std": "Producte",
+    "tool": "Eina"
+  },
+  "stock": {
+    "in": "En estoc",
+    "low": "Últimes unitats",
+    "out": "Esgotat"
+  },
+  "product": {
+    "specs": "Fitxa tècnica",
+    "related": "Productes relacionats",
+    "backToCatalog": "Torna a la botiga",
+    "notFound": "No hem trobat aquest producte."
+  },
+  "custom": {
+    "title": "Attrezzo a mida",
+    "intro": "Fabriquem peces úniques per a teatre, cinema, televisió i esdeveniments: des d'un objecte de mà fins a elements d'escenografia. Aquí tens una mostra del que sabem fer.",
+    "example1": "Objectes d'època envellits a mà",
+    "example2": "Armes i armadures escèniques segures",
+    "example3": "Rèpliques d'objectes reals",
+    "example4": "Mobiliari lleuger per a gira",
+    "example5": "Elements amb mecanismes i electrònica",
+    "example6": "Peces impreses en 3D i postprocessades",
+    "techniquesTitle": "Tècniques i capacitats",
+    "tech1": "Impressió 3D (FDM i resina) i postprocessat",
+    "tech2": "Modelatge i mecanitzat d'escuma i EVA",
+    "tech3": "Fusteria escènica lleugera",
+    "tech4": "Emmotllament i buidatge (silicona, resina)",
+    "tech5": "Pintura escènica, pàtines i envelliment",
+    "tech6": "Electrònica bàsica: llums, so i mecanismes",
+    "tech7": "Costura i tapisseria d'attrezzo",
+    "tech8": "Rèpliques segures d'objectes fràgils o valuosos",
+    "quoteTitle": "Demana pressupost",
+    "quoteIntro": "Explica'ns què necessites i quan ho necessites. Responem en 24-48 h laborables.",
+    "quoteWhat": "Què necessites? (mides, referències, ús en escena...)",
+    "quoteDeadline": "Data en què ho necessites",
+    "quoteSend": "Envia la sol·licitud"
+  },
+  "about": {
+    "title": "Qui som",
+    "storyTitle": "La nostra història",
+    "story1": "Prop a Prop Teu neix d'un taller on portem anys resolent els problemes pràctics de l'escena: aquell objecte que no existeix enlloc, la peça que s'ha de muntar en 30 segons de fosc, el material que ha d'aguantar una gira sencera.",
+    "story2": "Avui combinem dues coses: una botiga amb productes que dissenyem i provem nosaltres mateixos (més les eines i materials que fem servir cada dia), i un servei de fabricació a mida per a qualsevol necessitat escènica.",
+    "whatTitle": "Què fem",
+    "what1": "Productes de disseny propi, provats en condicions reals d'escena abans de vendre'ls.",
+    "what2": "Selecció d'eines i materials de taller: només venem el que faríem servir nosaltres.",
+    "what3": "Attrezzo a mida per a teatre, cinema, TV i esdeveniments.",
+    "valuesTitle": "Com treballem",
+    "values": "Cada producte propi passa per prototip, prova en ús real i revisió abans d'arribar a la botiga. Si un producte diu que aguanta 8 kg, és perquè l'hem penjat amb més pes i durant més temps del que diu la fitxa."
+  },
+  "team": {
+    "title": "L'equip",
+    "intro": "Les mans (i els caps) darrere del taller.",
+    "member1name": "[Nom Cognom]",
+    "member1role": "Direcció de taller",
+    "member1bio": "[Breu bio: especialitat, anys d'experiència, projectes destacats.]",
+    "member2name": "[Nom Cognom]",
+    "member2role": "Disseny i fabricació",
+    "member2bio": "[Breu bio: especialitat, anys d'experiència, projectes destacats.]"
+  },
+  "contact": {
+    "title": "Contacte",
+    "emailLabel": "Correu",
+    "phoneLabel": "Telèfon / WhatsApp",
+    "addressLabel": "Taller",
+    "formTitle": "Escriu-nos"
+  },
+  "form": {
+    "name": "Nom",
+    "email": "Correu electrònic",
+    "phone": "Telèfon (opcional)",
+    "message": "Missatge",
+    "send": "Envia"
+  },
+  "faq": {
+    "title": "Preguntes freqüents",
+    "q1": "Quant triga l'enviament?",
+    "a1": "Preparem les comandes en 24-48 h laborables. El transport triga 2-4 dies laborables a la península. Balears i Canàries poden trigar una mica més.",
+    "q2": "Puc retornar un producte?",
+    "a2": "Sí, tens 14 dies naturals des de la recepció per retornar qualsevol producte de catàleg. Els encàrrecs a mida no admeten devolució. Consulta les condicions de venda per als detalls.",
+    "q3": "Els preus inclouen IVA?",
+    "a3": "Sí, tots els preus mostren l'IVA (21%) inclòs. Les despeses d'enviament es calculen al finalitzar la compra.",
+    "q4": "Feu encàrrecs a mida? Com funciona?",
+    "a4": "Sí. Explica'ns què necessites al formulari d'attrezzo a mida i et farem un pressupost sense compromís en 24-48 h. Per a encàrrecs acceptats, demanem una paga i senyal del 50%.",
+    "q5": "Emeteu factura?",
+    "a5": "Sí, emetem factura amb IVA per a totes les comandes. Indica les teves dades fiscals al procés de compra o escriu-nos."
+  },
+  "footer": {
+    "blurb": "Attrezzo, eines i materials per a teatre, cinema i esdeveniments. Dissenyat i provat al nostre taller.",
+    "shop": "Botiga",
+    "company": "Empresa",
+    "legal": "Legal",
+    "legalNotice": "Avís legal",
+    "privacy": "Privacitat",
+    "cookies": "Cookies",
+    "terms": "Condicions de venda"
+  },
+  "legal": {
+    "title": "Avisos legals"
+  },
+  "cookies": {
+    "text": "Fem servir cookies tècniques pròpies i del proveïdor de pagament, imprescindibles per al funcionament de la botiga.",
+    "more": "Més informació",
+    "accept": "Entesos"
+  },
+  "notfound": {
+    "text": "Aquesta pàgina no existeix (o encara no l'hem fabricada).",
+    "back": "Torna a la botiga"
+  }
+}

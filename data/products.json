@@ -1,0 +1,244 @@
+{
+  "_readme": "HOW TO ADD A PRODUCT: copy any block inside 'products', change the fields, add your images to assets/img/products/. Fields: id (unique, no spaces), type ('own' = your design, 'std' = bought product, 'tool'), price (EUR, IVA included), stock (number; 0 = sold out; remove the field for 'always available'), labels (ids from the 'labels' list below), name/short/description in the 3 languages, specs = datasheet rows, featured (true shows it first).",
+
+  "labels": [
+    { "id": "props",       "name": { "ca": "Attrezzo",       "es": "Atrezo",          "en": "Props" } },
+    { "id": "hardware",    "name": { "ca": "Ferreteria escènica", "es": "Ferretería escénica", "en": "Stage hardware" } },
+    { "id": "tools",       "name": { "ca": "Eines",          "es": "Herramientas",    "en": "Tools" } },
+    { "id": "consumables", "name": { "ca": "Consumibles",    "es": "Consumibles",     "en": "Consumables" } },
+    { "id": "paint",       "name": { "ca": "Pintura i acabats", "es": "Pintura y acabados", "en": "Paint & finishes" } },
+    { "id": "foam",        "name": { "ca": "Escuma i EVA",   "es": "Espuma y EVA",    "en": "Foam & EVA" } },
+    { "id": "lighting",    "name": { "ca": "Il·luminació",   "es": "Iluminación",     "en": "Lighting" } }
+  ],
+
+  "products": [
+    {
+      "id": "penjaquadres-pro",
+      "type": "own",
+      "price": 14.9,
+      "stock": 42,
+      "featured": true,
+      "labels": ["hardware", "props"],
+      "images": ["assets/img/products/penjaquadres-pro.svg"],
+      "name": {
+        "ca": "Penja-quadres ràpid PQ-8",
+        "es": "Cuelga-cuadros rápido PQ-8",
+        "en": "Quick picture hanger PQ-8"
+      },
+      "short": {
+        "ca": "Penja i despenja quadres en segons, sense eines, fins a 8 kg.",
+        "es": "Cuelga y descuelga cuadros en segundos, sin herramientas, hasta 8 kg.",
+        "en": "Hang and unhang paintings in seconds, tool-free, up to 8 kg."
+      },
+      "description": {
+        "ca": "Sistema de penjat ràpid dissenyat i provat al nostre taller per a canvis d'escenografia. Permet muntar i desmuntar quadres o elements plans en segons, sense eines i sense fer malbé la paret del decorat. Testat amb càrrega contínua durant 72 hores.",
+        "es": "Sistema de colgado rápido diseñado y probado en nuestro taller para cambios de escenografía. Permite montar y desmontar cuadros o elementos planos en segundos, sin herramientas y sin dañar la pared del decorado. Testado con carga continua durante 72 horas.",
+        "en": "Quick-hang system designed and tested in our workshop for fast set changes. Mount and remove paintings or flat elements in seconds, tool-free, without damaging the set wall. Tested under continuous load for 72 hours."
+      },
+      "specs": [
+        { "label": { "ca": "Càrrega màxima", "es": "Carga máxima", "en": "Max load" }, "value": "8 kg" },
+        { "label": { "ca": "Material", "es": "Material", "en": "Material" }, "value": "PETG + acer" },
+        { "label": { "ca": "Mides", "es": "Medidas", "en": "Dimensions" }, "value": "60 × 40 × 12 mm" },
+        { "label": { "ca": "Pes", "es": "Peso", "en": "Weight" }, "value": "35 g" },
+        { "label": { "ca": "Contingut", "es": "Contenido", "en": "Contents" }, "value": "2 uds. + cargols" }
+      ]
+    },
+    {
+      "id": "llibre-secret",
+      "type": "own",
+      "price": 24.5,
+      "stock": 8,
+      "featured": true,
+      "labels": ["props"],
+      "images": ["assets/img/products/llibre-secret.svg"],
+      "name": {
+        "ca": "Llibre buit \"caixa secreta\"",
+        "es": "Libro hueco \"caja secreta\"",
+        "en": "Hollow book \"secret box\""
+      },
+      "short": {
+        "ca": "Llibre d'attrezzo amb compartiment ocult, envellit a mà.",
+        "es": "Libro de atrezo con compartimento oculto, envejecido a mano.",
+        "en": "Prop book with hidden compartment, hand-aged finish."
+      },
+      "description": {
+        "ca": "Llibre d'attrezzo fabricat al taller amb compartiment interior ocult. Acabat envellit a mà: cada unitat és lleugerament diferent. Ideal per a escenes d'amagatalls, màgia de prop o decoració de set.",
+        "es": "Libro de atrezo fabricado en el taller con compartimento interior oculto. Acabado envejecido a mano: cada unidad es ligeramente distinta. Ideal para escenas de escondites, magia de cerca o decoración de set.",
+        "en": "Workshop-made prop book with a hidden interior compartment. Hand-aged finish: each unit is slightly unique. Ideal for hiding-spot scenes, close-up magic or set dressing."
+      },
+      "specs": [
+        { "label": { "ca": "Mides", "es": "Medidas", "en": "Dimensions" }, "value": "24 × 16 × 5 cm" },
+        { "label": { "ca": "Compartiment", "es": "Compartimento", "en": "Compartment" }, "value": "18 × 11 × 3.5 cm" },
+        { "label": { "ca": "Pes", "es": "Peso", "en": "Weight" }, "value": "420 g" },
+        { "label": { "ca": "Material", "es": "Material", "en": "Material" }, "value": "Paper, cartró, cola PVA" }
+      ]
+    },
+    {
+      "id": "espelma-led",
+      "type": "own",
+      "price": 12.0,
+      "stock": 25,
+      "labels": ["props", "lighting"],
+      "images": ["assets/img/products/espelma-led.svg"],
+      "name": {
+        "ca": "Espelma LED de flama realista",
+        "es": "Vela LED de llama realista",
+        "en": "Realistic-flame LED candle"
+      },
+      "short": {
+        "ca": "Espelma segura per a escena amb flama LED que balla; 20 h d'autonomia.",
+        "es": "Vela segura para escena con llama LED que baila; 20 h de autonomía.",
+        "en": "Stage-safe candle with dancing LED flame; 20 h battery life."
+      },
+      "description": {
+        "ca": "Espelma d'attrezzo amb flama LED d'oscil·lació aleatòria, indistingible del foc real des de platea. Compleix normativa de seguretat en espais escènics (sense flama viva). Cos de cera real per a un acabat autèntic.",
+        "es": "Vela de atrezo con llama LED de oscilación aleatoria, indistinguible del fuego real desde platea. Cumple la normativa de seguridad en espacios escénicos (sin llama viva). Cuerpo de cera real para un acabado auténtico.",
+        "en": "Prop candle with randomly flickering LED flame, indistinguishable from real fire from the audience. Meets venue safety rules (no open flame). Real wax body for an authentic finish."
+      },
+      "specs": [
+        { "label": { "ca": "Autonomia", "es": "Autonomía", "en": "Battery life" }, "value": "20 h (2×AA)" },
+        { "label": { "ca": "Alçada", "es": "Altura", "en": "Height" }, "value": "18 cm" },
+        { "label": { "ca": "Material", "es": "Material", "en": "Material" }, "value": "Cera real + ABS" }
+      ]
+    },
+    {
+      "id": "kit-envelliment",
+      "type": "own",
+      "price": 32.0,
+      "stock": 3,
+      "labels": ["paint", "consumables"],
+      "images": ["assets/img/products/kit-envelliment.svg"],
+      "name": {
+        "ca": "Kit d'envelliment i pàtines",
+        "es": "Kit de envejecido y pátinas",
+        "en": "Aging & patina kit"
+      },
+      "short": {
+        "ca": "6 pàtines a l'aigua per envellir fusta, metall i plàstic.",
+        "es": "6 pátinas al agua para envejecer madera, metal y plástico.",
+        "en": "6 water-based patinas to age wood, metal and plastic."
+      },
+      "description": {
+        "ca": "La nostra selecció de pàtines de taller: òxid, verdet, brutícia, pols, fum i cera fosca. A l'aigua, sense olor, aptes per a interiors. Amb guia ràpida de tècniques inclosa (la mateixa que fem servir nosaltres).",
+        "es": "Nuestra selección de pátinas de taller: óxido, verdín, suciedad, polvo, humo y cera oscura. Al agua, sin olor, aptas para interiores. Con guía rápida de técnicas incluida (la misma que usamos nosotros).",
+        "en": "Our workshop patina selection: rust, verdigris, grime, dust, smoke and dark wax. Water-based, odourless, indoor-safe. Includes the quick technique guide we use ourselves."
+      },
+      "specs": [
+        { "label": { "ca": "Contingut", "es": "Contenido", "en": "Contents" }, "value": "6 × 100 ml" },
+        { "label": { "ca": "Base", "es": "Base", "en": "Base" }, "value": "Aigua / Agua / Water" },
+        { "label": { "ca": "Superfícies", "es": "Superficies", "en": "Surfaces" }, "value": "Fusta, metall, plàstic, EVA" }
+      ]
+    },
+    {
+      "id": "eva-foam-10mm",
+      "type": "std",
+      "price": 8.5,
+      "stock": 60,
+      "labels": ["foam", "consumables"],
+      "images": ["assets/img/products/eva-foam-10mm.svg"],
+      "name": {
+        "ca": "Planxa EVA alta densitat 10 mm",
+        "es": "Plancha EVA alta densidad 10 mm",
+        "en": "High-density EVA foam sheet 10 mm"
+      },
+      "short": {
+        "ca": "Planxa 100×50 cm per a armadures, attrezzo i cosplay.",
+        "es": "Plancha 100×50 cm para armaduras, atrezo y cosplay.",
+        "en": "100×50 cm sheet for armour, props and cosplay."
+      },
+      "description": {
+        "ca": "EVA d'alta densitat (85 kg/m³), la mateixa que fem servir als nostres encàrrecs. Talla net amb cúter, es modela amb calor i accepta imprimació i pintura sense problemes.",
+        "es": "EVA de alta densidad (85 kg/m³), la misma que usamos en nuestros encargos. Corta limpio con cúter, se moldea con calor y acepta imprimación y pintura sin problemas.",
+        "en": "High-density EVA (85 kg/m³), the same we use for our commissions. Cuts clean with a blade, heat-formable, primes and paints beautifully."
+      },
+      "specs": [
+        { "label": { "ca": "Mides", "es": "Medidas", "en": "Dimensions" }, "value": "100 × 50 cm" },
+        { "label": { "ca": "Gruix", "es": "Grosor", "en": "Thickness" }, "value": "10 mm" },
+        { "label": { "ca": "Densitat", "es": "Densidad", "en": "Density" }, "value": "85 kg/m³" }
+      ]
+    },
+    {
+      "id": "cutter-tallador-calent",
+      "type": "tool",
+      "price": 39.9,
+      "stock": 12,
+      "labels": ["tools", "foam"],
+      "images": ["assets/img/products/cutter-calent.svg"],
+      "name": {
+        "ca": "Tallador tèrmic per a escuma",
+        "es": "Cortador térmico para espuma",
+        "en": "Hot knife foam cutter"
+      },
+      "short": {
+        "ca": "Talls nets en EVA, porexpan i escumes tècniques; escalfa en 15 s.",
+        "es": "Cortes limpios en EVA, porexpan y espumas técnicas; calienta en 15 s.",
+        "en": "Clean cuts in EVA, styrofoam and technical foams; heats in 15 s."
+      },
+      "description": {
+        "ca": "Eina de tall en calent amb temperatura regulable i tres fulles intercanviables. La recomanem per a volums grans d'escenografia on el cúter es queda curt.",
+        "es": "Herramienta de corte en caliente con temperatura regulable y tres cuchillas intercambiables. La recomendamos para volúmenes grandes de escenografía donde el cúter se queda corto.",
+        "en": "Hot-cutting tool with adjustable temperature and three interchangeable blades. Recommended for large scenography volumes where a blade falls short."
+      },
+      "specs": [
+        { "label": { "ca": "Potència", "es": "Potencia", "en": "Power" }, "value": "18 W" },
+        { "label": { "ca": "Temps d'escalfament", "es": "Tiempo de calentamiento", "en": "Heat-up time" }, "value": "15 s" },
+        { "label": { "ca": "Fulles", "es": "Cuchillas", "en": "Blades" }, "value": "3 incloses" }
+      ]
+    },
+    {
+      "id": "pistola-cola-pro",
+      "type": "tool",
+      "price": 27.5,
+      "stock": 0,
+      "labels": ["tools"],
+      "images": ["assets/img/products/pistola-cola.svg"],
+      "name": {
+        "ca": "Pistola de cola professional 100 W",
+        "es": "Pistola de cola profesional 100 W",
+        "en": "Professional glue gun 100 W"
+      },
+      "short": {
+        "ca": "Flux constant i broquet fi per a muntatge d'attrezzo.",
+        "es": "Flujo constante y boquilla fina para montaje de atrezo.",
+        "en": "Constant flow and fine nozzle for prop assembly."
+      },
+      "description": {
+        "ca": "Pistola de cola calenta d'ús intensiu, amb broquet fi de precisió i suport estable. La que tenim a cada banc de treball del taller.",
+        "es": "Pistola de cola caliente de uso intensivo, con boquilla fina de precisión y soporte estable. La que tenemos en cada banco de trabajo del taller.",
+        "en": "Heavy-use hot glue gun with fine precision nozzle and stable stand. The one on every bench in our workshop."
+      },
+      "specs": [
+        { "label": { "ca": "Potència", "es": "Potencia", "en": "Power" }, "value": "100 W" },
+        { "label": { "ca": "Diàmetre barra", "es": "Diámetro barra", "en": "Stick diameter" }, "value": "11 mm" }
+      ]
+    },
+    {
+      "id": "sang-escenica",
+      "type": "std",
+      "price": 9.9,
+      "stock": 30,
+      "labels": ["consumables", "props"],
+      "images": ["assets/img/products/sang-escenica.svg"],
+      "name": {
+        "ca": "Sang escènica llavable 250 ml",
+        "es": "Sangre escénica lavable 250 ml",
+        "en": "Washable stage blood 250 ml"
+      },
+      "short": {
+        "ca": "Color realista, no taca la roba ni la pell; apta per a boca.",
+        "es": "Color realista, no mancha ropa ni piel; apta para boca.",
+        "en": "Realistic colour, won't stain fabric or skin; mouth-safe."
+      },
+      "description": {
+        "ca": "Sang artificial de qualitat professional. Es renta amb aigua i sabó, no irrita la pell i és apta per a ús a la boca. Textura i color calibrats per a llum d'escenari.",
+        "es": "Sangre artificial de calidad profesional. Se lava con agua y jabón, no irrita la piel y es apta para uso en boca. Textura y color calibrados para luz de escenario.",
+        "en": "Professional-grade artificial blood. Washes out with soap and water, skin-safe and mouth-safe. Texture and colour calibrated for stage lighting."
+      },
+      "specs": [
+        { "label": { "ca": "Volum", "es": "Volumen", "en": "Volume" }, "value": "250 ml" },
+        { "label": { "ca": "Llavable", "es": "Lavable", "en": "Washable" }, "value": "Sí / Yes" },
+        { "label": { "ca": "Apta per a boca", "es": "Apta para boca", "en": "Mouth-safe" }, "value": "Sí / Yes" }
+      ]
+    }
+  ]
+}

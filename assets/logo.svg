@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80">
+  <rect x="4" y="4" width="72" height="72" fill="none" stroke="#c0332b" stroke-width="4"/>
+  <path d="M20 60 V24 h18 a11 11 0 0 1 0 22 h-18" fill="none" stroke="#201d18" stroke-width="6" stroke-linecap="square"/>
+  <text x="90" y="38" font-family="Arial Narrow, sans-serif" font-weight="bold" font-size="30" letter-spacing="1" fill="#201d18">PROP A PROP</text>
+  <text x="90" y="68" font-family="Arial Narrow, sans-serif" font-weight="bold" font-size="30" letter-spacing="6" fill="#c0332b">TEU</text>
+</svg>

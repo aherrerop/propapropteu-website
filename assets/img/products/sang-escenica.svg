@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#efe8d8"/>
+  <rect x="10" y="10" width="380" height="380" fill="none" stroke="#ddd2bd" stroke-width="2"/>
+  <g stroke="#c0332b" stroke-width="5" fill="none"><rect x="160" y="130" width="80" height="150" rx="10"/><rect x="180" y="100" width="40" height="30" rx="4"/><path d="M160 200 h80" /><path d="M175 230 q10 15 0 25 M205 220 q12 18 0 30" stroke-width="4"/></g>
+  <text x="200" y="360" text-anchor="middle" font-family="Arial" font-size="17" fill="#6f675a">Sang escenica</text>
+</svg>

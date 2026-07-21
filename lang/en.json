@@ -1,0 +1,142 @@
+{
+  "nav": {
+    "catalog": "Shop",
+    "custom": "Custom props",
+    "about": "About us",
+    "team": "Our team",
+    "faq": "FAQ",
+    "contact": "Contact",
+    "cart": "Cart"
+  },
+  "home": {
+    "heroTitle": "Props, tools and materials to make any scene possible",
+    "heroText": "We design and build props in our own workshop, and stock the tools and materials we use ourselves. If we don't have it, we'll build it for you.",
+    "heroCta": "Request a custom prop"
+  },
+  "catalog": {
+    "filters": "Filters",
+    "byLabel": "By label",
+    "byType": "By type",
+    "clear": "Clear filters",
+    "searchPlaceholder": "Search products...",
+    "sortFeatured": "Featured",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortName": "Name (A-Z)",
+    "results": "products",
+    "empty": "No products match your filters.",
+    "addToCart": "Add",
+    "iva": "VAT incl."
+  },
+  "badge": {
+    "own": "Our design",
+    "std": "Product",
+    "tool": "Tool"
+  },
+  "stock": {
+    "in": "In stock",
+    "low": "Last units",
+    "out": "Sold out"
+  },
+  "product": {
+    "specs": "Datasheet",
+    "related": "Related products",
+    "backToCatalog": "Back to shop",
+    "notFound": "We couldn't find this product."
+  },
+  "custom": {
+    "title": "Custom props",
+    "intro": "We build one-off pieces for theatre, film, TV and events: from a hand prop to full scenography elements. Here's a sample of what we can do.",
+    "example1": "Hand-aged period objects",
+    "example2": "Safe stage weapons and armour",
+    "example3": "Replicas of real objects",
+    "example4": "Lightweight touring furniture",
+    "example5": "Pieces with mechanisms and electronics",
+    "example6": "3D-printed and post-processed parts",
+    "techniquesTitle": "Techniques & capabilities",
+    "tech1": "3D printing (FDM and resin) and post-processing",
+    "tech2": "Foam and EVA shaping and machining",
+    "tech3": "Lightweight stage carpentry",
+    "tech4": "Moulding and casting (silicone, resin)",
+    "tech5": "Scenic painting, patinas and aging",
+    "tech6": "Basic electronics: lights, sound and mechanisms",
+    "tech7": "Prop sewing and upholstery",
+    "tech8": "Safe replicas of fragile or valuable objects",
+    "quoteTitle": "Request a quote",
+    "quoteIntro": "Tell us what you need and when you need it. We reply within 24-48 working hours.",
+    "quoteWhat": "What do you need? (dimensions, references, how it's used on stage...)",
+    "quoteDeadline": "When do you need it?",
+    "quoteSend": "Send request"
+  },
+  "about": {
+    "title": "About us",
+    "storyTitle": "Our story",
+    "story1": "Prop a Prop Teu was born in a workshop where we've spent years solving the practical problems of the stage: the object that doesn't exist anywhere, the piece that must be mounted in a 30-second blackout, the material that has to survive a whole tour.",
+    "story2": "Today we combine two things: a shop with products we design and test ourselves (plus the tools and materials we use every day), and a custom fabrication service for any stage need.",
+    "whatTitle": "What we do",
+    "what1": "Our own designs, tested in real stage conditions before we sell them.",
+    "what2": "A curated selection of workshop tools and materials: we only sell what we'd use ourselves.",
+    "what3": "Custom props for theatre, film, TV and events.",
+    "valuesTitle": "How we work",
+    "values": "Every product of our own goes through prototype, real-use testing and review before reaching the shop. If a product says it holds 8 kg, it's because we've hung more weight on it, for longer, than the datasheet claims."
+  },
+  "team": {
+    "title": "Our team",
+    "intro": "The hands (and heads) behind the workshop.",
+    "member1name": "[First Last]",
+    "member1role": "Workshop lead",
+    "member1bio": "[Short bio: specialty, years of experience, notable projects.]",
+    "member2name": "[First Last]",
+    "member2role": "Design & fabrication",
+    "member2bio": "[Short bio: specialty, years of experience, notable projects.]"
+  },
+  "contact": {
+    "title": "Contact",
+    "emailLabel": "Email",
+    "phoneLabel": "Phone / WhatsApp",
+    "addressLabel": "Workshop",
+    "formTitle": "Write to us"
+  },
+  "form": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "message": "Message",
+    "send": "Send"
+  },
+  "faq": {
+    "title": "Frequently asked questions",
+    "q1": "How long does shipping take?",
+    "a1": "We prepare orders within 24-48 working hours. Delivery takes 2-4 working days in mainland Spain. The Balearic and Canary Islands may take longer.",
+    "q2": "Can I return a product?",
+    "a2": "Yes, you have 14 calendar days from delivery to return any catalogue product. Custom commissions cannot be returned. See the terms of sale for details.",
+    "q3": "Do prices include VAT?",
+    "a3": "Yes, all prices include Spanish VAT (21%). Shipping is calculated at checkout.",
+    "q4": "Do you take custom commissions? How does it work?",
+    "a4": "Yes. Tell us what you need via the custom props form and we'll send a no-obligation quote within 24-48 h. Accepted commissions require a 50% deposit.",
+    "q5": "Do you issue invoices?",
+    "a5": "Yes, we issue VAT invoices for all orders. Add your tax details at checkout or write to us."
+  },
+  "footer": {
+    "blurb": "Props, tools and materials for theatre, film and events. Designed and tested in our workshop.",
+    "shop": "Shop",
+    "company": "Company",
+    "legal": "Legal",
+    "legalNotice": "Legal notice",
+    "privacy": "Privacy",
+    "cookies": "Cookies",
+    "terms": "Terms of sale"
+  },
+  "legal": {
+    "title": "Legal notices"
+  },
+  "cookies": {
+    "text": "We use first-party technical cookies and payment-provider cookies, required for the shop to work.",
+    "more": "More info",
+    "accept": "Got it"
+  },
+  "notfound": {
+    "text": "This page doesn't exist (or we haven't built it yet).",
+    "back": "Back to shop"
+  }
+}

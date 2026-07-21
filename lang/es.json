@@ -1,0 +1,142 @@
+{
+  "nav": {
+    "catalog": "Tienda",
+    "custom": "Atrezo a medida",
+    "about": "Quiénes somos",
+    "team": "El equipo",
+    "faq": "FAQ",
+    "contact": "Contacto",
+    "cart": "Cesta"
+  },
+  "home": {
+    "heroTitle": "Atrezo, herramientas y materiales para hacer posible cualquier escena",
+    "heroText": "Diseñamos y fabricamos atrezo en nuestro taller, y seleccionamos las herramientas y materiales que usamos nosotros mismos. Si no lo tenemos, te lo fabricamos.",
+    "heroCta": "Pide atrezo a medida"
+  },
+  "catalog": {
+    "filters": "Filtros",
+    "byLabel": "Por etiqueta",
+    "byType": "Por tipo",
+    "clear": "Borrar filtros",
+    "searchPlaceholder": "Buscar productos...",
+    "sortFeatured": "Destacados",
+    "sortPriceAsc": "Precio: de menor a mayor",
+    "sortPriceDesc": "Precio: de mayor a menor",
+    "sortName": "Nombre (A-Z)",
+    "results": "productos",
+    "empty": "Ningún producto coincide con los filtros.",
+    "addToCart": "Añadir",
+    "iva": "IVA incl."
+  },
+  "badge": {
+    "own": "Diseño propio",
+    "std": "Producto",
+    "tool": "Herramienta"
+  },
+  "stock": {
+    "in": "En stock",
+    "low": "Últimas unidades",
+    "out": "Agotado"
+  },
+  "product": {
+    "specs": "Ficha técnica",
+    "related": "Productos relacionados",
+    "backToCatalog": "Volver a la tienda",
+    "notFound": "No hemos encontrado este producto."
+  },
+  "custom": {
+    "title": "Atrezo a medida",
+    "intro": "Fabricamos piezas únicas para teatro, cine, televisión y eventos: desde un objeto de mano hasta elementos de escenografía. Aquí tienes una muestra de lo que sabemos hacer.",
+    "example1": "Objetos de época envejecidos a mano",
+    "example2": "Armas y armaduras escénicas seguras",
+    "example3": "Réplicas de objetos reales",
+    "example4": "Mobiliario ligero para gira",
+    "example5": "Elementos con mecanismos y electrónica",
+    "example6": "Piezas impresas en 3D y postprocesadas",
+    "techniquesTitle": "Técnicas y capacidades",
+    "tech1": "Impresión 3D (FDM y resina) y postprocesado",
+    "tech2": "Modelado y mecanizado de espuma y EVA",
+    "tech3": "Carpintería escénica ligera",
+    "tech4": "Moldeado y vaciado (silicona, resina)",
+    "tech5": "Pintura escénica, pátinas y envejecido",
+    "tech6": "Electrónica básica: luces, sonido y mecanismos",
+    "tech7": "Costura y tapicería de atrezo",
+    "tech8": "Réplicas seguras de objetos frágiles o valiosos",
+    "quoteTitle": "Pide presupuesto",
+    "quoteIntro": "Cuéntanos qué necesitas y para cuándo. Respondemos en 24-48 h laborables.",
+    "quoteWhat": "¿Qué necesitas? (medidas, referencias, uso en escena...)",
+    "quoteDeadline": "Fecha en que lo necesitas",
+    "quoteSend": "Enviar solicitud"
+  },
+  "about": {
+    "title": "Quiénes somos",
+    "storyTitle": "Nuestra historia",
+    "story1": "Prop a Prop Teu nace de un taller donde llevamos años resolviendo los problemas prácticos de la escena: ese objeto que no existe en ningún sitio, la pieza que hay que montar en 30 segundos de oscuro, el material que tiene que aguantar una gira entera.",
+    "story2": "Hoy combinamos dos cosas: una tienda con productos que diseñamos y probamos nosotros mismos (más las herramientas y materiales que usamos cada día), y un servicio de fabricación a medida para cualquier necesidad escénica.",
+    "whatTitle": "Qué hacemos",
+    "what1": "Productos de diseño propio, probados en condiciones reales de escena antes de venderlos.",
+    "what2": "Selección de herramientas y materiales de taller: solo vendemos lo que usaríamos nosotros.",
+    "what3": "Atrezo a medida para teatro, cine, TV y eventos.",
+    "valuesTitle": "Cómo trabajamos",
+    "values": "Cada producto propio pasa por prototipo, prueba en uso real y revisión antes de llegar a la tienda. Si un producto dice que aguanta 8 kg, es porque lo hemos colgado con más peso y durante más tiempo del que dice la ficha."
+  },
+  "team": {
+    "title": "El equipo",
+    "intro": "Las manos (y las cabezas) detrás del taller.",
+    "member1name": "[Nombre Apellido]",
+    "member1role": "Dirección de taller",
+    "member1bio": "[Breve bio: especialidad, años de experiencia, proyectos destacados.]",
+    "member2name": "[Nombre Apellido]",
+    "member2role": "Diseño y fabricación",
+    "member2bio": "[Breve bio: especialidad, años de experiencia, proyectos destacados.]"
+  },
+  "contact": {
+    "title": "Contacto",
+    "emailLabel": "Correo",
+    "phoneLabel": "Teléfono / WhatsApp",
+    "addressLabel": "Taller",
+    "formTitle": "Escríbenos"
+  },
+  "form": {
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "phone": "Teléfono (opcional)",
+    "message": "Mensaje",
+    "send": "Enviar"
+  },
+  "faq": {
+    "title": "Preguntas frecuentes",
+    "q1": "¿Cuánto tarda el envío?",
+    "a1": "Preparamos los pedidos en 24-48 h laborables. El transporte tarda 2-4 días laborables en península. Baleares y Canarias pueden tardar algo más.",
+    "q2": "¿Puedo devolver un producto?",
+    "a2": "Sí, tienes 14 días naturales desde la recepción para devolver cualquier producto de catálogo. Los encargos a medida no admiten devolución. Consulta las condiciones de venta para los detalles.",
+    "q3": "¿Los precios incluyen IVA?",
+    "a3": "Sí, todos los precios muestran el IVA (21%) incluido. Los gastos de envío se calculan al finalizar la compra.",
+    "q4": "¿Hacéis encargos a medida? ¿Cómo funciona?",
+    "a4": "Sí. Cuéntanos qué necesitas en el formulario de atrezo a medida y te haremos un presupuesto sin compromiso en 24-48 h. Para encargos aceptados, pedimos una señal del 50%.",
+    "q5": "¿Emitís factura?",
+    "a5": "Sí, emitimos factura con IVA para todos los pedidos. Indica tus datos fiscales en el proceso de compra o escríbenos."
+  },
+  "footer": {
+    "blurb": "Atrezo, herramientas y materiales para teatro, cine y eventos. Diseñado y probado en nuestro taller.",
+    "shop": "Tienda",
+    "company": "Empresa",
+    "legal": "Legal",
+    "legalNotice": "Aviso legal",
+    "privacy": "Privacidad",
+    "cookies": "Cookies",
+    "terms": "Condiciones de venta"
+  },
+  "legal": {
+    "title": "Avisos legales"
+  },
+  "cookies": {
+    "text": "Usamos cookies técnicas propias y del proveedor de pago, imprescindibles para el funcionamiento de la tienda.",
+    "more": "Más información",
+    "accept": "Entendido"
+  },
+  "notfound": {
+    "text": "Esta página no existe (o todavía no la hemos fabricado).",
+    "back": "Volver a la tienda"
+  }
+}
