@@ -43,11 +43,7 @@ const Layout = {
       <div class="container header-inner">
         <a href="./" class="logo-link" aria-label="${SITE_CONFIG.businessName}">
           <img class="logo-mark" src="${SITE_CONFIG.logo}" alt="">
-          <!-- TODO: wordmark SVG still uses "Palace Script MT" for its "eu" glyphs.
-               That font is not embedded/web-safe, so it falls back to a generic serif
-               on most machines. Re-export from Illustrator/Inkscape with the type
-               converted to outlines (Type > Create Outlines). -->
-          ${SITE_CONFIG.wordmark ? `<img class="wordmark" src="${SITE_CONFIG.wordmark}" alt="${SITE_CONFIG.businessName}">` : ""}
+          <span class="logo-type">${SITE_CONFIG.businessName}</span>
         </a>
         <div class="header-bar">
           <nav class="main-nav">${nav}</nav>

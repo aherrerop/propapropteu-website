@@ -2,15 +2,20 @@
    PROP A PROP TEU — THEME
    Everything about the site's look lives in this file.
    Change these variables and the whole site follows.
+
+   Aesthetic: editorial / "elevated" (Moooi-inspired) — elegant
+   serif display, quiet tracked sans for labels, lots of air,
+   sharp corners, imagery does the talking. Colours are the
+   brand palette, used sparingly as accents.
    ============================================================ */
 
 :root {
-  /* ---- BRAND COLORS ---- */
-  --color-bg:          #f2efe8;  /* soft cream-gray page background */
+  /* ---- BRAND COLORS (change these freely; the site follows) ---- */
+  --color-bg:          #f2efe8;  /* soft cream page background */
   --color-surface:     #ffffff;  /* cards, panels */
-  --color-ink:         #1b1b19;  /* main text, near-black like logo strokes */
+  --color-ink:         #1b1b19;  /* main text, near-black */
   --color-muted:       #6d6c67;  /* secondary text */
-  --color-line:        #e4e2dc;  /* borders, rules */
+  --color-line:        #e0ddd5;  /* hairline borders, rules */
   --color-accent:      #ff5200;  /* ORANGE */
   --color-accent-ink:  #ffffff;  /* text on top of accent */
   --color-accent-dark: #d94500;  /* hover state of orange */
@@ -19,9 +24,9 @@
   --color-accent3:      #00b4b4; /* TURQUOISE */
 
   /* ---- BADGE COLORS (product types) ---- */
-  --color-badge-own:   var(--color-accent);   /* "own design" badge = orange */
-  --color-badge-std:   var(--color-accent3);  /* "standard product" badge = turquoise */
-  --color-badge-tool:  #1b1b19;               /* "tool" badge = ink black */
+  --color-badge-own:   var(--color-accent);   /* "own design" = orange */
+  --color-badge-std:   var(--color-accent3);  /* "standard product" = turquoise */
+  --color-badge-tool:  var(--color-ink);      /* "tool" = ink */
 
   /* ---- STATUS ---- */
   --color-ok:          var(--color-accent3);  /* "in stock" = turquoise */
@@ -29,41 +34,37 @@
   --color-out:         #8a8378;
 
   /* ---- TYPOGRAPHY ---- */
-  /* Display: condensed poster type. Body: clean sans. */
-  --font-display: 'Oswald', 'Arial Narrow', sans-serif;
-  --font-body:    'Inter', 'Helvetica Neue', Arial, sans-serif;
+  /* Display: elegant serif (headings + logotype). Body: quiet sans. */
+  --font-display: 'Cormorant Garamond', 'Times New Roman', Georgia, serif;
+  --font-body:    'Jost', 'Helvetica Neue', Arial, sans-serif;
+  --tracking-label: 0.22em;   /* uppercase micro-labels / nav */
 
   /* ---- SHAPES ---- */
-  --radius:        3px;    /* corner rounding everywhere */
-  --radius-img:    3px;    /* product image corners */
+  --radius:        0;       /* sharp corners everywhere */
+  --radius-img:    0;
   --border-w:      1px;
-  --shadow-card:   0 1px 3px rgba(32, 29, 24, 0.08);
-  --shadow-hover:  0 4px 14px rgba(32, 29, 24, 0.14);
+  --shadow-card:   none;
+  --shadow-hover:  0 18px 40px rgba(27, 27, 25, 0.10);
 
   /* ---- LOGO ---- */
-  /* Icon mark + horizontal wordmark heights in the (centered) header.
-     Tweak these two to scale the whole brand block up or down. */
-  --logo-height:     92px;
-  --wordmark-height: 74px;
+  /* Small icon mark shown next to the serif logotype in the header. */
+  --logo-mark-height: 40px;
 
   /* ---- LAYOUT ---- */
-  --max-width:     1200px;
-  --header-height: 150px;   /* approx height of the centered brand + nav header (sticky offset) */
+  --max-width:     1280px;
+  --gutter:        clamp(20px, 5vw, 64px);
+  --header-height: 118px;   /* sticky offset used by filters / summary */
 }
 
 /* ---- OPTIONAL DARK THEME ----
-   To try a "dark theater" look, uncomment this block and add
-   class="theme-dark" to the <html> tag of every page.
+   To try a "dark theatre" look, uncomment and add class="theme-dark"
+   to the <html> tag of every page.
 html.theme-dark {
-  --color-bg:         #17140f;
-  --color-surface:    #221e17;
-  --color-ink:        #f0e9dc;
-  --color-muted:      #a89e8d;
-  --color-line:       #3a352b;
-  --color-accent:     #e0a83c;
-  --color-accent-ink: #17140f;
-  --color-accent-dark:#c08c26;
-  --shadow-card:      0 1px 3px rgba(0,0,0,0.4);
-  --shadow-hover:     0 4px 14px rgba(0,0,0,0.5);
+  --color-bg:         #141311;
+  --color-surface:    #1d1c19;
+  --color-ink:        #f0ece3;
+  --color-muted:      #a49f95;
+  --color-line:       #34322c;
+  --color-accent-ink: #141311;
 }
 */
