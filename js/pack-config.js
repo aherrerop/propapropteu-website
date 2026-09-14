@@ -2,20 +2,19 @@
    PACK CONFIGURATOR — interface + data model only.
    A pack is bought for its full duration and delivered gradually.
    The customer sets delivery frequency, production duration and a
-   payment option (full upfront, or split per delivery), can add
-   EXTRA units to any upcoming delivery on top of the base pack, and
-   can SEARCH the whole catalogue to add any other product to the pack.
+   payment option, can SEARCH the catalogue to add any product to the
+   pack (recurring, in every delivery), and can adapt ONLY the next
+   delivery with one-off extra units.
 
-   NOTE: no real checkout/payment is wired up. The "Proceed" button is
-   a placeholder; the state object below is the structure a real
-   checkout/subscription integration would consume later.
+   NOTE: no real checkout is wired up. The state object below is the
+   structure a real checkout/subscription integration would consume.
    ============================================================ */
 
 const PackConfig = {
   pack: null,
-  state: { freq: "biweekly", months: 3, payment: "upfront", extras: {}, added: [] },
-  //  extras: { [deliveryIndex]: { [productId]: extraQty } }
-  //  added:  [productId, ...]  products the customer searched + added
+  state: { freq: "biweekly", months: 3, payment: "upfront", added: [], nextExtras: {} },
+  //  added:      [{ id, qty }]   products added via search — recur in every delivery
+  //  nextExtras: { [id]: qty }   one-off extra units for the NEXT delivery only
 
   async init() {
     await PackData.load();
@@ -31,14 +30,11 @@ const PackConfig = {
     this.state.freq = this.pack.defaultFrequency;
     this.state.months = this.pack.defaultDurationMonths;
 
-    // Delegated listeners on the stable #config node (survive innerHTML swaps).
     root.addEventListener("click", e => {
-      const step = e.target.closest("[data-act]");
-      if (step) {
-        const i = +step.dataset.i, pid = step.dataset.pid;
-        this.setExtra(i, pid, this.extraQty(i, pid) + (step.dataset.act === "inc" ? 1 : -1));
-        return;
-      }
+      const aq = e.target.closest("[data-addq]");
+      if (aq) { this.stepAdded(aq.dataset.pid, aq.dataset.addq === "inc" ? 1 : -1); return; }
+      const nq = e.target.closest("[data-nextq]");
+      if (nq) { this.stepNext(nq.dataset.pid, nq.dataset.nextq === "inc" ? 1 : -1); return; }
       const add = e.target.closest("[data-add]");
       if (add) { this.addProduct(add.dataset.pid); return; }
       const rm = e.target.closest("[data-remove-added]");
@@ -53,50 +49,51 @@ const PackConfig = {
       if (e.target.id === "cfg-freq") { this.state.freq = e.target.value; this.render(); }
       else if (e.target.id === "cfg-dur") { this.state.months = +e.target.value; this.render(); }
       else if (e.target.name === "payment") { this.state.payment = e.target.value; this.render(); }
-      else if (e.target.classList.contains("extra-input")) {
-        this.setExtra(+e.target.dataset.i, e.target.dataset.pid, +e.target.value || 0);
-      }
+      else if (e.target.classList.contains("added-input")) { this.setAdded(e.target.dataset.pid, +e.target.value || 0); }
+      else if (e.target.classList.contains("next-input")) { this.setNext(e.target.dataset.pid, +e.target.value || 0); }
     });
 
     document.addEventListener("langchange", () => this.render());
     this.render();
   },
 
-  /* ---- data model helpers ---- */
+  /* ---- model ---- */
   product(id) { return Catalog.data.products.find(p => p.id === id); },
   deliveries() { return PackData.shipmentsPerMonth[this.state.freq] * this.state.months; },
 
-  // Every line item shown per delivery: base pack items (fixed base qty)
-  // plus searched-in products (base 0, quantity comes from "extra").
-  allItems() {
-    const base = this.pack.items.map(it => ({ id: it.id, base: it.qty, added: false }));
-    const added = this.state.added
-      .filter(id => !this.pack.items.some(it => it.id === id))
-      .map(id => ({ id, base: 0, added: true }));
-    return base.concat(added);
-  },
-
-  extraQty(i, pid) { return (this.state.extras[i] && this.state.extras[i][pid]) || 0; },
-  setExtra(i, pid, q) {
-    if (!this.state.extras[i]) this.state.extras[i] = {};
-    this.state.extras[i][pid] = Math.max(0, q);
-    this.render();
+  baseItems()  { return this.pack.items.map(it => ({ id: it.id, qty: it.qty })); },
+  addedItems() { return this.state.added.filter(a => !this.pack.items.some(it => it.id === a.id)); },
+  // everything shipped in a standard delivery
+  standardItems() {
+    return this.baseItems().map(it => ({ ...it, added: false }))
+      .concat(this.addedItems().map(a => ({ id: a.id, qty: a.qty, added: true })));
   },
 
   addProduct(pid) {
-    if (this.allItems().some(it => it.id === pid)) return;   // already in pack
-    this.state.added.push(pid);
-    for (let i = 0; i < this.deliveries(); i++) {            // default 1 per delivery
-      if (!this.state.extras[i]) this.state.extras[i] = {};
-      this.state.extras[i][pid] = 1;
-    }
+    if (this.pack.items.some(it => it.id === pid)) return;
+    if (this.state.added.some(a => a.id === pid)) return;
+    this.state.added.push({ id: pid, qty: 1 });
     this.render();
   },
   removeAdded(pid) {
-    this.state.added = this.state.added.filter(x => x !== pid);
-    for (const i in this.state.extras) delete this.state.extras[i][pid];
+    this.state.added = this.state.added.filter(a => a.id !== pid);
+    delete this.state.nextExtras[pid];
     this.render();
   },
+  setAdded(pid, q) {
+    const a = this.state.added.find(x => x.id === pid);
+    if (!a) return;
+    q = Math.max(0, q);
+    if (q === 0) return this.removeAdded(pid);
+    a.qty = q; this.render();
+  },
+  stepAdded(pid, d) {
+    const a = this.state.added.find(x => x.id === pid);
+    if (a) this.setAdded(pid, a.qty + d);
+  },
+  nextExtra(pid) { return this.state.nextExtras[pid] || 0; },
+  setNext(pid, q) { this.state.nextExtras[pid] = Math.max(0, q); this.render(); },
+  stepNext(pid, d) { this.setNext(pid, this.nextExtra(pid) + d); },
 
   deliveryDate(i) {
     const d = new Date();
@@ -105,28 +102,22 @@ const PackConfig = {
     return d.toLocaleDateString(loc, { day: "numeric", month: "short", year: "numeric" });
   },
 
-  basePerDelivery() {
-    return this.pack.items.reduce((s, it) => s + this.product(it.id).price * it.qty, 0);
+  baseValue()     { return this.baseItems().reduce((s, it) => s + this.product(it.id).price * it.qty, 0); },
+  addedValue()    { return this.addedItems().reduce((s, a) => s + this.product(a.id).price * a.qty, 0); },
+  standardValue() { return this.baseValue() + this.addedValue(); },
+  nextExtrasValue() {
+    return Object.keys(this.state.nextExtras)
+      .reduce((s, pid) => s + this.product(pid).price * this.nextExtra(pid), 0);
   },
-  extrasInDelivery(i) {
-    return this.allItems().reduce((s, it) => s + this.product(it.id).price * this.extraQty(i, it.id), 0);
-  },
-  deliveryTotal(i) { return this.basePerDelivery() + this.extrasInDelivery(i); },
-  baseTotal() { return this.basePerDelivery() * this.deliveries(); },
-  extrasTotal() {
-    let t = 0;
-    for (let i = 0; i < this.deliveries(); i++) t += this.extrasInDelivery(i);
-    return t;
-  },
-  grandTotal() { return this.baseTotal() + this.extrasTotal(); },
+  grandTotal() { return this.standardValue() * this.deliveries() + this.nextExtrasValue(); },
 
-  /* ---- product search (add any product) ---- */
+  /* ---- product search ---- */
   renderSearchResults(query) {
     const box = document.getElementById("pack-search-results");
     if (!box) return;
     const q = query.trim().toLowerCase();
     if (!q) { box.innerHTML = ""; return; }
-    const existing = new Set(this.allItems().map(it => it.id));
+    const existing = new Set(this.standardItems().map(it => it.id));
     const matches = Catalog.data.products.filter(p =>
       !existing.has(p.id) &&
       (I18N.pick(p.name) + " " + I18N.pick(p.short)).toLowerCase().includes(q)
@@ -140,32 +131,23 @@ const PackConfig = {
       || `<li class="muted" style="cursor:default">${I18N.t("catalog.empty")}</li>`;
   },
 
-  /* ---- rendering ---- */
+  /* ---- render ---- */
   render() {
     const p = this.pack;
     const money = v => Catalog.formatPrice(v);
     const opt = (val, cur, label) => `<option value="${val}" ${val == cur ? "selected" : ""}>${label}</option>`;
-
-    const addedChips = this.state.added.length ? `
-      <div class="pack-meta" style="margin-top:12px">
-        ${this.state.added.map(id => `
-          <span class="pack-chip">${I18N.pick(this.product(id).name)}
-            <button type="button" class="di-remove" data-remove-added data-pid="${id}" title="${I18N.t("packs.remove")}">×</button>
-          </span>`).join("")}
-      </div>` : "";
+    const N = this.deliveries();
 
     const controls = `
       <div class="config-controls">
-        <label class="pack-field">
-          <span>${I18N.t("packs.frequencyLabel")}</span>
+        <label class="pack-field"><span>${I18N.t("packs.frequencyLabel")}</span>
           <select id="cfg-freq">
             ${opt("weekly", this.state.freq, I18N.t("packs.freq_weekly"))}
             ${opt("biweekly", this.state.freq, I18N.t("packs.freq_biweekly"))}
             ${opt("monthly", this.state.freq, I18N.t("packs.freq_monthly"))}
           </select>
         </label>
-        <label class="pack-field">
-          <span>${I18N.t("packs.durationLabel")}</span>
+        <label class="pack-field"><span>${I18N.t("packs.durationLabel")}</span>
           <select id="cfg-dur">
             ${opt(1, this.state.months, I18N.t("packs.dur1"))}
             ${opt(3, this.state.months, I18N.t("packs.dur3"))}
@@ -174,91 +156,99 @@ const PackConfig = {
           </select>
         </label>
       </div>
-
       <div class="pay-options">
         <label class="pay-option ${this.state.payment === "upfront" ? "selected" : ""}">
           <input type="radio" name="payment" value="upfront" ${this.state.payment === "upfront" ? "checked" : ""}>
-          <span>
-            <span class="po-title">${I18N.t("packs.payUpfront")}</span><br>
-            <span class="po-sub">${I18N.t("packs.payUpfrontSub")}</span>
-          </span>
+          <span><span class="po-title">${I18N.t("packs.payUpfront")}</span><br>
+          <span class="po-sub">${I18N.t("packs.payUpfrontSub")}</span></span>
         </label>
         <label class="pay-option ${this.state.payment === "split" ? "selected" : ""}">
           <input type="radio" name="payment" value="split" ${this.state.payment === "split" ? "checked" : ""}>
-          <span>
-            <span class="po-title">${I18N.t("packs.paySplit")}</span><br>
-            <span class="po-sub">${I18N.t("packs.paySplitSub")}</span>
-          </span>
+          <span><span class="po-title">${I18N.t("packs.paySplit")}</span><br>
+          <span class="po-sub">${I18N.t("packs.paySplitSub")}</span></span>
         </label>
-      </div>
-
-      <div class="pack-search">
-        <label class="pack-field" style="display:block;margin-bottom:8px"><span>${I18N.t("packs.addProduct")}</span></label>
-        <input type="search" id="pack-search" autocomplete="off" placeholder="${I18N.t("packs.searchPlaceholder")}">
-        <ul class="pack-search-results" id="pack-search-results"></ul>
-        ${addedChips}
       </div>`;
 
-    // Delivery schedule
-    let deliveriesHtml = "";
-    for (let i = 0; i < this.deliveries(); i++) {
-      const rows = this.allItems().map(item => {
-        const prod = this.product(item.id);
-        const extra = this.extraQty(i, item.id);
-        const lineTotal = prod.price * (item.base + extra);
-        const baseTag = item.base > 0 ? `<span class="di-base-tag">${item.base} ${I18N.t("packs.base")}</span>` : "";
-        const addedTag = item.added ? `<span class="di-extra-tag">${I18N.t("packs.added")}</span>` :
-          (extra > 0 ? `<span class="di-extra-tag">+${extra} ${I18N.t("packs.extra")}</span>` : "");
-        const extraSub = (item.base > 0 && extra > 0)
-          ? `<div class="extra">+ ${money(prod.price * extra)} ${I18N.t("packs.extra")}</div>` : "";
-        return `
-          <div class="d-item">
-            <span class="di-name">
-              <img src="${Catalog.mainImage(prod)}" alt="" class="pl-thumb">
-              ${I18N.pick(prod.name)}${baseTag}${addedTag}
-            </span>
-            <span class="di-qty">
-              <button type="button" class="qty-btn" data-act="dec" data-i="${i}" data-pid="${item.id}" aria-label="−">−</button>
-              <input type="number" class="qty-input extra-input" min="0" value="${extra}" data-i="${i}" data-pid="${item.id}"
-                     title="${I18N.t("packs.extraUnits")}">
-              <button type="button" class="qty-btn" data-act="inc" data-i="${i}" data-pid="${item.id}" aria-label="+">+</button>
-            </span>
-            <span class="di-sub">${money(lineTotal)}${extraSub}</span>
-          </div>`;
-      }).join("");
+    // Search block (before the list)
+    const search = `
+      <div class="pack-search config-block">
+        <label class="pack-field" style="display:block;margin-bottom:10px"><span>${I18N.t("packs.addProduct")}</span></label>
+        <input type="search" id="pack-search" autocomplete="off" placeholder="${I18N.t("packs.searchPlaceholder")}">
+        <ul class="pack-search-results" id="pack-search-results"></ul>
+      </div>`;
 
-      deliveriesHtml += `
-        <div class="delivery">
-          <div class="delivery-head">
-            <h3>${I18N.t("packs.delivery")} ${i + 1} <span class="muted">/ ${this.deliveries()}</span></h3>
-            <span class="d-date">${this.deliveryDate(i)}</span>
-          </div>
-          <div class="delivery-body">${rows}</div>
+    // "Included in every delivery" — the standard delivery contents
+    const stdRows = this.standardItems().map(it => {
+      const prod = this.product(it.id);
+      const qtyCell = it.added
+        ? `<span class="di-qty">
+             <button type="button" class="qty-btn" data-addq="dec" data-pid="${it.id}" aria-label="−">−</button>
+             <input type="number" class="qty-input added-input" min="1" value="${it.qty}" data-pid="${it.id}">
+             <button type="button" class="qty-btn" data-addq="inc" data-pid="${it.id}" aria-label="+">+</button>
+           </span>`
+        : `<span class="si-qty">× ${it.qty}</span>`;
+      const tag = it.added
+        ? `<span class="di-extra-tag">${I18N.t("packs.added")}</span>
+           <button type="button" class="di-remove" data-remove-added data-pid="${it.id}" title="${I18N.t("packs.remove")}">×</button>`
+        : `<span class="di-base-tag">${I18N.t("packs.base")}</span>`;
+      return `
+        <div class="std-item">
+          <img class="si-thumb" src="${Catalog.mainImage(prod)}" alt="">
+          <span class="si-name">${I18N.pick(prod.name)} ${tag}</span>
+          ${qtyCell}
+          <span class="si-sub">${money(prod.price * it.qty)}</span>
         </div>`;
-    }
+    }).join("");
+
+    // "Adapt your next delivery" — one-off extras for delivery 1 only
+    const adaptRows = this.standardItems().map(it => {
+      const prod = this.product(it.id);
+      const extra = this.nextExtra(it.id);
+      const lineTotal = prod.price * (it.qty + extra);
+      const extraTag = extra > 0 ? `<span class="di-extra-tag">+${extra} ${I18N.t("packs.extra")}</span>` : "";
+      const extraSub = extra > 0 ? `<div class="extra">+ ${money(prod.price * extra)} ${I18N.t("packs.extra")}</div>` : "";
+      return `
+        <div class="d-item">
+          <span class="di-name">
+            <img src="${Catalog.mainImage(prod)}" alt="" class="pl-thumb">
+            ${I18N.pick(prod.name)} <span class="di-base-tag">${it.qty}×</span>${extraTag}
+          </span>
+          <span class="di-qty">
+            <button type="button" class="qty-btn" data-nextq="dec" data-pid="${it.id}" aria-label="−">−</button>
+            <input type="number" class="qty-input next-input" min="0" value="${extra}" data-pid="${it.id}">
+            <button type="button" class="qty-btn" data-nextq="inc" data-pid="${it.id}" aria-label="+">+</button>
+          </span>
+          <span class="di-sub">${money(lineTotal)}${extraSub}</span>
+        </div>`;
+    }).join("");
 
     // Payment schedule
     let payHtml = "";
     if (this.state.payment === "upfront") {
       payHtml = `<div class="ps-row"><span>${I18N.t("packs.atOrder")}</span><strong>${money(this.grandTotal())}</strong></div>`;
     } else {
-      for (let i = 0; i < this.deliveries(); i++) {
-        payHtml += `<div class="ps-row"><span>${this.deliveryDate(i)}</span><strong>${money(this.deliveryTotal(i))}</strong></div>`;
+      for (let i = 0; i < N; i++) {
+        const amt = this.standardValue() + (i === 0 ? this.nextExtrasValue() : 0);
+        payHtml += `<div class="ps-row"><span>${this.deliveryDate(i)}</span><strong>${money(amt)}</strong></div>`;
       }
     }
+
+    const addedRow = this.addedItems().length
+      ? `<div class="sum-row"><span>${I18N.t("packs.addedLabel")} × ${N}</span><span>${money(this.addedValue() * N)}</span></div>` : "";
+    const nextRow = this.nextExtrasValue() > 0
+      ? `<div class="sum-row extra"><span>${I18N.t("packs.nextExtrasLabel")}</span><span>${money(this.nextExtrasValue())}</span></div>` : "";
 
     const summary = `
       <div class="config-summary">
         <h3>${I18N.t("packs.summaryTitle")}</h3>
-        <div class="sum-row"><span>${I18N.t("packs.basePack")} × ${this.deliveries()}</span><span>${money(this.baseTotal())}</span></div>
-        <div class="sum-row extra"><span>${I18N.t("packs.extrasLabel")}</span><span>${money(this.extrasTotal())}</span></div>
+        <div class="sum-row"><span>${I18N.t("packs.basePack")} × ${N}</span><span>${money(this.baseValue() * N)}</span></div>
+        ${addedRow}
+        ${nextRow}
         <div class="sum-row total"><span>${I18N.t("packs.estTotal")}</span><strong>${money(this.grandTotal())}</strong></div>
-
         <div class="pay-schedule">
           <div class="sum-row" style="padding-bottom:2px"><strong>${I18N.t("packs.paymentSchedule")}</strong></div>
           ${payHtml}
         </div>
-
         <div style="margin-top:18px;display:flex;flex-direction:column;gap:10px">
           <button class="btn" id="cfg-proceed" style="width:100%">${I18N.t("packs.proceedBtn")}</button>
           <button class="btn btn-outline" id="cfg-email" style="width:100%">${I18N.t("packs.requestBtn")}</button>
@@ -267,46 +257,53 @@ const PackConfig = {
       </div>`;
 
     document.getElementById("config").innerHTML = `
-      <p style="margin-bottom:20px"><a href="packs.html" class="link-more">← ${I18N.t("packs.backToPacks")}</a></p>
+      <p style="margin-bottom:22px"><a href="packs.html" class="link-more">← ${I18N.t("packs.backToPacks")}</a></p>
       <h1>${I18N.pick(p.name)}</h1>
-      <p class="muted" style="max-width:70ch;margin:10px 0 30px">${I18N.pick(p.tagline)}</p>
-      <div class="content-block" style="border-bottom:none;padding-bottom:0;margin-bottom:34px">
+      <p class="muted" style="max-width:70ch;margin:12px 0 26px">${I18N.pick(p.tagline)}</p>
+      <div style="margin-bottom:38px">
         <span class="pack-cat">${I18N.t("packs.cat_" + p.category)}</span>
-        <div style="height:14px"></div>
+        <div style="height:16px"></div>
         ${controls}
-        <p class="muted" style="font-size:0.85rem;margin-top:14px">${I18N.t("packs.configHelp")}</p>
+        <p class="config-note" style="margin-top:14px">${I18N.t("packs.configHelp")}</p>
       </div>
       <div class="config-grid">
         <div>
-          <h2 class="rule-title">${I18N.t("packs.scheduleTitle")}</h2>
-          ${deliveriesHtml}
+          ${search}
+          <div class="config-block">
+            <h2 class="rule-title">${I18N.t("packs.includedTitle")}</h2>
+            <div class="std-list">${stdRows}</div>
+          </div>
+          <div class="config-block">
+            <div class="next-head">
+              <h2>${I18N.t("packs.nextTitle")}</h2>
+              <span class="d-date">${I18N.t("packs.delivery")} 1 · ${this.deliveryDate(0)}</span>
+            </div>
+            <p class="config-note">${I18N.t("packs.nextNote")}</p>
+            ${adaptRows}
+          </div>
         </div>
         ${summary}
       </div>`;
   },
 
-  proceed() {
-    alert(I18N.t("packs.checkoutSoon"));
-  },
+  proceed() { alert(I18N.t("packs.checkoutSoon")); },
 
   emailRequest() {
     const p = this.pack;
-    const lines = [];
-    for (let i = 0; i < this.deliveries(); i++) {
-      const extras = this.allItems().filter(it => this.extraQty(i, it.id) > 0)
-        .map(it => `+${this.extraQty(i, it.id)} ${I18N.pick(this.product(it.id).name)}`);
-      const extraTxt = extras.length ? ` (${I18N.t("packs.extra")}: ${extras.join(", ")})` : "";
-      lines.push(`${I18N.t("packs.delivery")} ${i + 1} — ${this.deliveryDate(i)}: ${Catalog.formatPrice(this.deliveryTotal(i))}${extraTxt}`);
-    }
+    const std = this.standardItems()
+      .map(it => `${it.qty} × ${I18N.pick(this.product(it.id).name)}${it.added ? " (" + I18N.t("packs.added") + ")" : ""}`);
+    const next = this.standardItems()
+      .filter(it => this.nextExtra(it.id) > 0)
+      .map(it => `+${this.nextExtra(it.id)} ${I18N.pick(this.product(it.id).name)}`);
     const body = [
-      I18N.t("packs.mailIntro"),
-      "",
+      I18N.t("packs.mailIntro"), "",
       `${I18N.pick(p.name)}`,
       `${I18N.t("packs.frequencyLabel")}: ${I18N.t("packs.freq_" + this.state.freq)}`,
       `${I18N.t("packs.durationLabel")}: ${this.state.months} ${I18N.t("packs.monthsShort")}`,
       `${I18N.t("packs.paymentSchedule")}: ${this.state.payment === "upfront" ? I18N.t("packs.payUpfront") : I18N.t("packs.paySplit")}`,
       "",
-      ...lines,
+      `${I18N.t("packs.includedTitle")}:`, ...std.map(l => "- " + l),
+      ...(next.length ? ["", `${I18N.t("packs.nextTitle")}:`, ...next.map(l => "- " + l)] : []),
       "",
       `${I18N.t("packs.estTotal")} ${Catalog.formatPrice(this.grandTotal())}`
     ].join("\n");

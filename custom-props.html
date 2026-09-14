@@ -8,7 +8,7 @@
   <meta property="og:image" content="assets/logo_estandar_svg.svg">
   <link rel="icon" href="assets/logo_estandar_svg.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -16,91 +16,68 @@
   <header class="site-header" id="site-header"></header>
 
   <main class="container">
-    <h1 class="rule-title" data-i18n="custom.title"></h1>
-    <p class="mission-lead" data-i18n="custom.intro"></p>
+    <h1 data-i18n="custom.title"></h1>
+    <p class="mission-lead" data-i18n="custom.intro" style="margin-top:14px"></p>
 
-    <!-- CAPABILITY SECTIONS — each has room for one or more images.
-         Replace the placeholder graphics with real work photos at the
-         data-final paths below. -->
-
-    <!-- 3D printing -->
-    <section class="feature-section">
-      <div class="fs-media">
-        <div class="fs-gallery">
-          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/3d-printing-1.jpg"><span class="media-tag">assets/img/custom/3d-printing-1.jpg</span></div>
-          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/3d-printing-2.jpg"><span class="media-tag">assets/img/custom/3d-printing-2.jpg</span></div>
+    <!-- REQUEST A QUOTE — top of page, home-style band -->
+    <section class="cta-band bleed" style="margin-bottom:clamp(56px,8vw,110px)">
+      <div class="cta-inner">
+        <div>
+          <h2 data-i18n="home.ctaTitle"></h2>
+          <p data-i18n="home.ctaText"></p>
         </div>
-      </div>
-      <div class="fs-body">
-        <span class="fs-eyebrow">01</span>
-        <h2 data-i18n="custom.cap3dTitle"></h2>
-        <p data-i18n="custom.cap3dText"></p>
+        <a href="#quote" class="btn" data-i18n="custom.quoteCtaBtn"></a>
       </div>
     </section>
 
-    <!-- Moulding & casting -->
-    <section class="feature-section reverse">
-      <div class="fs-media">
-        <div class="fs-gallery">
-          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/moulding-1.jpg"><span class="media-tag">assets/img/custom/moulding-1.jpg</span></div>
-          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/moulding-2.jpg"><span class="media-tag">assets/img/custom/moulding-2.jpg</span></div>
-        </div>
+    <!-- INSTAGRAM-STYLE WORK GALLERY.
+         Replace the placeholder squares with real photos at assets/img/custom/work-N.jpg -->
+    <div class="section-head">
+      <div>
+        <span class="eyebrow" data-i18n="custom.workEyebrow"></span>
+        <h2 data-i18n="custom.workTitle"></h2>
       </div>
-      <div class="fs-body">
-        <span class="fs-eyebrow">02</span>
-        <h2 data-i18n="custom.capMouldTitle"></h2>
-        <p data-i18n="custom.capMouldText"></p>
-      </div>
+    </div>
+    <section class="work-gallery" style="margin-bottom:clamp(56px,8vw,110px)">
+      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-1.jpg"><span class="media-tag">work-1.jpg</span></div>
+      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-2.jpg"><span class="media-tag">work-2.jpg</span></div>
+      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-3.jpg"><span class="media-tag">work-3.jpg</span></div>
+      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-4.jpg"><span class="media-tag">work-4.jpg</span></div>
+      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-5.jpg"><span class="media-tag">work-5.jpg</span></div>
+      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-6.jpg"><span class="media-tag">work-6.jpg</span></div>
     </section>
 
-    <!-- Design & prototyping -->
-    <section class="feature-section">
-      <div class="fs-media">
-        <div class="fs-gallery">
-          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/design-1.jpg"><span class="media-tag">assets/img/custom/design-1.jpg</span></div>
-          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/design-2.jpg"><span class="media-tag">assets/img/custom/design-2.jpg</span></div>
-        </div>
+    <!-- CAPABILITIES — clean numbered list -->
+    <div class="section-head">
+      <div>
+        <span class="eyebrow" data-i18n="custom.capEyebrow"></span>
+        <h2 data-i18n="custom.moreTitle"></h2>
       </div>
-      <div class="fs-body">
-        <span class="fs-eyebrow">03</span>
-        <h2 data-i18n="custom.capDesignTitle"></h2>
-        <p data-i18n="custom.capDesignText"></p>
+    </div>
+    <section class="capabilities" style="margin-bottom:clamp(56px,8vw,110px)">
+      <div class="capability">
+        <span class="cap-no">01</span>
+        <div><h3 data-i18n="custom.cap3dTitle"></h3><p data-i18n="custom.cap3dText"></p></div>
       </div>
-    </section>
-
-    <!-- Finishing & fabrication -->
-    <section class="feature-section reverse">
-      <div class="fs-media">
-        <div class="fs-gallery">
-          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/finishing-1.jpg"><span class="media-tag">assets/img/custom/finishing-1.jpg</span></div>
-          <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/finishing-2.jpg"><span class="media-tag">assets/img/custom/finishing-2.jpg</span></div>
-        </div>
+      <div class="capability">
+        <span class="cap-no">02</span>
+        <div><h3 data-i18n="custom.capMouldTitle"></h3><p data-i18n="custom.capMouldText"></p></div>
       </div>
-      <div class="fs-body">
-        <span class="fs-eyebrow">04</span>
-        <h2 data-i18n="custom.capFinishTitle"></h2>
-        <p data-i18n="custom.capFinishText"></p>
+      <div class="capability">
+        <span class="cap-no">03</span>
+        <div><h3 data-i18n="custom.capDesignTitle"></h3><p data-i18n="custom.capDesignText"></p></div>
       </div>
-    </section>
-
-    <!-- More capabilities already on the site -->
-    <h2 class="rule-title" data-i18n="custom.moreTitle"></h2>
-    <section class="techniques" style="margin-bottom:40px">
-      <div class="technique" data-i18n="custom.tech1"></div>
-      <div class="technique" data-i18n="custom.tech2"></div>
-      <div class="technique" data-i18n="custom.tech3"></div>
-      <div class="technique" data-i18n="custom.tech4"></div>
-      <div class="technique" data-i18n="custom.tech5"></div>
-      <div class="technique" data-i18n="custom.tech6"></div>
-      <div class="technique" data-i18n="custom.tech7"></div>
-      <div class="technique" data-i18n="custom.tech8"></div>
+      <div class="capability">
+        <span class="cap-no">04</span>
+        <div><h3 data-i18n="custom.capFinishTitle"></h3><p data-i18n="custom.capFinishText"></p></div>
+      </div>
     </section>
 
     <!-- QUOTE FORM (unchanged functionality) -->
-    <div class="content-block page-narrow" id="quote">
-      <h2 data-i18n="custom.quoteTitle"></h2>
-      <p class="muted" data-i18n="custom.quoteIntro"></p>
-      <form class="std-form" id="quote-form" method="POST" style="margin-top:16px">
+    <div class="page-narrow" id="quote">
+      <h2 data-i18n="custom.quoteTitle" style="margin-bottom:10px"></h2>
+      <p class="muted" data-i18n="custom.quoteIntro" style="margin-bottom:22px"></p>
+      <form class="std-form" id="quote-form" method="POST">
         <label><span data-i18n="form.name"></span><input type="text" name="name" required></label>
         <label><span data-i18n="form.email"></span><input type="email" name="email" required></label>
         <label><span data-i18n="form.phone"></span><input type="tel" name="phone"></label>

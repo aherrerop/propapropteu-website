@@ -1,7 +1,7 @@
 {
   "_note": "EXAMPLE / DRAFT pack contents for building the interface. These pack compositions, durations and frequencies are placeholders assembled from real catalogue products (data/products.json) and are NOT final. Review and finalise contents, quantities and any pricing/payment rules before going live. 'items' quantities are the base quantity included per delivery; the customer can add extra units per delivery in the configurator.",
 
-  "categoryKeys": ["tools", "consumables", "duration", "production"],
+  "categoryKeys": ["tools", "consumables", "production"],
 
   "packs": [
     {
@@ -40,47 +40,6 @@
         { "id": "sang-escenica", "qty": 2 },
         { "id": "kit-envelliment", "qty": 1 },
         { "id": "eva-foam-10mm", "qty": 3 }
-      ]
-    },
-    {
-      "id": "quarter-3m",
-      "category": "duration",
-      "example": true,
-      "defaultFrequency": "biweekly",
-      "defaultDurationMonths": 3,
-      "image": "assets/img/packs/quarter-3m.jpg",
-      "name": { "ca": "Pack de 3 mesos", "es": "Pack de 3 meses", "en": "Three-month pack" },
-      "tagline": {
-        "ca": "Cobreix una producció curta de principi a fi.",
-        "es": "Cubre una producción corta de principio a fin.",
-        "en": "Covers a short production from start to finish."
-      },
-      "items": [
-        { "id": "penjaquadres-pro", "qty": 2 },
-        { "id": "eva-foam-10mm", "qty": 2 },
-        { "id": "sang-escenica", "qty": 1 },
-        { "id": "pistola-cola-pro", "qty": 1 }
-      ]
-    },
-    {
-      "id": "nine-month",
-      "category": "duration",
-      "example": true,
-      "defaultFrequency": "monthly",
-      "defaultDurationMonths": 9,
-      "image": "assets/img/packs/nine-month.jpg",
-      "name": { "ca": "Pack de 9 mesos", "es": "Pack de 9 meses", "en": "Nine-month pack" },
-      "tagline": {
-        "ca": "Per a rodatges llargs i sèries: subministrament continu.",
-        "es": "Para rodajes largos y series: suministro continuo.",
-        "en": "For long shoots and series: a continuous supply."
-      },
-      "items": [
-        { "id": "penjaquadres-pro", "qty": 3 },
-        { "id": "eva-foam-10mm", "qty": 3 },
-        { "id": "kit-envelliment", "qty": 1 },
-        { "id": "sang-escenica", "qty": 2 },
-        { "id": "pistola-cola-pro", "qty": 1 }
       ]
     },
     {

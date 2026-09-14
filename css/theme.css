@@ -11,11 +11,11 @@
 
 :root {
   /* ---- BRAND COLORS (change these freely; the site follows) ---- */
-  --color-bg:          #f2efe8;  /* soft cream page background */
+  --color-bg:          #eceae3;  /* refined warm stone (not "paper") */
   --color-surface:     #ffffff;  /* cards, panels */
-  --color-ink:         #1b1b19;  /* main text, near-black */
-  --color-muted:       #6d6c67;  /* secondary text */
-  --color-line:        #e0ddd5;  /* hairline borders, rules */
+  --color-ink:         #14130f;  /* main text, deep near-black — strong contrast */
+  --color-muted:       #4e4c45;  /* secondary text — legible, not washed out */
+  --color-line:        #b9b5a8;  /* borders/rules — clearly visible hairlines */
   --color-accent:      #ff5200;  /* ORANGE */
   --color-accent-ink:  #ffffff;  /* text on top of accent */
   --color-accent-dark: #d94500;  /* hover state of orange */

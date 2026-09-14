@@ -27,6 +27,19 @@ const Layout = {
     return location.pathname.split("/").pop() || "index.html";
   },
 
+  toggleNav() {
+    const h = document.getElementById("site-header");
+    const open = h.classList.toggle("nav-open");
+    const btn = h.querySelector(".nav-toggle");
+    if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+  },
+  closeNav() {
+    const h = document.getElementById("site-header");
+    h.classList.remove("nav-open");
+    const btn = h.querySelector(".nav-toggle");
+    if (btn) btn.setAttribute("aria-expanded", "false");
+  },
+
   renderHeader() {
     const cur = this.currentPage();
     const isHome = c => c === "index.html" || c === "";
@@ -41,12 +54,15 @@ const Layout = {
     // Centered brand block (icon + wordmark) on top, nav + tools row below.
     document.getElementById("site-header").innerHTML = `
       <div class="container header-inner">
+        <button class="nav-toggle" aria-label="Menu" aria-expanded="false" onclick="Layout.toggleNav()">
+          <span></span><span></span><span></span>
+        </button>
         <a href="./" class="logo-link" aria-label="${SITE_CONFIG.businessName}">
           <img class="logo-mark" src="${SITE_CONFIG.logo}" alt="">
           <span class="logo-type">${SITE_CONFIG.businessName}</span>
         </a>
         <div class="header-bar">
-          <nav class="main-nav">${nav}</nav>
+          <nav class="main-nav" onclick="Layout.closeNav()">${nav}</nav>
           <div class="header-tools">
             <div class="lang-switch">${langs}</div>
             <button class="cart-btn snipcart-checkout" title="Cart">
