@@ -55,7 +55,7 @@
         img.src = Catalog.mainImage(p);
         img.alt = I18N.pick(p.name);
         document.getElementById("hero-title").textContent = I18N.pick(p.heroTagline) || I18N.pick(p.name);
-        document.getElementById("hero-desc").textContent = I18N.pick(p.short);
+        document.getElementById("hero-desc").textContent = I18N.pick(p.heroDesc) || I18N.pick(p.short);
         document.getElementById("hero-link").href = "product.html?id=" + p.id;
       };
       window.Hero = {

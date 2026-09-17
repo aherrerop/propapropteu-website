@@ -24,8 +24,13 @@
         "es": "Cuelga, ajusta y sigue rodando",
         "en": "Hang it, adjust it, keep rolling"
       },
+      "heroDesc": {
+        "ca": "Sistema de penjat ràpid per muntar i desmuntar quadres i elements plans en qüestió de segons, sense eines i minimitzant l'impacte sobre les parets del decorat.",
+        "es": "Sistema de colgado rápido para montar y desmontar cuadros y elementos planos en cuestión de segundos, sin herramientas y minimizando el impacto sobre las paredes del decorado.",
+        "en": "Quick-hang system to mount and unmount paintings and flat elements in seconds, tool-free, minimising the impact on the set walls."
+      },
       "labels": ["hardware", "props"],
-      "images": ["assets/img/products/atlas.svg"],
+      "images": ["assets/img/products/atlas.png"],
       "name": {
         "ca": "Penja-quadres ràpid PQ-8",
         "es": "Cuelga-cuadros rápido PQ-8",
@@ -61,8 +66,13 @@
         "es": "Escóndelo a plena vista",
         "en": "Hide it in plain sight"
       },
+      "heroDesc": {
+        "ca": "Llibre d'attrezzo amb compartiment ocult, envellit a mà. Perfecte per a escenes d'amagatalls, màgia de prop o per vestir un set amb un objecte que amaga alguna cosa.",
+        "es": "Libro de atrezo con compartimento oculto, envejecido a mano. Perfecto para escenas de escondites, magia de cerca o para vestir un set con un objeto que esconde algo.",
+        "en": "Prop book with a hidden compartment, hand-aged. Perfect for hiding-spot scenes, close-up magic or dressing a set with an object that conceals something."
+      },
       "labels": ["props"],
-      "images": ["assets/img/products/atlas.svg"],
+      "images": ["assets/img/products/atlas.png"],
       "name": {
         "ca": "Llibre buit \"caixa secreta\"",
         "es": "Libro hueco \"caja secreta\"",

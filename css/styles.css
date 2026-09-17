@@ -241,59 +241,66 @@ body.home { --color-bg: var(--color-hero); }
 
 main.p-hero-wrap { position: relative; flex: 1; padding: 0; display: flex; }
 
+/* carousel arrows — thin light chevrons, vertically centred, not clipped */
 .p-arrow {
-  position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
-  background: none; border: none; cursor: pointer;
-  font-family: var(--font-display); font-weight: 700; font-size: 1.9rem; line-height: 1;
-  color: #a3a19c; width: 54px; height: 54px;
+  position: absolute; top: 48%; transform: translateY(-50%); z-index: 5;
+  background: none; border: none; cursor: pointer; padding: 12px 8px; overflow: visible;
+  font-family: Georgia, 'Times New Roman', serif; font-weight: 400;
+  font-size: 2.7rem; line-height: 1; color: #b4b3ae;
 }
 .p-arrow:hover { color: var(--color-ink); }
-.p-prev { left: 4px; }
-.p-next { right: 4px; }
+.p-prev { left: 12px; }
+.p-next { right: 12px; }
 
 .p-hero {
   position: relative; width: 100%; max-width: var(--max-width); margin: 0 auto;
-  padding: 16px var(--gutter) 40px;
-  min-height: calc(100vh - var(--header-height));
+  height: calc(100vh - var(--header-height));
+  min-height: 560px;
 }
+
+/* ATLAS watermark — subtle, huge, centred in the field */
 .p-watermark {
-  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  position: absolute; left: 0; right: 0; top: 45%; transform: translateY(-50%) scaleX(0.82);
   z-index: 0; pointer-events: none; text-align: center;
   font-family: var(--font-display); font-weight: 400; text-transform: uppercase;
-  font-size: clamp(7rem, 31vw, 26rem); line-height: 0.8; letter-spacing: 0.01em;
-  color: #ffffff; opacity: 0.62;
+  font-size: clamp(9rem, 44vw, 42rem); line-height: 0.78; letter-spacing: 0.005em;
+  color: rgba(255, 255, 255, 0.46);
 }
-.p-hero-media {
-  position: absolute; inset: 0; z-index: 1;
-  display: flex; align-items: center; justify-content: center; padding: 3% 12% 28%;
-}
-.p-hero-media img { max-width: min(58%, 700px); max-height: 46%; width: auto; height: auto; object-fit: contain; }
 
-.p-hero-copy { position: absolute; left: var(--gutter); bottom: 12%; z-index: 2; max-width: 46%; }
-.p-hero-copy h1 { margin: 0 0 18px; max-width: 15ch; font-size: clamp(1.8rem, 3.8vw, 3rem); line-height: 1.02; }
+/* product — large, centred, upper part of the field */
+.p-hero-media {
+  position: absolute; left: 0; right: 0; top: 8%; height: 58%; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.p-hero-media img { max-width: 42%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+
+/* headline + description — bottom-left, clear of the cookie bar */
+.p-hero-copy { position: absolute; left: var(--gutter); bottom: 13%; z-index: 2; max-width: 48%; }
+.p-hero-copy h1 { margin: 0 0 16px; max-width: 15ch; font-size: clamp(1.9rem, 4vw, 3.1rem); line-height: 1.0; }
 .p-hero-desc { display: flex; gap: 18px; }
 .p-hero-desc::before { content: ""; width: 2px; background: var(--color-ink); flex: none; }
-.p-hero-desc p { margin: 0; color: var(--color-ink); font-size: 0.98rem; line-height: 1.5; max-width: 44ch; text-align: justify; }
+.p-hero-desc p { margin: 0; color: var(--color-ink); font-size: 1rem; line-height: 1.5; max-width: 42ch; text-align: justify; }
 
+/* Saber más circle — bottom-right, clear of the cookie bar */
 .p-saber {
-  position: absolute; right: calc(var(--gutter) + 6px); bottom: 14%; z-index: 3;
-  width: clamp(148px, 15vw, 205px); aspect-ratio: 1; border-radius: 999px;
-  background: #c9c8c4; color: var(--color-ink);
+  position: absolute; right: 14%; bottom: 15%; z-index: 3;
+  width: clamp(150px, 14.5vw, 200px); aspect-ratio: 1; border-radius: 999px;
+  background: #c6c5c1; color: var(--color-ink);
   display: flex; align-items: center; justify-content: center; text-align: center;
-  font-family: var(--font-display); font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.04em; font-size: 1.05rem;
+  font-family: var(--font-display); font-weight: 400; text-transform: uppercase;
+  letter-spacing: 0.04em; font-size: 1.1rem;
   transition: background 0.2s ease, color 0.2s ease;
 }
 .p-saber:hover { background: var(--color-ink); color: #fff; }
 
 @media (max-width: 900px) {
-  .p-hero { min-height: auto; padding-top: 8px; padding-bottom: 44px; }
-  .p-watermark { position: static; transform: none; font-size: clamp(4rem, 24vw, 9rem); opacity: 0.55; margin-bottom: -6%; }
-  .p-hero-media { position: static; padding: 6px 0 18px; }
+  .p-hero { height: auto; min-height: 0; padding: 8px var(--gutter) 44px; }
+  .p-watermark { position: static; transform: none; font-size: clamp(4rem, 24vw, 9rem); }
+  .p-hero-media { position: static; height: auto; padding: 6px 0 18px; }
   .p-hero-media img { max-width: 80%; max-height: none; }
   .p-hero-copy { position: static; max-width: 100%; margin-top: 8px; }
   .p-saber { position: static; margin: 24px auto 0; width: 150px; }
-  .p-arrow { top: 34%; }
+  .p-arrow { top: 36%; }
 }
 
 /* ---------------- EDITORIAL FEATURE SECTIONS ---------------- */

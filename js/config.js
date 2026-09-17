@@ -43,8 +43,8 @@ const SITE_CONFIG = {
 
   // --- LANGUAGES ---
   languages: ["ca", "es", "en"],
-  defaultLang: "ca",       // fallback when browser language is not ca/es/en
-  autoDetectLang: true,    // use the visitor's browser language on first visit
+  defaultLang: "es",       // Spanish first (per current design/reference)
+  autoDetectLang: false,   // always start in Spanish until the visitor switches
 
   // --- CATALOG ---
   showPricesWithIva: true  // prices in products.json are IVA included
