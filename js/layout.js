@@ -65,7 +65,7 @@ const Layout = {
       <div class="container header-inner">
         <a href="./" class="logo-link" aria-label="${SITE_CONFIG.businessName}">
           <img class="logo-mark" src="${SITE_CONFIG.logo}" alt="">
-          <span class="logo-type"><span class="lt-a">PROP <b class="lt-tri">&#9662;</b> PROP</span><span class="lt-b">TEU</span></span>
+          <span class="logo-type"><span class="lt-a">PROP<img class="lt-fig" src="assets/logo_a.svg" alt="a">PROP</span><span class="lt-b">TEU</span></span>
         </a>
         <nav class="main-nav" onclick="Layout.closeNav()">${nav}</nav>
         <div class="header-tools">

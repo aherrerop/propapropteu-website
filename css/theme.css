@@ -35,8 +35,8 @@
   --color-out:         #9a9791;
 
   /* ---- TYPOGRAPHY ---- */
-  /* Display: heavy condensed grotesque. Body/UI: clean neutral sans. */
-  --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+  /* Display: heavy condensed grotesque (blunt terminals). Body/UI: neutral sans. */
+  --font-display: 'Anton', 'Oswald', 'Arial Narrow', sans-serif;
   --font-body:    'Inter', 'Helvetica Neue', Arial, sans-serif;
   --tracking-label: 0.14em;   /* uppercase nav / labels */
 
