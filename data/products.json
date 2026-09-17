@@ -18,8 +18,14 @@
       "price": 14.9,
       "stock": 42,
       "featured": true,
+      "codename": "ATLAS",
+      "heroTagline": {
+        "ca": "Penja, ajusta i segueix rodant",
+        "es": "Cuelga, ajusta y sigue rodando",
+        "en": "Hang it, adjust it, keep rolling"
+      },
       "labels": ["hardware", "props"],
-      "images": ["assets/img/products/penjaquadres-pro.svg"],
+      "images": ["assets/img/products/atlas.svg"],
       "name": {
         "ca": "Penja-quadres ràpid PQ-8",
         "es": "Cuelga-cuadros rápido PQ-8",
@@ -49,8 +55,14 @@
       "price": 24.5,
       "stock": 8,
       "featured": true,
+      "codename": "OCULT",
+      "heroTagline": {
+        "ca": "Amaga-ho a plena vista",
+        "es": "Escóndelo a plena vista",
+        "en": "Hide it in plain sight"
+      },
       "labels": ["props"],
-      "images": ["assets/img/products/llibre-secret.svg"],
+      "images": ["assets/img/products/atlas.svg"],
       "name": {
         "ca": "Llibre buit \"caixa secreta\"",
         "es": "Libro hueco \"caja secreta\"",

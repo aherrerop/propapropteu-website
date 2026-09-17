@@ -3,20 +3,21 @@
    Everything about the site's look lives in this file.
    Change these variables and the whole site follows.
 
-   Aesthetic: editorial / "elevated" (Moooi-inspired) — elegant
-   serif display, quiet tracked sans for labels, lots of air,
-   sharp corners, imagery does the talking. Colours are the
-   brand palette, used sparingly as accents.
+   Aesthetic (per designer mockups): monochrome, industrial —
+   near-white page with light warm-grey feature blocks, heavy
+   condensed uppercase display type, clean neutral sans for body.
    ============================================================ */
 
 :root {
-  /* ---- BRAND COLORS (change these freely; the site follows) ---- */
-  --color-bg:          #eceae3;  /* refined warm stone (not "paper") */
-  --color-surface:     #ffffff;  /* cards, panels */
-  --color-ink:         #14130f;  /* main text, deep near-black — strong contrast */
-  --color-muted:       #4e4c45;  /* secondary text — legible, not washed out */
-  --color-line:        #b9b5a8;  /* borders/rules — clearly visible hairlines */
-  --color-accent:      #ff5200;  /* ORANGE */
+  /* ---- BRAND COLORS ---- */
+  --color-bg:          #ffffff;  /* page background */
+  --color-hero:        #dcdbd8;  /* light warm-grey hero / feature blocks */
+  --color-surface:     #dcdbd8;  /* cards, panels (match hero grey) */
+  --color-ink:         #111111;  /* main text, near-black */
+  --color-muted:       #6b6a67;  /* secondary text */
+  --color-line:        #c4c3bf;  /* borders, rules */
+  --color-link:        #8a82d6;  /* periwinkle links (privacy, etc.) */
+  --color-accent:      #ff5200;  /* ORANGE (brand, used sparingly) */
   --color-accent-ink:  #ffffff;  /* text on top of accent */
   --color-accent-dark: #d94500;  /* hover state of orange */
   --color-accent2:      #c431d0; /* LILA */
@@ -24,47 +25,34 @@
   --color-accent3:      #00b4b4; /* TURQUOISE */
 
   /* ---- BADGE COLORS (product types) ---- */
-  --color-badge-own:   var(--color-accent);   /* "own design" = orange */
-  --color-badge-std:   var(--color-accent3);  /* "standard product" = turquoise */
-  --color-badge-tool:  var(--color-ink);      /* "tool" = ink */
+  --color-badge-own:   var(--color-ink);
+  --color-badge-std:   var(--color-ink);
+  --color-badge-tool:  var(--color-ink);
 
   /* ---- STATUS ---- */
-  --color-ok:          var(--color-accent3);  /* "in stock" = turquoise */
+  --color-ok:          #2f7d4f;
   --color-warn:        #b07716;
-  --color-out:         #8a8378;
+  --color-out:         #9a9791;
 
   /* ---- TYPOGRAPHY ---- */
-  /* Display: elegant serif (headings + logotype). Body: quiet sans. */
-  --font-display: 'Cormorant Garamond', 'Times New Roman', Georgia, serif;
-  --font-body:    'Jost', 'Helvetica Neue', Arial, sans-serif;
-  --tracking-label: 0.22em;   /* uppercase micro-labels / nav */
+  /* Display: heavy condensed grotesque. Body/UI: clean neutral sans. */
+  --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+  --font-body:    'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --tracking-label: 0.14em;   /* uppercase nav / labels */
 
   /* ---- SHAPES ---- */
-  --radius:        0;       /* sharp corners everywhere */
+  --radius:        0;        /* sharp corners */
   --radius-img:    0;
+  --radius-pill:   10px;     /* "Cesta" button */
   --border-w:      1px;
   --shadow-card:   none;
-  --shadow-hover:  0 18px 40px rgba(27, 27, 25, 0.10);
+  --shadow-hover:  0 18px 40px rgba(17, 17, 17, 0.10);
 
   /* ---- LOGO ---- */
-  /* Small icon mark shown next to the serif logotype in the header. */
-  --logo-mark-height: 40px;
+  --logo-mark-height: 60px;
 
   /* ---- LAYOUT ---- */
-  --max-width:     1280px;
-  --gutter:        clamp(20px, 5vw, 64px);
-  --header-height: 118px;   /* sticky offset used by filters / summary */
+  --max-width:     1400px;
+  --gutter:        clamp(20px, 4vw, 56px);
+  --header-height: 108px;   /* sticky offset */
 }
-
-/* ---- OPTIONAL DARK THEME ----
-   To try a "dark theatre" look, uncomment and add class="theme-dark"
-   to the <html> tag of every page.
-html.theme-dark {
-  --color-bg:         #141311;
-  --color-surface:    #1d1c19;
-  --color-ink:        #f0ece3;
-  --color-muted:      #a49f95;
-  --color-line:       #34322c;
-  --color-accent-ink: #141311;
-}
-*/

@@ -1,0 +1,31 @@
+<!-- PROVISIONAL product graphic (ATLAS quick-hang bracket).
+     Replace with the real cutout photo at assets/img/products/atlas.png -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" role="img" aria-label="ATLAS quick-hang bracket">
+  <g>
+    <!-- lower plate -->
+    <rect x="88" y="150" width="504" height="150" fill="#161616"/>
+    <!-- top rail -->
+    <rect x="88" y="98" width="504" height="56" fill="#1d1d1d"/>
+    <!-- top bevel highlight -->
+    <rect x="88" y="98" width="504" height="6" fill="#333"/>
+    <!-- raised notch blocks -->
+    <path d="M150 98 v-40 h120 v40 z M188 58 l22 40 h-44 z" fill="#1d1d1d" fill-rule="evenodd"/>
+    <path d="M410 98 v-40 h120 v40 z M448 58 l22 40 h-44 z" fill="#1d1d1d" fill-rule="evenodd"/>
+    <!-- mounting holes (match the grey backdrop) -->
+    <circle cx="170" cy="225" r="12" fill="#dcdbd8"/>
+    <circle cx="510" cy="225" r="12" fill="#dcdbd8"/>
+    <circle cx="250" cy="278" r="9" fill="#dcdbd8"/>
+    <circle cx="430" cy="278" r="9" fill="#dcdbd8"/>
+    <!-- screws -->
+    <g fill="#3a3a3a" stroke="#0c0c0c" stroke-width="2">
+      <circle cx="250" cy="128" r="11"/>
+      <circle cx="430" cy="128" r="11"/>
+      <circle cx="340" cy="205" r="12"/>
+    </g>
+    <g stroke="#0c0c0c" stroke-width="2.5">
+      <path d="M243 128 h14 M250 121 v14"/>
+      <path d="M423 128 h14 M430 121 v14"/>
+      <path d="M333 205 h14 M340 198 v14"/>
+    </g>
+  </g>
+</svg>

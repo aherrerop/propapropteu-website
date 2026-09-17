@@ -1,0 +1,16 @@
+<!-- PROVISIONAL trace of the designer's black geometric mark.
+     Replace with the real vector from the brand's source file when available. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Prop a Prop Teu">
+  <g fill="#111111">
+    <!-- left stem + bottom bar (L) -->
+    <path d="M10 8 h20 v88 h78 v16 H10 z"/>
+    <!-- P bowl -->
+    <path d="M30 10 h9 a24 24 0 0 1 0 48 h-9 v-15 h9 a9 9 0 0 0 0-18 h-9 z"/>
+    <!-- top-right folded corner -->
+    <path d="M78 10 h32 v32 z"/>
+    <!-- centre square with circular aperture (hole) -->
+    <path fill-rule="evenodd" d="M50 58 h32 v32 h-32 z M66 65 a9 9 0 1 0 0.01 0 z"/>
+    <!-- bottom-right arch -->
+    <path d="M84 96 v-24 a15 15 0 0 1 30 0 v24 z"/>
+  </g>
+</svg>

@@ -10,7 +10,7 @@ const SITE_CONFIG = {
   // Brand logo files (both live in assets/, no spaces in filenames).
   //  logo     = the icon mark (also used as favicon + og:image + header icon)
   //  wordmark = the horizontal lettering shown next to the icon in the header
-  logo: "assets/logo_estandar_svg.svg",
+  logo: "assets/logo_mark.svg",
   wordmark: "assets/logo_lletras_v1_horitzontal.svg",
 
   // --- SNIPCART (cart & checkout) ---

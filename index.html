@@ -4,122 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prop a Prop Teu — Attrezzo, eines i materials</title>
-  <meta name="description" content="Fem la feina més fàcil als equips de rodatge: attrezzistes, direcció d'art, prop makers. Attrezzo de disseny propi, fabricació a mida i packs de producció.">
+  <meta name="description" content="Attrezzo, eines i materials de disseny propi per a cinema, TV, teatre i esdeveniments. Cuelga, ajusta y sigue rodando.">
   <meta property="og:title" content="Prop a Prop Teu">
-  <meta property="og:description" content="Fem possible qualsevol escena: attrezzo, fabricació a mida i packs de producció per a cinema, TV, teatre i esdeveniments.">
+  <meta property="og:description" content="Attrezzo, eines i materials per a rodatges i escena.">
   <meta property="og:image" content="assets/logo_estandar_svg.svg">
   <link rel="icon" href="assets/logo_estandar_svg.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body>
+<body class="home">
   <header class="site-header" id="site-header"></header>
 
-  <main class="container">
+  <main class="p-hero-wrap">
+    <button class="p-arrow p-prev" aria-label="Anterior" onclick="Hero.prev()">&#171;</button>
 
-    <!-- HERO — full-bleed image + minimal serif statement.
-         Replace with a real image at assets/img/home/hero.jpg -->
-    <section class="home-hero bleed">
-      <div class="hero-media">
-        <img src="assets/img/placeholder-landscape.svg" alt="" data-final="assets/img/home/hero.jpg">
+    <section class="p-hero">
+      <div class="p-watermark" id="hero-wm">ATLAS</div>
+      <div class="p-hero-media">
+        <img id="hero-img" src="assets/img/products/atlas.svg" alt="" loading="eager">
       </div>
-      <div class="hero-inner">
-        <span class="eyebrow" data-i18n="home.heroEyebrow"></span>
-        <h1 data-i18n="home.heroTitle"></h1>
-        <div class="hero-cta-row">
-          <a href="shop.html" class="link-more" data-i18n="home.heroCtaShop"></a>
-          <a href="custom-props.html" class="link-more" data-i18n="home.heroCtaCustom"></a>
-        </div>
+      <div class="p-hero-copy">
+        <h1 id="hero-title"></h1>
+        <div class="p-hero-desc"><p id="hero-desc"></p></div>
       </div>
+      <a class="p-saber" id="hero-link" href="#"><span data-i18n="home.saberMas"></span></a>
     </section>
 
-    <!-- SHOP OUR COLLECTION -->
-    <section class="section">
-      <div class="section-head">
-        <div>
-          <span class="eyebrow" data-i18n="nav.catalog"></span>
-          <h2 data-i18n="home.collectionTitle"></h2>
-        </div>
-        <a href="shop.html" class="link-more" data-i18n="home.collectionLink"></a>
-      </div>
-      <div class="product-grid collection-row" id="home-collection"></div>
-    </section>
-
-    <!-- SCENE — a set built with our tools. Replace assets/img/home/scene.jpg -->
-    <section class="scene bleed">
-      <div class="scene-media">
-        <img src="assets/img/placeholder-landscape.svg" alt="" data-final="assets/img/home/scene.jpg">
-      </div>
-      <div class="scene-inner">
-        <span class="eyebrow" data-i18n="nav.custom"></span>
-        <h2 data-i18n="home.sceneTitle"></h2>
-        <a href="custom-props.html" class="link-more" data-i18n="home.sceneLink"></a>
-      </div>
-    </section>
-
-    <!-- LET'S TALK -->
-    <section class="cta-band bleed">
-      <div class="cta-inner">
-        <div>
-          <h2 data-i18n="home.ctaTitle"></h2>
-          <p data-i18n="home.ctaText"></p>
-        </div>
-        <a href="contact.html" class="btn" data-i18n="home.ctaBtn"></a>
-      </div>
-    </section>
-
-    <!-- PRODUCTION PACKS -->
-    <section class="feature-section">
-      <div class="fs-media">
-        <img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/home/production-packs.jpg">
-        <span class="media-tag">assets/img/home/production-packs.jpg</span>
-      </div>
-      <div class="fs-body">
-        <span class="fs-eyebrow" data-i18n="nav.packs"></span>
-        <h2 data-i18n="home.packsTitle"></h2>
-        <p data-i18n="home.packsText"></p>
-        <a href="packs.html" class="link-more" data-i18n="home.packsLink"></a>
-      </div>
-    </section>
-
-    <!-- ABOUT -->
-    <section class="feature-section reverse">
-      <div class="fs-media">
-        <img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/home/about.jpg">
-        <span class="media-tag">assets/img/home/about.jpg</span>
-      </div>
-      <div class="fs-body">
-        <span class="fs-eyebrow" data-i18n="nav.about"></span>
-        <h2 data-i18n="home.aboutTitle"></h2>
-        <p data-i18n="home.aboutText"></p>
-        <a href="about.html" class="link-more" data-i18n="home.aboutLink"></a>
-      </div>
-    </section>
-
-    <!-- PURPOSE — who we work for (little text) -->
-    <section class="section">
-      <p class="mission-lead" data-i18n="home.missionLead"></p>
-      <div class="qualities">
-        <div class="quality">
-          <span class="quality-mark quality-mark-1">01</span>
-          <h3 data-i18n="home.m1title"></h3>
-          <p data-i18n="home.m1text"></p>
-        </div>
-        <div class="quality">
-          <span class="quality-mark quality-mark-2">02</span>
-          <h3 data-i18n="home.m2title"></h3>
-          <p data-i18n="home.m2text"></p>
-        </div>
-        <div class="quality">
-          <span class="quality-mark quality-mark-3">03</span>
-          <h3 data-i18n="home.m3title"></h3>
-          <p data-i18n="home.m3text"></p>
-        </div>
-      </div>
-    </section>
-
+    <button class="p-arrow p-next" aria-label="Següent" onclick="Hero.next()">&#187;</button>
   </main>
 
   <footer class="site-footer" id="site-footer"></footer>
@@ -131,19 +44,23 @@
     document.addEventListener("DOMContentLoaded", async () => {
       await Layout.init();
       const data = await Catalog.load();
-      const featured = data.products.filter(p => p.featured);
-      const list = (featured.length >= 4 ? featured : data.products).slice(0, 4);
+      const feat = data.products.filter(p => p.featured);
+      const slides = feat.length ? feat : data.products.slice(0, 3);
+      let i = 0;
+      const wm = p => p.codename || (I18N.pick(p.name).split(" ")[0] || "").toUpperCase();
       const render = () => {
-        document.getElementById("home-collection").innerHTML = list.map(p => `
-          <article class="product-card">
-            <a class="card-link" href="product.html?id=${p.id}">
-              <div class="card-img"><img src="${Catalog.mainImage(p)}" alt="${I18N.pick(p.name)}" loading="lazy"></div>
-              <div class="card-body">
-                <h3>${I18N.pick(p.name)}</h3>
-                <div class="card-price-row"><span class="price">${Catalog.formatPrice(p.price)} <span class="iva">${I18N.t("catalog.iva")}</span></span></div>
-              </div>
-            </a>
-          </article>`).join("");
+        const p = slides[i];
+        document.getElementById("hero-wm").textContent = wm(p);
+        const img = document.getElementById("hero-img");
+        img.src = Catalog.mainImage(p);
+        img.alt = I18N.pick(p.name);
+        document.getElementById("hero-title").textContent = I18N.pick(p.heroTagline) || I18N.pick(p.name);
+        document.getElementById("hero-desc").textContent = I18N.pick(p.short);
+        document.getElementById("hero-link").href = "product.html?id=" + p.id;
+      };
+      window.Hero = {
+        next() { i = (i + 1) % slides.length; render(); },
+        prev() { i = (i - 1 + slides.length) % slides.length; render(); }
       };
       render();
       document.addEventListener("langchange", render);

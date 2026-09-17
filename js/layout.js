@@ -6,14 +6,13 @@
 
 const Layout = {
 
+  // Top nav per the mockups: INICIO · TIENDA · ABOUT · CONTACTO.
+  // Custom Props, Production Packs and FAQ stay reachable from the footer.
   navItems: [
-    { href: "./",                key: "nav.home" },     // clean root URL, no /index.html
-    { href: "shop.html",         key: "nav.catalog" },
-    { href: "custom-props.html", key: "nav.custom" },
-    { href: "packs.html",        key: "nav.packs" },
-    { href: "about.html",        key: "nav.about" },
-    { href: "faq.html",          key: "nav.faq" },
-    { href: "contact.html",      key: "nav.contact" }
+    { href: "./",           key: "nav.home" },
+    { href: "shop.html",    key: "nav.catalog" },
+    { href: "about.html",   key: "nav.about" },
+    { href: "contact.html", key: "nav.contact" }
   ],
 
   socialIcons: {
@@ -39,6 +38,16 @@ const Layout = {
     const btn = h.querySelector(".nav-toggle");
     if (btn) btn.setAttribute("aria-expanded", "false");
   },
+  toggleLang(e) {
+    if (e) e.stopPropagation();
+    const l = document.querySelector(".lang");
+    if (!l) return;
+    const open = l.classList.toggle("open");
+    if (open) {
+      const close = () => { l.classList.remove("open"); document.removeEventListener("click", close); };
+      setTimeout(() => document.addEventListener("click", close), 0);
+    }
+  },
 
   renderHeader() {
     const cur = this.currentPage();
@@ -50,26 +59,27 @@ const Layout = {
     const langs = SITE_CONFIG.languages.map(l =>
       `<button data-lang="${l}" onclick="I18N.set('${l}')">${l.toUpperCase()}</button>`
     ).join("");
+    const globe = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9S9.5 5.5 12 3z"/></svg>';
 
-    // Centered brand block (icon + wordmark) on top, nav + tools row below.
     document.getElementById("site-header").innerHTML = `
       <div class="container header-inner">
-        <button class="nav-toggle" aria-label="Menu" aria-expanded="false" onclick="Layout.toggleNav()">
-          <span></span><span></span><span></span>
-        </button>
         <a href="./" class="logo-link" aria-label="${SITE_CONFIG.businessName}">
           <img class="logo-mark" src="${SITE_CONFIG.logo}" alt="">
-          <span class="logo-type">${SITE_CONFIG.businessName}</span>
+          <span class="logo-type"><span class="lt-a">PROP <b class="lt-tri">&#9662;</b> PROP</span><span class="lt-b">TEU</span></span>
         </a>
-        <div class="header-bar">
-          <nav class="main-nav" onclick="Layout.closeNav()">${nav}</nav>
-          <div class="header-tools">
-            <div class="lang-switch">${langs}</div>
-            <button class="cart-btn snipcart-checkout" title="Cart">
-              <span data-i18n="nav.cart"></span>
-              <span class="cart-count snipcart-items-count">0</span>
-            </button>
+        <nav class="main-nav" onclick="Layout.closeNav()">${nav}</nav>
+        <div class="header-tools">
+          <div class="lang">
+            <button class="lang-globe" aria-label="Language" onclick="Layout.toggleLang(event)">${globe}<span class="caret">&#9662;</span></button>
+            <div class="lang-menu">${langs}</div>
           </div>
+          <button class="cart-btn snipcart-checkout" title="Cart">
+            <span data-i18n="nav.cart"></span>
+            <span class="cart-count snipcart-items-count">0</span>
+          </button>
+          <button class="nav-toggle" aria-label="Menu" aria-expanded="false" onclick="Layout.toggleNav()">
+            <span></span><span></span><span></span>
+          </button>
         </div>
       </div>`;
   },
