@@ -190,7 +190,7 @@ const Catalog = {
 
   async load() {
     if (this.data) return this.data;
-    const res = await fetch("data/products.json");
+    const res = await fetch("data/products.json", { cache: "no-cache" });
     this.data = await res.json();
     return this.data;
   },

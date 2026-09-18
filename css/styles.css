@@ -252,44 +252,45 @@ main.p-hero-wrap { position: relative; flex: 1; padding: 0; display: flex; }
 .p-prev { left: 12px; }
 .p-next { right: 12px; }
 
+/* Full-bleed field, height-driven so nothing overflows on wide/short screens */
 .p-hero {
-  position: relative; width: 100%; max-width: var(--max-width); margin: 0 auto;
+  position: relative; width: 100%;
   height: calc(100vh - var(--header-height));
-  min-height: 580px;
+  min-height: 480px;
 }
 
-/* ATLAS watermark — big but fully visible, with side + top/bottom margins */
+/* ATLAS watermark — sized by min(width, height) so it never gets cut */
 .p-watermark {
-  position: absolute; left: var(--gutter); right: var(--gutter); top: 46%;
-  transform: translateY(-50%) scaleX(0.62);
+  position: absolute; left: var(--gutter); right: var(--gutter); top: 47%;
+  transform: translateY(-50%) scaleX(0.72);
   z-index: 0; pointer-events: none; text-align: center; white-space: nowrap;
   font-family: var(--font-display); font-weight: 400; text-transform: uppercase;
-  font-size: clamp(9rem, 52vw, 47rem); line-height: 0.8; letter-spacing: 0.005em;
+  font-size: clamp(6rem, min(40vw, 70vh), 46rem); line-height: 0.82; letter-spacing: 0.005em;
   color: rgba(255, 255, 255, 0.5);
 }
 
 /* product — large, centred, upper part of the field */
 .p-hero-media {
-  position: absolute; left: var(--gutter); right: var(--gutter); top: 8%; height: 52%; z-index: 1;
+  position: absolute; left: var(--gutter); right: var(--gutter); top: 10%; height: 50%; z-index: 1;
   display: flex; align-items: center; justify-content: center;
 }
-.p-hero-media img { max-width: 44%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+.p-hero-media img { max-width: 40%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
 
 /* headline + description — bottom-left, clear of the cookie bar */
-.p-hero-copy { position: absolute; left: var(--gutter); bottom: 12%; z-index: 2; max-width: 46%; }
-.p-hero-copy h1 { margin: 0 0 16px; max-width: 15ch; font-size: clamp(1.9rem, 4vw, 3.1rem); line-height: 1.0; }
-.p-hero-desc { display: flex; gap: 18px; }
+.p-hero-copy { position: absolute; left: var(--gutter); bottom: 15%; z-index: 2; max-width: 46%; }
+.p-hero-copy h1 { margin: 0 0 14px; max-width: 15ch; font-size: clamp(1.6rem, min(3.4vw, 5.4vh), 2.8rem); line-height: 1.02; }
+.p-hero-desc { display: flex; gap: 16px; }
 .p-hero-desc::before { content: ""; width: 2px; background: var(--color-ink); flex: none; }
-.p-hero-desc p { margin: 0; color: var(--color-ink); font-size: 1rem; line-height: 1.5; max-width: 42ch; text-align: justify; }
+.p-hero-desc p { margin: 0; color: var(--color-ink); font-size: clamp(0.85rem, 1.6vh, 1rem); line-height: 1.5; max-width: 40ch; text-align: justify; }
 
 /* Saber más circle — bottom-right, overlapping the lower part of the ATLAS letters */
 .p-saber {
-  position: absolute; right: calc(var(--gutter) + 4%); bottom: 18%; z-index: 3;
-  width: clamp(150px, 14.5vw, 200px); aspect-ratio: 1; border-radius: 999px;
+  position: absolute; right: 12%; bottom: 17%; z-index: 3;
+  width: clamp(120px, min(13vw, 21vh), 185px); aspect-ratio: 1; border-radius: 999px;
   background: #c6c5c1; color: var(--color-ink);
   display: flex; align-items: center; justify-content: center; text-align: center;
   font-family: var(--font-display); font-weight: 400; text-transform: uppercase;
-  letter-spacing: 0.04em; font-size: 1.1rem;
+  letter-spacing: 0.04em; font-size: clamp(0.85rem, 1.7vh, 1.05rem);
   transition: background 0.2s ease, color 0.2s ease;
 }
 .p-saber:hover { background: var(--color-ink); color: #fff; }
@@ -887,8 +888,8 @@ body.shop .site-header { background: var(--color-hero); }
 .sf-wm {
   position: absolute; inset: 0; z-index: 0; display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display); font-weight: 400; text-transform: uppercase; pointer-events: none;
-  font-size: clamp(6rem, 17vw, 15rem); line-height: 0.8; letter-spacing: 0.01em; color: rgba(255,255,255,0.5);
-  transform: scaleX(0.86);
+  font-size: clamp(6rem, min(22vw, 40vh), 17rem); line-height: 0.8; letter-spacing: 0.01em; color: rgba(255,255,255,0.55);
+  transform: scaleX(0.8);
 }
 .sf-img { position: relative; z-index: 1; max-width: 80%; max-height: 380px; width: auto; object-fit: contain; }
 .sf-dots { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }

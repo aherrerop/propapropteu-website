@@ -52,7 +52,7 @@
   --logo-mark-height: 60px;
 
   /* ---- LAYOUT ---- */
-  --max-width:     1360px;
-  --gutter:        clamp(24px, 6vw, 84px);
-  --header-height: 108px;   /* sticky offset */
+  --max-width:     1600px;
+  --gutter:        clamp(22px, 5vw, 100px);
+  --header-height: 104px;   /* sticky offset */
 }

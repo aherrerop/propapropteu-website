@@ -21,7 +21,7 @@ const I18N = {
   },
 
   async load(lang) {
-    const res = await fetch(`lang/${lang}.json`);
+    const res = await fetch(`lang/${lang}.json`, { cache: "no-cache" });
     this.dict = await res.json();
     this.lang = lang;
     document.documentElement.lang = lang;
