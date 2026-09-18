@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prop a Prop Teu â€” Contacte</title>
-  <link rel="icon" href="assets/logo_estandar_svg.svg" type="image/svg+xml">
+  <title>Prop a Prop Teu — Contacto</title>
+  <meta property="og:image" content="assets/logo_mark.svg">
+  <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/theme.css">
@@ -13,26 +14,57 @@
 <body>
   <header class="site-header" id="site-header"></header>
 
-  <main class="container page-narrow">
-    <h1 class="rule-title" data-i18n="contact.title"></h1>
+  <main class="container">
+    <h1 class="contact-title" data-i18n="contact.title"></h1>
 
-    <div class="content-block">
-      <p><strong data-i18n="contact.emailLabel"></strong>: <a href="#" id="contact-email"></a></p>
-      <p><strong data-i18n="contact.phoneLabel"></strong>: <span id="contact-phone"></span></p>
-      <p><strong data-i18n="contact.addressLabel"></strong>: <span id="contact-address"></span></p>
-    </div>
+    <div class="contact-grid">
+      <!-- Left: info -->
+      <div class="contact-info">
+        <a class="ci-email" id="contact-email" href="#"></a>
+        <div class="ci-cols">
+          <div>
+            <div class="ci-label" data-i18n="contact.findUs"></div>
+            <div class="ci-social" id="contact-social"></div>
+          </div>
+          <div>
+            <div class="ci-label" id="contact-address"></div>
+            <div class="ci-label" id="contact-phone" style="margin-bottom:0"></div>
+          </div>
+        </div>
+        <p class="contact-note" data-i18n="contact.note"></p>
+      </div>
 
-    <div class="content-block">
-      <h2 data-i18n="contact.formTitle"></h2>
-      <!-- NOTE: Formspree only processes file uploads on PAID plans. On the free
-           tier this "attachment" field is silently ignored (the rest of the form
-           still works). Verify current pricing at formspree.io/plans. -->
-      <form class="std-form" id="contact-form" method="POST" enctype="multipart/form-data" style="margin-top:14px">
-        <label><span data-i18n="form.name"></span><input type="text" name="name" required></label>
-        <label><span data-i18n="form.email"></span><input type="email" name="email" required></label>
-        <label><span data-i18n="form.message"></span><textarea name="message" required></textarea></label>
-        <label><span data-i18n="form.attachment"></span><input type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.zip"></label>
-        <button class="btn" type="submit" data-i18n="form.send"></button>
+      <!-- Right: form -->
+      <form class="contact-form" id="contact-form" method="POST">
+        <div class="cf-grid">
+          <div class="cf-field">
+            <label><span data-i18n="form.name"></span> *</label>
+            <input type="text" name="name" required data-i18n-placeholder="form.namePh">
+          </div>
+          <div class="cf-field">
+            <label><span data-i18n="form.phoneLabel"></span></label>
+            <input type="tel" name="phone" data-i18n-placeholder="form.phonePh">
+          </div>
+          <div class="cf-field">
+            <label><span data-i18n="form.company"></span></label>
+            <input type="text" name="company" data-i18n-placeholder="form.companyPh">
+          </div>
+          <div class="cf-field">
+            <label><span data-i18n="form.emailShort"></span> *</label>
+            <input type="email" name="email" required data-i18n-placeholder="form.emailPh">
+          </div>
+          <div class="cf-field">
+            <label><span data-i18n="form.message"></span> *</label>
+            <textarea name="message" required data-i18n-placeholder="form.messagePh"></textarea>
+          </div>
+          <label class="cf-check">
+            <input type="checkbox" required>
+            <span><span data-i18n="form.privacyPre"></span> <a href="legal.html#privacidad" data-i18n="form.privacyLink"></a> *</span>
+          </label>
+          <div class="cf-send">
+            <button type="submit"><span data-i18n="form.send"></span> <span aria-hidden="true">&#10230;</span></button>
+          </div>
+        </div>
       </form>
     </div>
   </main>
@@ -50,6 +82,11 @@
       em.href = "mailto:" + SITE_CONFIG.email;
       document.getElementById("contact-phone").textContent = SITE_CONFIG.phoneDisplay;
       document.getElementById("contact-address").textContent = SITE_CONFIG.address;
+      const s = SITE_CONFIG.social;
+      document.getElementById("contact-social").innerHTML = ["instagram", "youtube", "tiktok", "facebook"]
+        .filter(k => s[k])
+        .map(k => `<a href="${s[k]}" target="_blank" rel="noopener" aria-label="${k}">${Layout.socialIcons[k] || k}</a>`)
+        .join("");
       document.getElementById("contact-form").action = SITE_CONFIG.formEndpoint;
     });
   </script>

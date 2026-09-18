@@ -61,6 +61,11 @@
     "results": "products",
     "empty": "No products match your filters.",
     "addToCart": "Add",
+    "addToCartFull": "Add to cart",
+    "sortRelevance": "Relevance",
+    "sortBest": "Best sellers",
+    "sortAz": "Order A-Z",
+    "sortZa": "Order Z-A",
     "iva": "VAT incl."
   },
   "badge": {
@@ -222,7 +227,9 @@
     "emailLabel": "Email",
     "phoneLabel": "Phone / WhatsApp",
     "addressLabel": "Workshop",
-    "formTitle": "Write to us"
+    "formTitle": "Write to us",
+    "findUs": "Find us",
+    "note": "To serve you better, this phone is used only for incident management. All other enquiries are handled exclusively by e-mail. Thank you for your cooperation."
   },
   "form": {
     "name": "Name",
@@ -230,6 +237,16 @@
     "phone": "Phone (optional)",
     "message": "Message",
     "attachment": "Attach a file (optional)",
+    "company": "Company",
+    "emailShort": "Email",
+    "phoneLabel": "Phone",
+    "namePh": "Enter your name",
+    "phonePh": "Enter your phone",
+    "companyPh": "Enter your company name",
+    "emailPh": "Enter your email",
+    "messagePh": "Write your message here",
+    "privacyPre": "I have read and accept the",
+    "privacyLink": "privacy policy",
     "send": "Send"
   },
   "faq": {

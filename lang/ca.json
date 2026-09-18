@@ -61,6 +61,11 @@
     "results": "productes",
     "empty": "Cap producte no coincideix amb els filtres.",
     "addToCart": "Afegeix",
+    "addToCartFull": "Afegeix a la cistella",
+    "sortRelevance": "Rellevància",
+    "sortBest": "Més venuts",
+    "sortAz": "Ordre A-Z",
+    "sortZa": "Ordre Z-A",
     "iva": "IVA incl."
   },
   "badge": {
@@ -222,7 +227,9 @@
     "emailLabel": "Correu",
     "phoneLabel": "Telèfon / WhatsApp",
     "addressLabel": "Taller",
-    "formTitle": "Escriu-nos"
+    "formTitle": "Escriu-nos",
+    "findUs": "Trobeu-nos",
+    "note": "Per atendre't millor, aquest telèfon és d'ús exclusiu per a la gestió d'incidències. La resta de consultes es gestionen exclusivament per correu electrònic. Gràcies per la teva col·laboració."
   },
   "form": {
     "name": "Nom",
@@ -230,6 +237,16 @@
     "phone": "Telèfon (opcional)",
     "message": "Missatge",
     "attachment": "Adjunta un arxiu (opcional)",
+    "company": "Empresa",
+    "emailShort": "Email",
+    "phoneLabel": "Telèfon",
+    "namePh": "Escriu el teu nom",
+    "phonePh": "Escriu el teu telèfon",
+    "companyPh": "Escriu el nom de l'empresa",
+    "emailPh": "Escriu el teu correu",
+    "messagePh": "Escriu aquí el teu missatge",
+    "privacyPre": "He llegit i accepto la",
+    "privacyLink": "política de privacitat",
     "send": "Envia"
   },
   "faq": {

@@ -61,6 +61,11 @@
     "results": "productos",
     "empty": "Ningún producto coincide con los filtros.",
     "addToCart": "Añadir",
+    "addToCartFull": "Añadir a la cesta",
+    "sortRelevance": "Relevancia",
+    "sortBest": "Best sellers",
+    "sortAz": "Orden A-Z",
+    "sortZa": "Orden Z-A",
     "iva": "IVA incl."
   },
   "badge": {
@@ -222,7 +227,9 @@
     "emailLabel": "Correo",
     "phoneLabel": "Teléfono / WhatsApp",
     "addressLabel": "Taller",
-    "formTitle": "Escríbenos"
+    "formTitle": "Escríbenos",
+    "findUs": "Encuéntranos",
+    "note": "Para poder atenderte mejor, este teléfono es de uso exclusivo para la gestión de incidencias. El resto de consultas serán gestionadas exclusivamente a través de e-mail. Gracias por tu colaboración."
   },
   "form": {
     "name": "Nombre",
@@ -230,6 +237,16 @@
     "phone": "Teléfono (opcional)",
     "message": "Mensaje",
     "attachment": "Adjunta un archivo (opcional)",
+    "company": "Empresa",
+    "emailShort": "Email",
+    "phoneLabel": "Teléfono",
+    "namePh": "Escribe tu nombre",
+    "phonePh": "Escribe tu teléfono",
+    "companyPh": "Escribe el nombre de la empresa",
+    "emailPh": "Escribe tu email",
+    "messagePh": "Escribe aquí tu mensaje",
+    "privacyPre": "He leído y acepto la",
+    "privacyLink": "política de privacidad",
     "send": "Enviar"
   },
   "faq": {

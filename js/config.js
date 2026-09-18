@@ -25,7 +25,7 @@ const SITE_CONFIG = {
   email: "info@propapropteu.com",          // change to real address
   whatsapp: "34638003367",                 // international format, digits only ("" hides button)
   phoneDisplay: "+34 638 00 33 67",
-  address: "Barcelona, Catalunya",
+  address: "Barcelona, España",
 
   // --- CONTACT / QUOTE FORMS ---
   // Create a free form at https://formspree.io, then paste the endpoint
@@ -37,7 +37,7 @@ const SITE_CONFIG = {
   social: {
     instagram: "https://instagram.com/propaproteu",
     tiktok: "",
-    youtube: "",
+    youtube: "https://youtube.com/@propaproteu",
     facebook: ""
   },
 
