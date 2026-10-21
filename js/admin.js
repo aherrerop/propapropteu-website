@@ -6,7 +6,7 @@
 
 const LANGS = ["ca", "es", "en"];
 const LANG_LABEL = { ca: "Català", es: "Español", en: "English" };
-const TYPE_LABEL = { own: "Diseño propio", std: "Producto estándar", tool: "Herramienta" };
+const TYPE_LABEL = { own: "Disseny propi", std: "Producte estàndard", tool: "Eina" };
 const DIRTY_KEY = "ppt-admin-dirty";
 
 const State = { products: [], labels: [], images: [], editingOriginalId: null };
@@ -46,6 +46,7 @@ function isDirty() { try { return !!sessionStorage.getItem(DIRTY_KEY); } catch (
 document.addEventListener("DOMContentLoaded", async () => {
   if (!(await Admin.requireLogin())) return;
   $("admin-who").textContent = "Hola, " + (Admin.user?.name || Admin.user?.email || "");
+  // (UI in Catalan — manager-facing)
   $("btn-logout").addEventListener("click", () => { Admin.clear(); location.href = "acceso.html"; });
   $("btn-new").addEventListener("click", () => openEditor(null));
   $("btn-publish").addEventListener("click", publish);
@@ -65,7 +66,7 @@ async function loadLabels() {
 
 async function loadProducts() {
   const r = await Admin.call("listProducts");
-  if (!r.ok) { toast(r.message || "Error al cargar productos.", "err"); return; }
+  if (!r.ok) { toast(r.message || "Error en carregar els productes.", "err"); return; }
   State.products = r.data || [];
   renderList();
 }
@@ -82,9 +83,9 @@ function renderList() {
     const img = (p.images && p.images[0]) || "";
     const stock = (p.stock === undefined || p.stock === null || p.stock === "")
       ? '<span class="stk stk-inf">∞</span>'
-      : (Number(p.stock) <= 0 ? '<span class="stk stk-0">Agotado</span>' : '<span class="stk">' + p.stock + ' ud.</span>');
+      : (Number(p.stock) <= 0 ? '<span class="stk stk-0">Esgotat</span>' : '<span class="stk">' + p.stock + ' u.</span>');
     const card = el("div", { class: "adm-card" }, [
-      el("div", { class: "adm-card-img", html: img ? '<img src="' + img + '" alt="">' : '<span>sin foto</span>' }),
+      el("div", { class: "adm-card-img", html: img ? '<img src="' + img + '" alt="">' : '<span>sense foto</span>' }),
       el("div", { class: "adm-card-main" }, [
         el("div", { class: "adm-card-name", html: (p.featured ? "★ " : "") + (pick(p.name) || p.id) }),
         el("div", { class: "adm-card-meta", html:
@@ -94,7 +95,7 @@ function renderList() {
       ]),
       el("div", { class: "adm-card-actions" }, [
         el("button", { class: "btn-outline", onclick: () => openEditor(p.id) }, ["Editar"]),
-        el("button", { class: "btn-text danger", onclick: () => removeProduct(p.id) }, ["Borrar"])
+        el("button", { class: "btn-text danger", onclick: () => removeProduct(p.id) }, ["Esborrar"])
       ])
     ]);
     wrap.appendChild(card);
@@ -152,26 +153,26 @@ function buildEditor(p, isExisting) {
   const form = el("form", { class: "adm-editor", onsubmit: (e) => { e.preventDefault(); saveEditor(); } });
 
   form.appendChild(el("div", { class: "adm-editor-head" }, [
-    el("h1", {}, [isExisting ? "Editar producto" : "Nuevo producto"]),
+    el("h1", {}, [isExisting ? "Editar producte" : "Nou producte"]),
     el("div", {}, [
-      el("button", { type: "button", class: "btn-text", onclick: closeEditor }, ["Cancelar"]),
-      el("button", { type: "submit", class: "btn" }, ["Guardar"])
+      el("button", { type: "button", class: "btn-text", onclick: closeEditor }, ["Cancel·lar"]),
+      el("button", { type: "submit", class: "btn" }, ["Desar"])
     ])
   ]));
 
   /* --- basics row --- */
-  const idInput = el("input", { id: "f-id", type: "text", value: p.id, placeholder: "ej. penja-quadres-pro",
+  const idInput = el("input", { id: "f-id", type: "text", value: p.id, placeholder: "ex. penja-quadres-pro",
     pattern: "[a-z0-9\\-]+", required: true });
   if (isExisting) { idInput.readOnly = true; idInput.classList.add("readonly"); }
   const typeSel = el("select", { id: "f-type" }, Object.keys(TYPE_LABEL).map(k =>
     el("option", { value: k, selected: p.type === k }, [TYPE_LABEL[k]])));
 
   form.appendChild(el("div", { class: "adm-grid-4" }, [
-    el("div", { class: "adm-field" }, [el("label", {}, ["ID (identificador único)"]), idInput]),
-    el("div", { class: "adm-field" }, [el("label", {}, ["Tipo"]), typeSel]),
-    el("div", { class: "adm-field" }, [el("label", {}, ["Precio (€, IVA incl.)"]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["ID (identificador únic)"]), idInput]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["Tipus"]), typeSel]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["Preu (€, IVA inclòs)"]),
       el("input", { id: "f-price", type: "number", step: "0.01", min: "0", value: p.price })]),
-    el("div", { class: "adm-field" }, [el("label", {}, ["Stock (vacío = ∞)"]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["Estoc (buit = ∞)"]),
       el("input", { id: "f-stock", type: "number", step: "1", min: "0", value: (p.stock ?? "") })])
   ]));
 
@@ -182,20 +183,20 @@ function buildEditor(p, isExisting) {
   featChk.addEventListener("change", () => { heroBox.hidden = !featChk.checked; });
 
   form.appendChild(el("div", { class: "adm-grid-2" }, [
-    el("label", { class: "adm-check" }, [featChk, el("span", {}, ["Destacado (sale primero y en la portada)"])]),
-    el("div", { class: "adm-field" }, [el("label", {}, ["Nombre clave portada (ej. ATLAS)"]),
+    el("label", { class: "adm-check" }, [featChk, el("span", {}, ["Destacat (surt primer i a la portada)"])]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["Nom clau portada (ex. ATLAS)"]),
       el("input", { id: "f-codename", type: "text", value: p.codename || "" })])
   ]));
 
   /* --- texts --- */
-  form.appendChild(langField("Nombre", "name", p.name));
-  form.appendChild(langField("Resumen corto", "short", p.short, true));
-  form.appendChild(langField("Descripción", "description", p.description, true));
+  form.appendChild(langField("Nom", "name", p.name));
+  form.appendChild(langField("Resum curt", "short", p.short, true));
+  form.appendChild(langField("Descripció", "description", p.description, true));
 
   /* --- hero (featured only) --- */
-  heroBox.appendChild(el("h3", {}, ["Portada (solo destacados)"]));
+  heroBox.appendChild(el("h3", {}, ["Portada (només destacats)"]));
   heroBox.appendChild(langField("Titular portada", "heroTagline", p.heroTagline));
-  heroBox.appendChild(langField("Texto portada", "heroDesc", p.heroDesc, true));
+  heroBox.appendChild(langField("Text portada", "heroDesc", p.heroDesc, true));
   heroBox.hidden = !p.featured;
   form.appendChild(heroBox);
 
@@ -205,7 +206,7 @@ function buildEditor(p, isExisting) {
     cb.checked = (p.labels || []).indexOf(l.id) >= 0;
     return el("label", { class: "adm-chip" }, [cb, el("span", {}, [pick(l.name) || l.id])]);
   }));
-  form.appendChild(el("div", { class: "adm-field" }, [el("label", {}, ["Categorías"]), labelBox]));
+  form.appendChild(el("div", { class: "adm-field" }, [el("label", {}, ["Categories"]), labelBox]));
 
   /* --- images --- */
   form.appendChild(buildImages());
@@ -215,11 +216,11 @@ function buildEditor(p, isExisting) {
 
   /* --- footer actions + delete --- */
   const foot = el("div", { class: "adm-editor-foot" }, [
-    el("button", { type: "submit", class: "btn" }, ["Guardar"]),
-    el("button", { type: "button", class: "btn-text", onclick: closeEditor }, ["Cancelar"])
+    el("button", { type: "submit", class: "btn" }, ["Desar"]),
+    el("button", { type: "button", class: "btn-text", onclick: closeEditor }, ["Cancel·lar"])
   ]);
   if (isExisting) foot.appendChild(el("button", { type: "button", class: "btn-text danger",
-    onclick: () => removeProduct(p.id, true) }, ["Borrar producto"]));
+    onclick: () => removeProduct(p.id, true) }, ["Esborrar producte"]));
   form.appendChild(foot);
 
   return form;
@@ -230,8 +231,8 @@ function buildImages() {
   const strip = el("div", { class: "adm-imgs", id: "img-strip" });
   const file = el("input", { type: "file", accept: "image/*", id: "img-file", style: "display:none" });
   file.addEventListener("change", onPickImage);
-  const addBtn = el("button", { type: "button", class: "btn-outline", onclick: () => file.click() }, ["+ Subir imagen"]);
-  const field = el("div", { class: "adm-field" }, [el("label", {}, ["Imágenes"]), strip, addBtn, file]);
+  const addBtn = el("button", { type: "button", class: "btn-outline", onclick: () => file.click() }, ["+ Pujar imatge"]);
+  const field = el("div", { class: "adm-field" }, [el("label", {}, ["Imatges"]), strip, addBtn, file]);
   renderImages(strip);
   return field;
 }
@@ -242,7 +243,7 @@ function renderImages(strip) {
   State.images.forEach((url, i) => {
     strip.appendChild(el("div", { class: "adm-img" }, [
       el("img", { src: url, alt: "" }),
-      el("button", { type: "button", class: "adm-img-x", title: "Quitar",
+      el("button", { type: "button", class: "adm-img-x", title: "Treure",
         onclick: () => { State.images.splice(i, 1); renderImages(); } }, ["×"])
     ]));
   });
@@ -250,14 +251,14 @@ function renderImages(strip) {
 async function onPickImage(e) {
   const f = e.target.files[0];
   if (!f) return;
-  toast("Subiendo imagen…");
+  toast("Pujant la imatge…");
   const dataUrl = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f); });
   const resp = await Admin.call("uploadImage", { filename: f.name, mimeType: f.type, dataBase64: dataUrl });
   e.target.value = "";
-  if (!resp.ok) { toast(resp.message || "No se pudo subir la imagen.", "err"); return; }
+  if (!resp.ok) { toast(resp.message || "No s'ha pogut pujar la imatge.", "err"); return; }
   State.images.push(resp.url);
   renderImages();
-  toast("Imagen añadida.", "ok");
+  toast("Imatge afegida.", "ok");
 }
 
 /* ---------- specs sub-panel ---------- */
@@ -265,8 +266,8 @@ function buildSpecs(specs) {
   const rows = el("div", { class: "adm-specs", id: "spec-rows" });
   (specs.length ? specs : []).forEach(s => rows.appendChild(specRow(s)));
   const add = el("button", { type: "button", class: "btn-outline",
-    onclick: () => rows.appendChild(specRow({})) }, ["+ Fila de ficha técnica"]);
-  return el("div", { class: "adm-field" }, [el("label", {}, ["Ficha técnica (opcional)"]), rows, add]);
+    onclick: () => rows.appendChild(specRow({})) }, ["+ Fila de fitxa tècnica"]);
+  return el("div", { class: "adm-field" }, [el("label", {}, ["Fitxa tècnica (opcional)"]), rows, add]);
 }
 function specRow(s) {
   const lab = s.label || {};
@@ -275,7 +276,7 @@ function specRow(s) {
     el("input", { type: "text", class: "sp-es", placeholder: "Etiqueta ES", value: lab.es || "" }),
     el("input", { type: "text", class: "sp-en", placeholder: "Etiqueta EN", value: lab.en || "" }),
     el("input", { type: "text", class: "sp-val", placeholder: "Valor", value: s.value || "" }),
-    el("button", { type: "button", class: "adm-img-x", title: "Quitar",
+    el("button", { type: "button", class: "adm-img-x", title: "Treure",
       onclick: (e) => e.target.closest(".adm-spec-row").remove() }, ["×"])
   ]);
   return row;
@@ -325,37 +326,37 @@ function collect() {
 
 async function saveEditor() {
   const p = collect();
-  if (!p.id || !/^[a-z0-9-]+$/.test(p.id)) { toast("El ID solo puede llevar minúsculas, números y guiones.", "err"); return; }
-  if (!Object.keys(p.name).length) { toast("Pon al menos un nombre (en un idioma).", "err"); return; }
+  if (!p.id || !/^[a-z0-9-]+$/.test(p.id)) { toast("L'ID només pot tenir minúscules, números i guions.", "err"); return; }
+  if (!Object.keys(p.name).length) { toast("Posa com a mínim un nom (en un idioma).", "err"); return; }
   if (!State.editingOriginalId && State.products.some(x => x.id === p.id)) {
-    toast("Ya existe un producto con ese ID.", "err"); return;
+    toast("Ja existeix un producte amb aquest ID.", "err"); return;
   }
-  toast("Guardando…");
+  toast("Desant…");
   const r = await Admin.call("saveProduct", { product: p });
-  if (!r.ok) { toast(r.message || "No se pudo guardar.", "err"); return; }
+  if (!r.ok) { toast(r.message || "No s'ha pogut desar.", "err"); return; }
   setDirty(true);
   await loadProducts();
   closeEditor();
-  toast("Guardado. Recuerda Publicar para que salga en la web.", "ok");
+  toast("Desat. Recorda Publicar perquè surti al web.", "ok");
 }
 
 async function removeProduct(id, fromEditor) {
-  if (!confirm("¿Borrar este producto? No se puede deshacer.")) return;
-  toast("Borrando…");
+  if (!confirm("Segur que vols esborrar aquest producte? No es pot desfer.")) return;
+  toast("Esborrant…");
   const r = await Admin.call("deleteProduct", { id });
-  if (!r.ok) { toast(r.message || "No se pudo borrar.", "err"); return; }
+  if (!r.ok) { toast(r.message || "No s'ha pogut esborrar.", "err"); return; }
   setDirty(true);
   await loadProducts();
   if (fromEditor) closeEditor();
-  toast("Producto borrado. Recuerda Publicar.", "ok");
+  toast("Producte esborrat. Recorda Publicar.", "ok");
 }
 
 async function publish() {
   const btn = $("btn-publish");
-  btn.disabled = true; const prev = btn.textContent; btn.textContent = "Publicando…";
+  btn.disabled = true; const prev = btn.textContent; btn.textContent = "Publicant…";
   const r = await Admin.call("publish");
   btn.disabled = false; btn.textContent = prev;
-  if (!r.ok) { toast(r.message || "No se pudo publicar.", "err"); return; }
+  if (!r.ok) { toast(r.message || "No s'ha pogut publicar.", "err"); return; }
   setDirty(false);
-  toast(r.message || "Publicado.", "ok");
+  toast(r.message || "Publicat.", "ok");
 }

@@ -4,11 +4,12 @@
     "catalog": "Tienda",
     "custom": "Atrezo a medida",
     "packs": "Packs de producción",
-    "about": "About",
+    "about": "Nosotros",
     "team": "El equipo",
     "faq": "FAQ",
     "contact": "Contacto",
-    "cart": "Cesta"
+    "cart": "Cesta",
+    "login": "Acceso"
   },
   "home": {
     "heroTitle": "Hacemos posible cualquier escena",

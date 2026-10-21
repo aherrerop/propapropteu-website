@@ -4,11 +4,12 @@
     "catalog": "Botiga",
     "custom": "Attrezzo a mida",
     "packs": "Packs de producció",
-    "about": "About",
+    "about": "Qui som",
     "team": "L'equip",
     "faq": "FAQ",
     "contact": "Contacte",
-    "cart": "Cistella"
+    "cart": "Cistella",
+    "login": "Accés"
   },
   "home": {
     "heroTitle": "Fem possible qualsevol escena",

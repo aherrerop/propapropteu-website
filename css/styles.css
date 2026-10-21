@@ -189,6 +189,15 @@ nav.main-nav a:hover::after { transform: scaleX(1); }
 .lang-menu button:hover { background: var(--color-line); }
 
 /* Cesta pill */
+.login-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--color-ink); text-decoration: none;
+  font-family: var(--font-body); font-size: 0.9rem; font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.login-link:hover { color: var(--color-muted); }
+.login-link svg { display: block; }
+
 .cart-btn {
   display: inline-flex; align-items: center; gap: 8px;
   background: var(--color-ink); color: var(--color-bg);
@@ -805,6 +814,7 @@ body.has-cookie .whatsapp-fab { bottom: calc(var(--cookie-h, 64px) + 20px); tran
   nav.main-nav a.active { border-left: 3px solid var(--color-ink); }
   .logo-type { font-size: 1rem; }
   .cart-btn { padding: 9px 15px; font-size: 0.82rem; }
+  .login-link span { display: none; }
 }
 
 /* ============================================================

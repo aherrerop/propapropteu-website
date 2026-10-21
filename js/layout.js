@@ -73,6 +73,10 @@ const Layout = {
             <button class="lang-globe" aria-label="Language" onclick="Layout.toggleLang(event)">${globe}<span class="caret">&#9662;</span></button>
             <div class="lang-menu">${langs}</div>
           </div>
+          <a class="login-link" href="acceso.html" title="Accés equip">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            <span data-i18n="nav.login"></span>
+          </a>
           <button class="cart-btn snipcart-checkout" title="Cart">
             <span data-i18n="nav.cart"></span>
             <span class="cart-count snipcart-items-count">0</span>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Prop a Prop Teu — Acceso</title>
+  <title>Prop a Prop Teu — Accés</title>
   <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -18,15 +18,15 @@
     </a>
 
     <form class="auth-card" id="login-form" autocomplete="on">
-      <h1>Acceso</h1>
-      <p class="auth-sub">Panel de gestión · solo equipo</p>
+      <h1>Accés</h1>
+      <p class="auth-sub">Panell de gestió · només equip</p>
 
       <div class="cf-field">
-        <label for="email">Email</label>
+        <label for="email">Correu</label>
         <input type="email" id="email" name="email" required autocomplete="username">
       </div>
       <div class="cf-field">
-        <label for="password">Contraseña</label>
+        <label for="password">Contrasenya</label>
         <input type="password" id="password" name="password" required autocomplete="current-password">
       </div>
 
@@ -52,7 +52,7 @@
       e.preventDefault();
       errEl.hidden = true;
       btn.disabled = true;
-      btn.textContent = "Entrando…";
+      btn.textContent = "Entrant…";
       const r = await Admin.call("login", {
         email: document.getElementById("email").value.trim(),
         password: document.getElementById("password").value
@@ -62,7 +62,7 @@
         location.href = "admin.html";
         return;
       }
-      showError(r.message || "No se ha podido iniciar sesión.");
+      showError(r.message || "No s'ha pogut iniciar la sessió.");
       btn.disabled = false;
       btn.textContent = "Entrar";
     });

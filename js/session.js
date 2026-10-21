@@ -24,7 +24,7 @@ const Admin = {
 
   async call(action, payload) {
     if (!this.api) {
-      return { ok: false, error: "noapi", message: "Backend no configurado todavía (adminApi en js/config.js)." };
+      return { ok: false, error: "noapi", message: "Backend encara no configurat (adminApi a js/config.js)." };
     }
     const body = Object.assign({ action }, payload || {});
     if (action !== "login") body.token = this.token;
@@ -32,10 +32,10 @@ const Admin = {
     try {
       res = await fetch(this.api, { method: "POST", body: JSON.stringify(body), redirect: "follow" });
     } catch (e) {
-      return { ok: false, error: "network", message: "No se ha podido conectar con el servidor." };
+      return { ok: false, error: "network", message: "No s'ha pogut connectar amb el servidor." };
     }
     try { return await res.json(); }
-    catch (e) { return { ok: false, error: "parse", message: "Respuesta no válida del servidor." }; }
+    catch (e) { return { ok: false, error: "parse", message: "Resposta no vàlida del servidor." }; }
   },
 
   /* For admin.html: bounce to login if there's no valid session. */
