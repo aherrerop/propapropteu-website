@@ -122,7 +122,7 @@ const Layout = {
         </div>
         <div class="footer-bottom">
           <span>© ${new Date().getFullYear()} ${SITE_CONFIG.businessName}</span>
-          <span>${SITE_CONFIG.email} · ${SITE_CONFIG.phoneDisplay}</span>
+          <span>${SITE_CONFIG.email} · ${SITE_CONFIG.phoneDisplay} · <a href="acceso.html">Acceso</a></span>
         </div>
       </div>`;
   },
@@ -147,9 +147,21 @@ const Layout = {
       <span data-i18n="cookies.text"></span>
       <a href="legal.html#cookies" data-i18n="cookies.more"></a>
       <button class="btn" style="padding:7px 16px;font-size:0.85rem"
-              onclick="localStorage.setItem('ppt-cookies-ok','1');this.parentElement.remove()"
+              onclick="Layout.acceptCookies()"
               data-i18n="cookies.accept"></button>`;
     document.body.appendChild(div);
+    document.body.classList.add("has-cookie");
+    const setH = () =>
+      document.documentElement.style.setProperty("--cookie-h", div.offsetHeight + "px");
+    setH();
+    window.addEventListener("resize", setH);
+  },
+
+  acceptCookies() {
+    localStorage.setItem("ppt-cookies-ok", "1");
+    const b = document.querySelector(".cookie-banner");
+    if (b) b.remove();
+    document.body.classList.remove("has-cookie");
   },
 
   loadSnipcart() {

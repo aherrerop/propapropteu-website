@@ -37,9 +37,14 @@ const SITE_CONFIG = {
   social: {
     instagram: "https://instagram.com/propaproteu",
     tiktok: "",
-    youtube: "https://youtube.com/@propaproteu",
+    youtube: "",
     facebook: ""
   },
+
+  // --- MANAGER LOGIN BACKEND ---
+  // Paste the Apps Script Web app URL here (ends in /exec). See backend/SETUP.md.
+  // Leave "" until the backend is deployed; the login page will say so.
+  adminApi: "https://script.google.com/macros/s/AKfycbx03Ql3nWT1bFbsRDfTm6AXQXG-hS4J6KHPxpaKsnIviajJxj56xyFh9dF77qCp84sn/exec",
 
   // --- LANGUAGES ---
   languages: ["ca", "es", "en"],

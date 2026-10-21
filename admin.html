@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Prop a Prop Teu — Gestión</title>
+  <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="admin-body">
+  <!-- Top bar -->
+  <header class="admin-top">
+    <a class="admin-brand" href="./"><img src="assets/logo_mark.svg" alt="" height="34"></a>
+    <span class="admin-who" id="admin-who"></span>
+    <div class="admin-top-actions">
+      <span class="admin-dirty" id="admin-dirty" hidden>Cambios sin publicar</span>
+      <button class="btn-outline" id="btn-publish">Publicar</button>
+      <button class="btn-text" id="btn-logout">Salir</button>
+    </div>
+  </header>
+
+  <!-- Toast / status line -->
+  <div class="admin-toast" id="admin-toast" hidden></div>
+
+  <main class="admin-main">
+    <!-- LIST VIEW -->
+    <section id="view-list">
+      <div class="admin-head">
+        <h1>Productos</h1>
+        <button class="btn" id="btn-new">+ Nuevo producto</button>
+      </div>
+      <div class="admin-list" id="product-list"></div>
+      <p class="admin-empty" id="list-empty" hidden>Todavía no hay productos. Crea el primero.</p>
+    </section>
+
+    <!-- EDITOR VIEW (hidden until editing) -->
+    <section id="view-editor" hidden></section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/session.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
