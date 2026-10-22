@@ -128,8 +128,19 @@ var PRODUCT_COLS = ['id','type','price','stock','featured','codename',
   'labels','images','name','short','description','heroTagline','heroDesc','specs'];
 var PRODUCT_JSON_COLS = ['labels','images','name','short','description','heroTagline','heroDesc','specs'];
 
+/* Guarantee the Products header row is exactly PRODUCT_COLS, in order.
+   This makes the backend immune to missing/renamed/reordered headers. */
+function ensureProductHeaders() {
+  var sh = sheet(SHEET_PRODUCTS);
+  var n = PRODUCT_COLS.length;
+  var head = sh.getLastColumn() >= n ? sh.getRange(1, 1, 1, n).getValues()[0] : [];
+  var ok = PRODUCT_COLS.every(function (k, i) { return String(head[i] || '').trim() === k; });
+  if (!ok) sh.getRange(1, 1, 1, n).setValues([PRODUCT_COLS]);
+}
+
 function readProducts() {
   var sh = sheet(SHEET_PRODUCTS);
+  ensureProductHeaders();
   var values = sh.getDataRange().getValues();
   var head = values[0];
   var col = indexMap(head);
@@ -163,6 +174,7 @@ function saveProduct(product) {
   if (!product || !product.id) return { ok: false, error: 'missing', message: 'Falta id de producte.' };
   var id = String(product.id).trim();
   var sh = sheet(SHEET_PRODUCTS);
+  ensureProductHeaders();
   var values = sh.getDataRange().getValues();
   var head = values[0];
   var col = indexMap(head);
