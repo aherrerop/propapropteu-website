@@ -1,13 +1,62 @@
 {
   "_readme": "Managed from the admin dashboard (acceso.html). Products come from the Google Sheet on Publish; 'labels' and this note are preserved. Manual edits here are overwritten on the next Publish.",
   "labels": [
-    { "id": "props",       "name": { "ca": "Attrezzo",            "es": "Atrezo",             "en": "Props" } },
-    { "id": "hardware",    "name": { "ca": "Ferreteria escènica", "es": "Ferretería escénica", "en": "Stage hardware" } },
-    { "id": "tools",       "name": { "ca": "Eines",               "es": "Herramientas",       "en": "Tools" } },
-    { "id": "consumables", "name": { "ca": "Consumibles",         "es": "Consumibles",        "en": "Consumables" } },
-    { "id": "paint",       "name": { "ca": "Pintura i acabats",   "es": "Pintura y acabados", "en": "Paint & finishes" } },
-    { "id": "foam",        "name": { "ca": "Escuma i EVA",        "es": "Espuma y EVA",       "en": "Foam & EVA" } },
-    { "id": "lighting",    "name": { "ca": "Il·luminació",        "es": "Iluminación",        "en": "Lighting" } }
+    {
+      "id": "props",
+      "name": {
+        "ca": "Attrezzo",
+        "es": "Atrezo",
+        "en": "Props"
+      }
+    },
+    {
+      "id": "hardware",
+      "name": {
+        "ca": "Ferreteria escènica",
+        "es": "Ferretería escénica",
+        "en": "Stage hardware"
+      }
+    },
+    {
+      "id": "tools",
+      "name": {
+        "ca": "Eines",
+        "es": "Herramientas",
+        "en": "Tools"
+      }
+    },
+    {
+      "id": "consumables",
+      "name": {
+        "ca": "Consumibles",
+        "es": "Consumibles",
+        "en": "Consumables"
+      }
+    },
+    {
+      "id": "paint",
+      "name": {
+        "ca": "Pintura i acabats",
+        "es": "Pintura y acabados",
+        "en": "Paint & finishes"
+      }
+    },
+    {
+      "id": "foam",
+      "name": {
+        "ca": "Escuma i EVA",
+        "es": "Espuma y EVA",
+        "en": "Foam & EVA"
+      }
+    },
+    {
+      "id": "lighting",
+      "name": {
+        "ca": "Il·luminació",
+        "es": "Iluminación",
+        "en": "Lighting"
+      }
+    }
   ],
   "products": [
     {
@@ -27,8 +76,13 @@
         "es": "Sistema de colgado rápido para montar y desmontar cuadros y elementos planos en cuestión de segundos, sin herramientas y minimizando el impacto sobre las paredes del decorado.",
         "en": "Quick-hang system to mount and unmount paintings and flat elements in seconds, tool-free, minimising the impact on the set walls."
       },
-      "labels": ["hardware", "props"],
-      "images": ["assets/img/products/atlas.png"],
+      "labels": [
+        "hardware",
+        "props"
+      ],
+      "images": [
+        "assets/img/products/atlas.png"
+      ],
       "name": {
         "ca": "Penja-quadres ràpid PQ-8",
         "es": "Cuelga-cuadros rápido PQ-8",
@@ -45,12 +99,49 @@
         "en": "Quick-hang system designed and tested in our workshop for fast set changes. Mount and remove paintings or flat elements in seconds, tool-free, without damaging the set wall. Tested under continuous load for 72 hours."
       },
       "specs": [
-        { "label": { "ca": "Càrrega màxima", "es": "Carga máxima", "en": "Max load" }, "value": "8 kg" },
-        { "label": { "ca": "Material", "es": "Material", "en": "Material" }, "value": "PETG + acer" },
-        { "label": { "ca": "Mides", "es": "Medidas", "en": "Dimensions" }, "value": "60 × 40 × 12 mm" },
-        { "label": { "ca": "Pes", "es": "Peso", "en": "Weight" }, "value": "35 g" },
-        { "label": { "ca": "Contingut", "es": "Contenido", "en": "Contents" }, "value": "2 uds. + cargols" }
-      ]
+        {
+          "label": {
+            "ca": "Càrrega màxima",
+            "es": "Carga máxima",
+            "en": "Max load"
+          },
+          "value": "8 kg"
+        },
+        {
+          "label": {
+            "ca": "Material",
+            "es": "Material",
+            "en": "Material"
+          },
+          "value": "PETG + acer"
+        },
+        {
+          "label": {
+            "ca": "Mides",
+            "es": "Medidas",
+            "en": "Dimensions"
+          },
+          "value": "60 × 40 × 12 mm"
+        },
+        {
+          "label": {
+            "ca": "Pes",
+            "es": "Peso",
+            "en": "Weight"
+          },
+          "value": "35 g"
+        },
+        {
+          "label": {
+            "ca": "Contingut",
+            "es": "Contenido",
+            "en": "Contents"
+          },
+          "value": "2 uds. + cargols"
+        }
+      ],
+      "cutout": true,
+      "heroImage": "assets/img/products/atlas.png"
     },
     {
       "id": "llibre-secret",
@@ -69,8 +160,12 @@
         "es": "Libro de atrezo con compartimento oculto, envejecido a mano. Perfecto para escenas de escondites, magia de cerca o para vestir un set con un objeto que esconde algo.",
         "en": "Prop book with a hidden compartment, hand-aged. Perfect for hiding-spot scenes, close-up magic or dressing a set with an object that conceals something."
       },
-      "labels": ["props"],
-      "images": ["assets/img/products/llibre-secret.svg"],
+      "labels": [
+        "props"
+      ],
+      "images": [
+        "assets/img/products/llibre-secret.svg"
+      ],
       "name": {
         "ca": "Llibre buit \"caixa secreta\"",
         "es": "Libro hueco \"caja secreta\"",
@@ -87,19 +182,54 @@
         "en": "Workshop-made prop book with a hidden interior compartment. Hand-aged finish: each unit is slightly unique. Ideal for hiding-spot scenes, close-up magic or set dressing."
       },
       "specs": [
-        { "label": { "ca": "Mides", "es": "Medidas", "en": "Dimensions" }, "value": "24 × 16 × 5 cm" },
-        { "label": { "ca": "Compartiment", "es": "Compartimento", "en": "Compartment" }, "value": "18 × 11 × 3.5 cm" },
-        { "label": { "ca": "Pes", "es": "Peso", "en": "Weight" }, "value": "420 g" },
-        { "label": { "ca": "Material", "es": "Material", "en": "Material" }, "value": "Paper, cartró, cola PVA" }
-      ]
+        {
+          "label": {
+            "ca": "Mides",
+            "es": "Medidas",
+            "en": "Dimensions"
+          },
+          "value": "24 × 16 × 5 cm"
+        },
+        {
+          "label": {
+            "ca": "Compartiment",
+            "es": "Compartimento",
+            "en": "Compartment"
+          },
+          "value": "18 × 11 × 3.5 cm"
+        },
+        {
+          "label": {
+            "ca": "Pes",
+            "es": "Peso",
+            "en": "Weight"
+          },
+          "value": "420 g"
+        },
+        {
+          "label": {
+            "ca": "Material",
+            "es": "Material",
+            "en": "Material"
+          },
+          "value": "Paper, cartró, cola PVA"
+        }
+      ],
+      "cutout": true,
+      "heroImage": "assets/img/products/llibre-secret.svg"
     },
     {
       "id": "espelma-led",
       "type": "own",
-      "price": 12.0,
+      "price": 12,
       "stock": 25,
-      "labels": ["props", "lighting"],
-      "images": ["assets/img/products/espelma-led.svg"],
+      "labels": [
+        "props",
+        "lighting"
+      ],
+      "images": [
+        "assets/img/products/espelma-led.svg"
+      ],
       "name": {
         "ca": "[DEMO] Espelma LED de flama realista",
         "es": "[DEMO] Vela LED de llama realista",
@@ -116,17 +246,37 @@
         "en": "Demo product to preview the grid. Prop candle with a randomly flickering LED flame."
       },
       "specs": [
-        { "label": { "ca": "Autonomia", "es": "Autonomía", "en": "Battery life" }, "value": "20 h (2×AA)" },
-        { "label": { "ca": "Alçada", "es": "Altura", "en": "Height" }, "value": "18 cm" }
-      ]
+        {
+          "label": {
+            "ca": "Autonomia",
+            "es": "Autonomía",
+            "en": "Battery life"
+          },
+          "value": "20 h (2×AA)"
+        },
+        {
+          "label": {
+            "ca": "Alçada",
+            "es": "Altura",
+            "en": "Height"
+          },
+          "value": "18 cm"
+        }
+      ],
+      "cutout": true
     },
     {
       "id": "kit-envelliment",
       "type": "own",
-      "price": 32.0,
+      "price": 32,
       "stock": 3,
-      "labels": ["paint", "consumables"],
-      "images": ["assets/img/products/kit-envelliment.svg"],
+      "labels": [
+        "paint",
+        "consumables"
+      ],
+      "images": [
+        "assets/img/products/kit-envelliment.svg"
+      ],
       "name": {
         "ca": "[DEMO] Kit d'envelliment i pàtines",
         "es": "[DEMO] Kit de envejecido y pátinas",
@@ -143,16 +293,29 @@
         "en": "Demo product. Workshop patina selection: rust, verdigris, grime, dust, smoke and dark wax."
       },
       "specs": [
-        { "label": { "ca": "Contingut", "es": "Contenido", "en": "Contents" }, "value": "6 × 100 ml" }
-      ]
+        {
+          "label": {
+            "ca": "Contingut",
+            "es": "Contenido",
+            "en": "Contents"
+          },
+          "value": "6 × 100 ml"
+        }
+      ],
+      "cutout": true
     },
     {
       "id": "eva-foam-10mm",
       "type": "std",
       "price": 8.5,
       "stock": 60,
-      "labels": ["foam", "consumables"],
-      "images": ["assets/img/products/eva-foam-10mm.svg"],
+      "labels": [
+        "foam",
+        "consumables"
+      ],
+      "images": [
+        "assets/img/products/eva-foam-10mm.svg"
+      ],
       "name": {
         "ca": "[DEMO] Planxa EVA alta densitat 10 mm",
         "es": "[DEMO] Plancha EVA alta densidad 10 mm",
@@ -169,17 +332,37 @@
         "en": "Demo product. High-density EVA (85 kg/m³). Cuts clean with a blade and is heat-formable."
       },
       "specs": [
-        { "label": { "ca": "Mides", "es": "Medidas", "en": "Dimensions" }, "value": "100 × 50 cm" },
-        { "label": { "ca": "Gruix", "es": "Grosor", "en": "Thickness" }, "value": "10 mm" }
-      ]
+        {
+          "label": {
+            "ca": "Mides",
+            "es": "Medidas",
+            "en": "Dimensions"
+          },
+          "value": "100 × 50 cm"
+        },
+        {
+          "label": {
+            "ca": "Gruix",
+            "es": "Grosor",
+            "en": "Thickness"
+          },
+          "value": "10 mm"
+        }
+      ],
+      "cutout": true
     },
     {
       "id": "cutter-tallador-calent",
       "type": "tool",
       "price": 39.9,
       "stock": 12,
-      "labels": ["tools", "foam"],
-      "images": ["assets/img/products/cutter-calent.svg"],
+      "labels": [
+        "tools",
+        "foam"
+      ],
+      "images": [
+        "assets/img/products/cutter-calent.svg"
+      ],
       "name": {
         "ca": "[DEMO] Tallador tèrmic per a escuma",
         "es": "[DEMO] Cortador térmico para espuma",
@@ -196,17 +379,36 @@
         "en": "Demo product. Hot-cutting tool with adjustable temperature and three interchangeable blades."
       },
       "specs": [
-        { "label": { "ca": "Potència", "es": "Potencia", "en": "Power" }, "value": "18 W" },
-        { "label": { "ca": "Fulles", "es": "Cuchillas", "en": "Blades" }, "value": "3 incloses" }
-      ]
+        {
+          "label": {
+            "ca": "Potència",
+            "es": "Potencia",
+            "en": "Power"
+          },
+          "value": "18 W"
+        },
+        {
+          "label": {
+            "ca": "Fulles",
+            "es": "Cuchillas",
+            "en": "Blades"
+          },
+          "value": "3 incloses"
+        }
+      ],
+      "cutout": true
     },
     {
       "id": "pistola-cola-pro",
       "type": "tool",
       "price": 27.5,
       "stock": 0,
-      "labels": ["tools"],
-      "images": ["assets/img/products/pistola-cola.svg"],
+      "labels": [
+        "tools"
+      ],
+      "images": [
+        "assets/img/products/pistola-cola.svg"
+      ],
       "name": {
         "ca": "[DEMO] Pistola de cola professional 100 W",
         "es": "[DEMO] Pistola de cola profesional 100 W",
@@ -223,16 +425,29 @@
         "en": "Demo product (out of stock, to preview the \"Sold out\" state). Heavy-use hot glue gun."
       },
       "specs": [
-        { "label": { "ca": "Potència", "es": "Potencia", "en": "Power" }, "value": "100 W" }
-      ]
+        {
+          "label": {
+            "ca": "Potència",
+            "es": "Potencia",
+            "en": "Power"
+          },
+          "value": "100 W"
+        }
+      ],
+      "cutout": true
     },
     {
       "id": "sang-escenica",
       "type": "std",
       "price": 9.9,
       "stock": 30,
-      "labels": ["consumables", "props"],
-      "images": ["assets/img/products/sang-escenica.svg"],
+      "labels": [
+        "consumables",
+        "props"
+      ],
+      "images": [
+        "assets/img/products/sang-escenica.svg"
+      ],
       "name": {
         "ca": "[DEMO] Sang escènica llavable 250 ml",
         "es": "[DEMO] Sangre escénica lavable 250 ml",
@@ -249,8 +464,16 @@
         "en": "Demo product. Professional-grade artificial blood, washes out with soap and water."
       },
       "specs": [
-        { "label": { "ca": "Volum", "es": "Volumen", "en": "Volume" }, "value": "250 ml" }
-      ]
+        {
+          "label": {
+            "ca": "Volum",
+            "es": "Volumen",
+            "en": "Volume"
+          },
+          "value": "250 ml"
+        }
+      ],
+      "cutout": true
     }
   ]
 }

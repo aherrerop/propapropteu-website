@@ -34,7 +34,7 @@ const ShopPage = {
     document.getElementById("sf-desc").textContent = I18N.pick(p.heroDesc) || I18N.pick(p.short);
     document.getElementById("sf-wm").textContent = p.codename || (I18N.pick(p.name).split(" ")[0] || "").toUpperCase();
     const img = document.getElementById("sf-img");
-    img.src = Catalog.mainImage(p); img.alt = I18N.pick(p.name);
+    img.src = Catalog.heroImage(p); img.alt = I18N.pick(p.name);
     const add = document.getElementById("sf-add");
     add.dataset.itemId = p.id;
     add.dataset.itemPrice = p.price;
@@ -58,11 +58,12 @@ const ShopPage = {
   renderGrid() {
     document.getElementById("shop-grid").innerHTML = this.sortItems().map(p => `
       <a class="shop-card" href="product.html?id=${p.id}">
-        <div class="sc-img">
-          <span class="corner tl"></span><span class="corner br"></span>
+        <div class="sc-img ${Catalog.isCutout(p) ? "cut" : "photo"}">
+          <span class="sc-corner" aria-hidden="true"></span>
           <img src="${Catalog.mainImage(p)}" alt="${this.esc(I18N.pick(p.name))}" loading="lazy">
         </div>
         <div class="sc-name">${I18N.pick(p.name)}</div>
+        <div class="sc-short">${I18N.pick(p.short)}</div>
         <div class="sc-price">${Catalog.formatPrice(p.price)}</div>
       </a>`).join("");
   }

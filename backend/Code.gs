@@ -53,6 +53,22 @@ function doGet() {
   return json({ ok: true, service: 'propapropteu-admin', time: new Date().toISOString() });
 }
 
+/* Sheet menu: adds "Prop a Prop Teu > Publicar al web" so managers can publish
+   straight from the spreadsheet, without opening the dashboard. */
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Prop a Prop Teu')
+    .addItem('Publicar al web', 'menuPublish')
+    .addToUi();
+}
+
+function menuPublish() {
+  var ui = SpreadsheetApp.getUi();
+  var who = (Session.getActiveUser() && Session.getActiveUser().getEmail()) || 'sheet-menu';
+  var r = publish({ email: who });
+  ui.alert(r.ok ? r.message : ('No s’ha pogut publicar: ' + r.message));
+}
+
 function json(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
@@ -124,7 +140,7 @@ function verifyToken(token) {
  *          labels(json) | images(json) | name(json) | short(json) |
  *          description(json) | heroTagline(json) | heroDesc(json) | specs(json)
  */
-var PRODUCT_COLS = ['id','type','price','stock','featured','codename',
+var PRODUCT_COLS = ['id','type','price','stock','featured','cutout','codename','heroImage',
   'labels','images','name','short','description','heroTagline','heroDesc','specs'];
 var PRODUCT_JSON_COLS = ['labels','images','name','short','description','heroTagline','heroDesc','specs'];
 
@@ -160,7 +176,9 @@ function rowToProduct(r, col) {
   p.price = Number(r[col.price] || 0);
   if (String(r[col.stock]) !== '') p.stock = Number(r[col.stock]);
   if (String(r[col.featured]).toLowerCase() === 'true' || r[col.featured] === true) p.featured = true;
+  if (col.cutout != null && (String(r[col.cutout]).toLowerCase() === 'true' || r[col.cutout] === true)) p.cutout = true;
   if (String(r[col.codename] || '').trim()) p.codename = String(r[col.codename]).trim();
+  if (col.heroImage != null && String(r[col.heroImage] || '').trim()) p.heroImage = String(r[col.heroImage]).trim();
   PRODUCT_JSON_COLS.forEach(function (k) {
     if (col[k] == null) return;
     var raw = String(r[col[k]] || '').trim();
@@ -182,6 +200,7 @@ function saveProduct(product) {
   var rowArr = PRODUCT_COLS.map(function (k) {
     if (col[k] == null) return '';
     if (k === 'featured') return product.featured ? true : false;
+    if (k === 'cutout') return product.cutout ? true : false;
     if (k === 'stock') return (product.stock === '' || product.stock == null) ? '' : Number(product.stock);
     if (k === 'price') return Number(product.price || 0);
     if (PRODUCT_JSON_COLS.indexOf(k) >= 0) return product[k] != null ? JSON.stringify(product[k]) : '';

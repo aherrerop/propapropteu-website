@@ -200,6 +200,12 @@ function buildEditor(p, isExisting) {
   heroBox.hidden = !p.featured;
   form.appendChild(heroBox);
 
+  /* --- image display mode --- */
+  const cutChk = el("input", { id: "f-cutout", type: "checkbox" });
+  cutChk.checked = !!p.cutout;
+  form.appendChild(el("label", { class: "adm-check" }, [cutChk,
+    el("span", {}, ["Imatge sense fons (es mostra sencera dins el marc; desmarca-ho si la foto ja té fons)"])]));
+
   /* --- labels --- */
   const labelBox = el("div", { class: "adm-labels" }, State.labels.map(l => {
     const cb = el("input", { type: "checkbox", value: l.id, class: "f-label" });
@@ -296,6 +302,7 @@ function collect() {
   const stock = $("f-stock").value.trim();
   p.stock = stock === "" ? "" : Number(stock);
   p.featured = $("f-featured").checked;
+  p.cutout = $("f-cutout").checked;
   const code = $("f-codename").value.trim();
   if (code) p.codename = code;
 

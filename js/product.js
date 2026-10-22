@@ -42,8 +42,8 @@ const ProductPage = {
           `<tr><td>${I18N.pick(s.label)}</td><td>${s.value}</td></tr>`).join("")}
       </table>` : "";
 
-    const labels = Catalog.data.labels
-      .filter(l => p.labels.includes(l.id))
+    const labels = (Catalog.data.labels || [])
+      .filter(l => (p.labels || []).includes(l.id))
       .map(l => `<span class="label-chip">${I18N.pick(l.name)}</span>`).join("");
 
     document.getElementById("detail").innerHTML = `
@@ -85,7 +85,7 @@ const ProductPage = {
   renderRelated() {
     const p = this.product;
     const related = Catalog.data.products
-      .filter(o => o.id !== p.id && o.labels.some(l => p.labels.includes(l)))
+      .filter(o => o.id !== p.id && (o.labels || []).some(l => (p.labels || []).includes(l)))
       .slice(0, 4);
     const el = document.getElementById("related");
     if (!related.length) { el.innerHTML = ""; return; }

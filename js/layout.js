@@ -236,6 +236,17 @@ const Catalog = {
     return (p.images && p.images[0]) || "assets/img/placeholder.svg";
   },
 
+  // Transparent "cutout" image for the home hero + shop featured band.
+  // Falls back to the first product photo if no dedicated hero image is set.
+  heroImage(p) {
+    return p.heroImage || this.mainImage(p);
+  },
+  // true  -> image is a cutout (no background): show it "contain" on the panel
+  // false -> image is a photo (has its own background): show it "cover", filling the frame
+  isCutout(p) {
+    return p.cutout === true;
+  },
+
   /* Snipcart buy-button attributes for a product.
      Add class "snipcart-add-item" on the button yourself. */
   snipcartAttrs(p) {
