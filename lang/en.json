@@ -212,16 +212,11 @@
   },
   "team": {
     "title": "Our team",
-    "intro": "The hands (and heads) behind the workshop. Serious about the work, easy to work with.",
-    "member1name": "[First Last]",
-    "member1role": "Workshop lead",
-    "member1bio": "[Placeholder bio — warm, slightly funny tone. E.g. \"Has spent years turning 'can you have it by Friday?' into a yes.\"]",
-    "member2name": "[First Last]",
-    "member2role": "Design & fabrication",
-    "member2bio": "[Placeholder bio — warm, slightly funny tone. E.g. \"Welds, sculpts and can improvise a sword from a broom handle by Tuesday.\"]",
-    "member3name": "[Add member]",
-    "member3role": "[Role]",
-    "member3bio": "[Placeholder bio — duplicate this card for each team member.]"
+    "intro": "The hands (and minds) behind the workshop.",
+    "member1name": "Yerai Bertolín Arch",
+    "member1role": "Senior Set Dresser",
+    "member2name": "Albert Herrero Parareda, PhD",
+    "member2role": "Lead Designer"
   },
   "contact": {
     "title": "Contact",

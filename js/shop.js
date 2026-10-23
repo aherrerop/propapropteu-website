@@ -23,10 +23,16 @@ const ShopPage = {
       const b = e.target.closest("button[data-i]"); if (!b) return;
       this.fi = +b.dataset.i; this.renderFeatured();
     });
+    // hide arrows + dots when there's only one featured product
+    const single = this.featured.length <= 1;
+    ["sf-prev", "sf-next"].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = single; });
     document.addEventListener("langchange", () => { this.renderFeatured(); this.renderGrid(); });
   },
 
   esc(s) { return String(s).replace(/"/g, "&quot;"); },
+
+  fnext() { this.fi = (this.fi + 1) % this.featured.length; this.renderFeatured(); },
+  fprev() { this.fi = (this.fi - 1 + this.featured.length) % this.featured.length; this.renderFeatured(); },
 
   renderFeatured() {
     const p = this.featured[this.fi];

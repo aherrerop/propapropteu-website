@@ -541,6 +541,8 @@ table.specs td:last-child { font-weight: 400; color: var(--color-ink); }
 /* ---------------- TEAM ---------------- */
 
 .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: clamp(28px, 4vw, 52px); }
+/* two-person team: cap at two columns, don't stretch full width */
+.team-grid.team-2 { grid-template-columns: repeat(2, minmax(220px, 300px)); justify-content: start; }
 .team-card { text-align: left; }
 .team-card img, .team-card .media-box { aspect-ratio: 4 / 5; width: 100%; margin-bottom: 16px; object-fit: cover; }
 .team-card h3 { font-size: 1.5rem; margin-bottom: 2px; }
@@ -555,7 +557,8 @@ table.specs td:last-child { font-weight: 400; color: var(--color-ink); }
   display: flex; align-items: center; justify-content: center;
   padding: 48px; min-height: 340px;
 }
-.about-hero .about-brand img { width: 62%; max-width: 220px; height: auto; }
+/* new logo mark is black; render it white on the dark brand panel */
+.about-hero .about-brand img { width: 50%; max-width: 180px; height: auto; filter: brightness(0) invert(1); }
 .about-hero .about-media { min-height: 340px; }
 
 /* ---------------- CUSTOM PROPS ---------------- */
@@ -904,6 +907,16 @@ body.shop .site-header { background: var(--color-hero); }
   transform: scaleX(0.8);
 }
 .sf-img { position: relative; z-index: 1; max-width: 80%; max-height: 380px; width: auto; object-fit: contain; }
+.sf-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+  width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--color-line);
+  background: rgba(255,255,255,0.85); color: var(--color-ink); cursor: pointer;
+  font-size: 1.6rem; line-height: 1; display: flex; align-items: center; justify-content: center;
+  transition: background .2s, color .2s;
+}
+.sf-arrow:hover { background: var(--color-ink); color: #fff; }
+.sf-prev { left: 0; }
+.sf-next { right: 0; }
 .sf-dots { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
 .sf-dots button { width: 10px; height: 10px; border-radius: 999px; border: none; background: #b3b2ad; cursor: pointer; padding: 0; }
 .sf-dots button.active { background: var(--color-ink); }

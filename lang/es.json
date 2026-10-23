@@ -212,16 +212,11 @@
   },
   "team": {
     "title": "El equipo",
-    "intro": "Las manos (y las cabezas) detrás del taller. Gente seria con el trabajo y fácil de tratar.",
-    "member1name": "[Nombre Apellido]",
-    "member1role": "Dirección de taller",
-    "member1bio": "[Bio provisional — tono cercano y con humor. Ej.: «Lleva años convirtiendo un “¿lo puedes tener el viernes?” en un sí.»]",
-    "member2name": "[Nombre Apellido]",
-    "member2role": "Diseño y fabricación",
-    "member2bio": "[Bio provisional — tono cercano y con humor. Ej.: «Suelda, esculpe e improvisa una espada con un palo de escoba antes del martes.»]",
-    "member3name": "[Añade miembro]",
-    "member3role": "[Cargo]",
-    "member3bio": "[Bio provisional — duplica esta tarjeta para cada persona del equipo.]"
+    "intro": "Las manos (y las cabezas) detrás del taller.",
+    "member1name": "Yerai Bertolín Arch",
+    "member1role": "Senior Set Dresser",
+    "member2name": "Albert Herrero Parareda, PhD",
+    "member2role": "Lead Designer"
   },
   "contact": {
     "title": "Contacto",

@@ -212,16 +212,11 @@
   },
   "team": {
     "title": "L'equip",
-    "intro": "Les mans (i els caps) darrere del taller. Gent seriosa amb la feina i fàcil de tractar.",
-    "member1name": "[Nom Cognom]",
-    "member1role": "Direcció de taller",
-    "member1bio": "[Bio provisional — to proper i simpàtic. Ex.: «Porta anys convertint un “ho pots tenir divendres?” en un sí.»]",
-    "member2name": "[Nom Cognom]",
-    "member2role": "Disseny i fabricació",
-    "member2bio": "[Bio provisional — to proper i simpàtic. Ex.: «Solda, esculpeix i improvisa una espasa amb un pal d'escombra abans de dimarts.»]",
-    "member3name": "[Afegeix membre]",
-    "member3role": "[Càrrec]",
-    "member3bio": "[Bio provisional — duplica aquesta targeta per a cada persona de l'equip.]"
+    "intro": "Les mans (i els caps) darrere del taller.",
+    "member1name": "Yerai Bertolín Arch",
+    "member1role": "Senior Set Dresser",
+    "member2name": "Albert Herrero Parareda, PhD",
+    "member2role": "Lead Designer"
   },
   "contact": {
     "title": "Contacte",
