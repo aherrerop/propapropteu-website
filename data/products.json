@@ -65,17 +65,9 @@
       "price": 14.9,
       "stock": 42,
       "featured": true,
+      "cutout": true,
       "codename": "ATLAS",
-      "heroTagline": {
-        "ca": "Penja, ajusta i segueix rodant",
-        "es": "Cuelga, ajusta y sigue rodando",
-        "en": "Hang it, adjust it, keep rolling"
-      },
-      "heroDesc": {
-        "ca": "Sistema de penjat ràpid per muntar i desmuntar quadres i elements plans en qüestió de segons, sense eines i minimitzant l'impacte sobre les parets del decorat.",
-        "es": "Sistema de colgado rápido para montar y desmontar cuadros y elementos planos en cuestión de segundos, sin herramientas y minimizando el impacto sobre las paredes del decorado.",
-        "en": "Quick-hang system to mount and unmount paintings and flat elements in seconds, tool-free, minimising the impact on the set walls."
-      },
+      "heroImage": "assets/img/products/atlas.png",
       "labels": [
         "hardware",
         "props"
@@ -97,6 +89,16 @@
         "ca": "Sistema de penjat ràpid dissenyat i provat al nostre taller per a canvis d'escenografia. Permet muntar i desmuntar quadres o elements plans en segons, sense eines i sense fer malbé la paret del decorat. Testat amb càrrega contínua durant 72 hores.",
         "es": "Sistema de colgado rápido diseñado y probado en nuestro taller para cambios de escenografía. Permite montar y desmontar cuadros o elementos planos en segundos, sin herramientas y sin dañar la pared del decorado. Testado con carga continua durante 72 horas.",
         "en": "Quick-hang system designed and tested in our workshop for fast set changes. Mount and remove paintings or flat elements in seconds, tool-free, without damaging the set wall. Tested under continuous load for 72 hours."
+      },
+      "heroTagline": {
+        "ca": "Penja, ajusta i segueix rodant",
+        "es": "Cuelga, ajusta y sigue rodando",
+        "en": "Hang it, adjust it, keep rolling"
+      },
+      "heroDesc": {
+        "ca": "Sistema de penjat ràpid per muntar i desmuntar quadres i elements plans en qüestió de segons, sense eines i minimitzant l'impacte sobre les parets del decorat.",
+        "es": "Sistema de colgado rápido para montar y desmontar cuadros y elementos planos en cuestión de segundos, sin herramientas y minimizando el impacto sobre las paredes del decorado.",
+        "en": "Quick-hang system to mount and unmount paintings and flat elements in seconds, tool-free, minimising the impact on the set walls."
       },
       "specs": [
         {
@@ -139,9 +141,7 @@
           },
           "value": "2 uds. + cargols"
         }
-      ],
-      "cutout": true,
-      "heroImage": "assets/img/products/atlas.png"
+      ]
     },
     {
       "id": "llibre-secret",
@@ -149,17 +149,9 @@
       "price": 24.5,
       "stock": 8,
       "featured": true,
+      "cutout": true,
       "codename": "OCULT",
-      "heroTagline": {
-        "ca": "Amaga-ho a plena vista",
-        "es": "Escóndelo a plena vista",
-        "en": "Hide it in plain sight"
-      },
-      "heroDesc": {
-        "ca": "Llibre d'attrezzo amb compartiment ocult, envellit a mà. Perfecte per a escenes d'amagatalls, màgia de prop o per vestir un set amb un objecte que amaga alguna cosa.",
-        "es": "Libro de atrezo con compartimento oculto, envejecido a mano. Perfecto para escenas de escondites, magia de cerca o para vestir un set con un objeto que esconde algo.",
-        "en": "Prop book with a hidden compartment, hand-aged. Perfect for hiding-spot scenes, close-up magic or dressing a set with an object that conceals something."
-      },
+      "heroImage": "assets/img/products/llibre-secret.svg",
       "labels": [
         "props"
       ],
@@ -180,6 +172,16 @@
         "ca": "Llibre d'attrezzo fabricat al taller amb compartiment interior ocult. Acabat envellit a mà: cada unitat és lleugerament diferent. Ideal per a escenes d'amagatalls, màgia de prop o decoració de set.",
         "es": "Libro de atrezo fabricado en el taller con compartimento interior oculto. Acabado envejecido a mano: cada unidad es ligeramente distinta. Ideal para escenas de escondites, magia de cerca o decoración de set.",
         "en": "Workshop-made prop book with a hidden interior compartment. Hand-aged finish: each unit is slightly unique. Ideal for hiding-spot scenes, close-up magic or set dressing."
+      },
+      "heroTagline": {
+        "ca": "Amaga-ho a plena vista",
+        "es": "Escóndelo a plena vista",
+        "en": "Hide it in plain sight"
+      },
+      "heroDesc": {
+        "ca": "Llibre d'attrezzo amb compartiment ocult, envellit a mà. Perfecte per a escenes d'amagatalls, màgia de prop o per vestir un set amb un objecte que amaga alguna cosa.",
+        "es": "Libro de atrezo con compartimento oculto, envejecido a mano. Perfecto para escenas de escondites, magia de cerca o para vestir un set con un objeto que esconde algo.",
+        "en": "Prop book with a hidden compartment, hand-aged. Perfect for hiding-spot scenes, close-up magic or dressing a set with an object that conceals something."
       },
       "specs": [
         {
@@ -214,15 +216,14 @@
           },
           "value": "Paper, cartró, cola PVA"
         }
-      ],
-      "cutout": true,
-      "heroImage": "assets/img/products/llibre-secret.svg"
+      ]
     },
     {
       "id": "espelma-led",
       "type": "own",
       "price": 12,
       "stock": 25,
+      "cutout": true,
       "labels": [
         "props",
         "lighting"
@@ -262,14 +263,14 @@
           },
           "value": "18 cm"
         }
-      ],
-      "cutout": true
+      ]
     },
     {
       "id": "kit-envelliment",
       "type": "own",
       "price": 32,
       "stock": 3,
+      "cutout": true,
       "labels": [
         "paint",
         "consumables"
@@ -301,14 +302,14 @@
           },
           "value": "6 × 100 ml"
         }
-      ],
-      "cutout": true
+      ]
     },
     {
       "id": "eva-foam-10mm",
       "type": "std",
       "price": 8.5,
       "stock": 60,
+      "cutout": true,
       "labels": [
         "foam",
         "consumables"
@@ -348,14 +349,14 @@
           },
           "value": "10 mm"
         }
-      ],
-      "cutout": true
+      ]
     },
     {
       "id": "cutter-tallador-calent",
       "type": "tool",
       "price": 39.9,
       "stock": 12,
+      "cutout": true,
       "labels": [
         "tools",
         "foam"
@@ -395,14 +396,14 @@
           },
           "value": "3 incloses"
         }
-      ],
-      "cutout": true
+      ]
     },
     {
       "id": "pistola-cola-pro",
       "type": "tool",
       "price": 27.5,
       "stock": 0,
+      "cutout": true,
       "labels": [
         "tools"
       ],
@@ -433,14 +434,14 @@
           },
           "value": "100 W"
         }
-      ],
-      "cutout": true
+      ]
     },
     {
       "id": "sang-escenica",
       "type": "std",
       "price": 9.9,
       "stock": 30,
+      "cutout": true,
       "labels": [
         "consumables",
         "props"
@@ -472,8 +473,7 @@
           },
           "value": "250 ml"
         }
-      ],
-      "cutout": true
+      ]
     }
   ]
 }
