@@ -61,16 +61,15 @@
   "products": [
     {
       "id": "penja-quadres-pro",
-      "type": "own",
+      "type": "tool",
       "price": 14.9,
-      "stock": 42,
       "featured": true,
       "cutout": true,
       "codename": "ATLAS",
       "heroImage": "assets/img/products/atlas.png",
       "labels": [
-        "hardware",
-        "props"
+        "tools",
+        "hardware"
       ],
       "images": [
         "assets/img/products/atlas.png"
@@ -86,9 +85,9 @@
         "en": "Hang and unhang paintings in seconds, tool-free, up to 8 kg."
       },
       "description": {
-        "ca": "Sistema de penjat ràpid dissenyat i provat al nostre taller per a canvis d'escenografia. Permet muntar i desmuntar quadres o elements plans en segons, sense eines i sense fer malbé la paret del decorat. Testat amb càrrega contínua durant 72 hores.",
-        "es": "Sistema de colgado rápido diseñado y probado en nuestro taller para cambios de escenografía. Permite montar y desmontar cuadros o elementos planos en segundos, sin herramientas y sin dañar la pared del decorado. Testado con carga continua durante 72 horas.",
-        "en": "Quick-hang system designed and tested in our workshop for fast set changes. Mount and remove paintings or flat elements in seconds, tool-free, without damaging the set wall. Tested under continuous load for 72 hours."
+        "ca": "Sistema de penjat ràpid dissenyat i provat al nostre taller per a canvis d'escenografia. Munta i desmunta quadres o elements plans en segons, sense eines i sense fer malbé la paret. Testat amb càrrega contínua 72 h.",
+        "es": "Sistema de colgado rápido diseñado y probado en nuestro taller para cambios de escenografía. Monta y desmonta cuadros o elementos planos en segundos, sin herramientas y sin dañar la pared. Testado con carga continua 72 h.",
+        "en": "Quick-hang system designed and tested in our workshop for fast set changes. Mount and remove paintings or flat elements in seconds, tool-free, without damaging the wall. Tested under continuous load for 72 h."
       },
       "heroTagline": {
         "ca": "Penja, ajusta i segueix rodant",
@@ -96,9 +95,9 @@
         "en": "Hang it, adjust it, keep rolling"
       },
       "heroDesc": {
-        "ca": "Sistema de penjat ràpid per muntar i desmuntar quadres i elements plans en qüestió de segons, sense eines i minimitzant l'impacte sobre les parets del decorat.",
-        "es": "Sistema de colgado rápido para montar y desmontar cuadros y elementos planos en cuestión de segundos, sin herramientas y minimizando el impacto sobre las paredes del decorado.",
-        "en": "Quick-hang system to mount and unmount paintings and flat elements in seconds, tool-free, minimising the impact on the set walls."
+        "ca": "Sistema de penjat ràpid per muntar i desmuntar quadres i elements plans en segons, sense eines i sense fer malbé la paret del decorat.",
+        "es": "Sistema de colgado rápido para montar y desmontar cuadros y elementos planos en segundos, sin herramientas y sin dañar la pared del decorado.",
+        "en": "Quick-hang system to mount and remove paintings and flat elements in seconds, tool-free, without damaging the set wall."
       },
       "specs": [
         {
@@ -119,27 +118,11 @@
         },
         {
           "label": {
-            "ca": "Mides",
-            "es": "Medidas",
-            "en": "Dimensions"
-          },
-          "value": "60 × 40 × 12 mm"
-        },
-        {
-          "label": {
-            "ca": "Pes",
-            "es": "Peso",
-            "en": "Weight"
-          },
-          "value": "35 g"
-        },
-        {
-          "label": {
             "ca": "Contingut",
             "es": "Contenido",
             "en": "Contents"
           },
-          "value": "2 uds. + cargols"
+          "value": "2 u. + cargols"
         }
       ]
     },
@@ -147,7 +130,6 @@
       "id": "llibre-secret",
       "type": "own",
       "price": 24.5,
-      "stock": 8,
       "featured": true,
       "cutout": true,
       "codename": "OCULT",
@@ -169,9 +151,9 @@
         "en": "Prop book with hidden compartment, hand-aged finish."
       },
       "description": {
-        "ca": "Llibre d'attrezzo fabricat al taller amb compartiment interior ocult. Acabat envellit a mà: cada unitat és lleugerament diferent. Ideal per a escenes d'amagatalls, màgia de prop o decoració de set.",
-        "es": "Libro de atrezo fabricado en el taller con compartimento interior oculto. Acabado envejecido a mano: cada unidad es ligeramente distinta. Ideal para escenas de escondites, magia de cerca o decoración de set.",
-        "en": "Workshop-made prop book with a hidden interior compartment. Hand-aged finish: each unit is slightly unique. Ideal for hiding-spot scenes, close-up magic or set dressing."
+        "ca": "Llibre d'attrezzo fabricat al taller amb compartiment interior ocult i acabat envellit a mà: cada unitat és lleugerament diferent. Ideal per a amagatalls, màgia de prop o decoració de set.",
+        "es": "Libro de atrezo fabricado en el taller con compartimento interior oculto y acabado envejecido a mano: cada unidad es ligeramente distinta. Ideal para escondites, magia de cerca o decoración de set.",
+        "en": "Workshop-made prop book with a hidden interior compartment and hand-aged finish: each unit is slightly unique. Ideal for hiding spots, close-up magic or set dressing."
       },
       "heroTagline": {
         "ca": "Amaga-ho a plena vista",
@@ -179,9 +161,9 @@
         "en": "Hide it in plain sight"
       },
       "heroDesc": {
-        "ca": "Llibre d'attrezzo amb compartiment ocult, envellit a mà. Perfecte per a escenes d'amagatalls, màgia de prop o per vestir un set amb un objecte que amaga alguna cosa.",
-        "es": "Libro de atrezo con compartimento oculto, envejecido a mano. Perfecto para escenas de escondites, magia de cerca o para vestir un set con un objeto que esconde algo.",
-        "en": "Prop book with a hidden compartment, hand-aged. Perfect for hiding-spot scenes, close-up magic or dressing a set with an object that conceals something."
+        "ca": "Llibre d'attrezzo amb compartiment ocult, envellit a mà. Per a escenes d'amagatalls, màgia de prop o per vestir un set amb un objecte que amaga alguna cosa.",
+        "es": "Libro de atrezo con compartimento oculto, envejecido a mano. Para escenas de escondites, magia de cerca o para vestir un set con un objeto que esconde algo.",
+        "en": "Prop book with a hidden compartment, hand-aged. For hiding-spot scenes, close-up magic or dressing a set with an object that conceals something."
       },
       "specs": [
         {
@@ -202,14 +184,6 @@
         },
         {
           "label": {
-            "ca": "Pes",
-            "es": "Peso",
-            "en": "Weight"
-          },
-          "value": "420 g"
-        },
-        {
-          "label": {
             "ca": "Material",
             "es": "Material",
             "en": "Material"
@@ -219,79 +193,84 @@
       ]
     },
     {
-      "id": "espelma-led",
-      "type": "own",
-      "price": 12,
-      "stock": 25,
+      "id": "anivellador-mobles",
+      "type": "tool",
+      "price": 9.9,
       "cutout": true,
       "labels": [
-        "props",
-        "lighting"
+        "tools"
       ],
       "images": [
-        "assets/img/products/espelma-led.svg"
+        "assets/img/placeholder.svg"
       ],
       "name": {
-        "ca": "[DEMO] Espelma LED de flama realista",
-        "es": "[DEMO] Vela LED de llama realista",
-        "en": "[DEMO] Realistic-flame LED candle"
+        "ca": "Anivellador de mobles i decorats",
+        "es": "Nivelador de muebles y decorados",
+        "en": "Furniture & set leveller"
       },
       "short": {
-        "ca": "Espelma segura per a escena amb flama LED que balla; 20 h d'autonomia.",
-        "es": "Vela segura para escena con llama LED que baila; 20 h de autonomía.",
-        "en": "Stage-safe candle with dancing LED flame; 20 h battery life."
+        "ca": "Anivella mobles i panells sobre terres irregulars sense falques de fusta.",
+        "es": "Nivela muebles y paneles sobre suelos irregulares sin cuñas de madera.",
+        "en": "Levels furniture and panels on uneven floors without wooden shims."
       },
       "description": {
-        "ca": "Producte de demostració per veure com queda la graella. Espelma d'attrezzo amb flama LED d'oscil·lació aleatòria.",
-        "es": "Producto de demostración para ver cómo queda la cuadrícula. Vela de atrezo con llama LED de oscilación aleatoria.",
-        "en": "Demo product to preview the grid. Prop candle with a randomly flickering LED flame."
+        "ca": "Joc d'anivelladors regulables per a mobles, panells i decorats sobre terres irregulars. Es col·loquen i s'ajusten amb la mà, sense eines, i no marquen el terra del plató. Reutilitzables.",
+        "es": "Juego de niveladores regulables para muebles, paneles y decorados sobre suelos irregulares. Se colocan y ajustan a mano, sin herramientas, y no marcan el suelo del plató. Reutilizables.",
+        "en": "Set of adjustable levellers for furniture, panels and sets on uneven floors. Placed and adjusted by hand, tool-free, and they don't mark the stage floor. Reusable."
       },
       "specs": [
         {
           "label": {
-            "ca": "Autonomia",
-            "es": "Autonomía",
-            "en": "Battery life"
+            "ca": "Rang d'ajust",
+            "es": "Rango de ajuste",
+            "en": "Adjust range"
           },
-          "value": "20 h (2×AA)"
+          "value": "0–25 mm"
         },
         {
           "label": {
-            "ca": "Alçada",
-            "es": "Altura",
-            "en": "Height"
+            "ca": "Contingut",
+            "es": "Contenido",
+            "en": "Contents"
           },
-          "value": "18 cm"
+          "value": "4 u."
+        },
+        {
+          "label": {
+            "ca": "Material",
+            "es": "Material",
+            "en": "Material"
+          },
+          "value": "PLA"
         }
       ]
     },
     {
-      "id": "kit-envelliment",
-      "type": "own",
-      "price": 32,
-      "stock": 3,
+      "id": "passacables-set",
+      "type": "tool",
+      "price": 7.5,
       "cutout": true,
       "labels": [
-        "paint",
-        "consumables"
+        "tools",
+        "hardware"
       ],
       "images": [
-        "assets/img/products/kit-envelliment.svg"
+        "assets/img/placeholder.svg"
       ],
       "name": {
-        "ca": "[DEMO] Kit d'envelliment i pàtines",
-        "es": "[DEMO] Kit de envejecido y pátinas",
-        "en": "[DEMO] Aging & patina kit"
+        "ca": "Passacables adhesius per a set (pack)",
+        "es": "Pasacables adhesivos para set (pack)",
+        "en": "Stick-on cable clips for set (pack)"
       },
       "short": {
-        "ca": "6 pàtines a l'aigua per envellir fusta, metall i plàstic.",
-        "es": "6 pátinas al agua para envejecer madera, metal y plástico.",
-        "en": "6 water-based patinas to age wood, metal and plastic."
+        "ca": "Ordena i amaga cables al plató sense fer forats.",
+        "es": "Ordena y oculta cables en el plató sin hacer agujeros.",
+        "en": "Route and hide cables on set without drilling."
       },
       "description": {
-        "ca": "Producte de demostració. Selecció de pàtines de taller: òxid, verdet, brutícia, pols, fum i cera fosca.",
-        "es": "Producto de demostración. Selección de pátinas de taller: óxido, verdín, suciedad, polvo, humo y cera oscura.",
-        "en": "Demo product. Workshop patina selection: rust, verdigris, grime, dust, smoke and dark wax."
+        "ca": "Pack de passacables adhesius per guiar i amagar cables al plató sense foradar ni deixar marca. Aguanten cables de potència i de senyal, i es treuen net en desmuntar el set.",
+        "es": "Pack de pasacables adhesivos para guiar y ocultar cables en el plató sin taladrar ni dejar marca. Aguantan cables de potencia y de señal, y se retiran limpios al desmontar.",
+        "en": "Pack of stick-on cable clips to route and hide cables on set without drilling or leaving a mark. They hold power and signal cables and peel off clean on strike."
       },
       "specs": [
         {
@@ -300,178 +279,213 @@
             "es": "Contenido",
             "en": "Contents"
           },
-          "value": "6 × 100 ml"
-        }
-      ]
-    },
-    {
-      "id": "eva-foam-10mm",
-      "type": "std",
-      "price": 8.5,
-      "stock": 60,
-      "cutout": true,
-      "labels": [
-        "foam",
-        "consumables"
-      ],
-      "images": [
-        "assets/img/products/eva-foam-10mm.svg"
-      ],
-      "name": {
-        "ca": "[DEMO] Planxa EVA alta densitat 10 mm",
-        "es": "[DEMO] Plancha EVA alta densidad 10 mm",
-        "en": "[DEMO] High-density EVA foam sheet 10 mm"
-      },
-      "short": {
-        "ca": "Planxa 100×50 cm per a armadures, attrezzo i cosplay.",
-        "es": "Plancha 100×50 cm para armaduras, atrezo y cosplay.",
-        "en": "100×50 cm sheet for armour, props and cosplay."
-      },
-      "description": {
-        "ca": "Producte de demostració. EVA d'alta densitat (85 kg/m³). Talla net amb cúter i es modela amb calor.",
-        "es": "Producto de demostración. EVA de alta densidad (85 kg/m³). Corta limpio con cúter y se moldea con calor.",
-        "en": "Demo product. High-density EVA (85 kg/m³). Cuts clean with a blade and is heat-formable."
-      },
-      "specs": [
-        {
-          "label": {
-            "ca": "Mides",
-            "es": "Medidas",
-            "en": "Dimensions"
-          },
-          "value": "100 × 50 cm"
+          "value": "10 u."
         },
         {
           "label": {
-            "ca": "Gruix",
-            "es": "Grosor",
-            "en": "Thickness"
+            "ca": "Adhesiu",
+            "es": "Adhesivo",
+            "en": "Adhesive"
           },
-          "value": "10 mm"
+          "value": "3M retirable"
+        },
+        {
+          "label": {
+            "ca": "Material",
+            "es": "Material",
+            "en": "Material"
+          },
+          "value": "PETG"
         }
       ]
     },
     {
-      "id": "cutter-tallador-calent",
+      "id": "ganxo-seguretat",
       "type": "tool",
-      "price": 39.9,
-      "stock": 12,
+      "price": 11,
       "cutout": true,
       "labels": [
         "tools",
-        "foam"
+        "hardware"
       ],
       "images": [
-        "assets/img/products/cutter-calent.svg"
+        "assets/img/placeholder.svg"
       ],
       "name": {
-        "ca": "[DEMO] Tallador tèrmic per a escuma",
-        "es": "[DEMO] Cortador térmico para espuma",
-        "en": "[DEMO] Hot knife foam cutter"
+        "ca": "Ganxo de seguretat per a panells",
+        "es": "Gancho de seguridad para paneles",
+        "en": "Safety hook for panels"
       },
       "short": {
-        "ca": "Talls nets en EVA, porexpan i escumes tècniques; escalfa en 15 s.",
-        "es": "Cortes limpios en EVA, porexpan y espumas técnicas; calienta en 15 s.",
-        "en": "Clean cuts in EVA, styrofoam and technical foams; heats in 15 s."
+        "ca": "Penjat segur de panells i marcs pesats, amb tanca anti-caiguda.",
+        "es": "Colgado seguro de paneles y marcos pesados, con cierre anticaída.",
+        "en": "Secure hanging of heavy panels and frames, with anti-drop latch."
       },
       "description": {
-        "ca": "Producte de demostració. Eina de tall en calent amb temperatura regulable i tres fulles intercanviables.",
-        "es": "Producto de demostración. Herramienta de corte en caliente con temperatura regulable y tres cuchillas intercambiables.",
-        "en": "Demo product. Hot-cutting tool with adjustable temperature and three interchangeable blades."
+        "ca": "Ganxo de penjat amb tanca de seguretat per a panells, marcs i elements pesats del decorat. La tanca evita que l'element caigui en moviments de càmera o cops. Es penja i es despenja en segons.",
+        "es": "Gancho de colgado con cierre de seguridad para paneles, marcos y elementos pesados del decorado. El cierre evita que el elemento caiga ante movimientos de cámara o golpes. Se cuelga y descuelga en segundos.",
+        "en": "Hanging hook with a safety latch for heavy panels, frames and set elements. The latch stops the element dropping during camera moves or knocks. Hangs and unhangs in seconds."
       },
       "specs": [
         {
           "label": {
-            "ca": "Potència",
-            "es": "Potencia",
-            "en": "Power"
+            "ca": "Càrrega màxima",
+            "es": "Carga máxima",
+            "en": "Max load"
           },
-          "value": "18 W"
+          "value": "15 kg"
         },
         {
           "label": {
-            "ca": "Fulles",
-            "es": "Cuchillas",
-            "en": "Blades"
+            "ca": "Material",
+            "es": "Material",
+            "en": "Material"
           },
-          "value": "3 incloses"
+          "value": "PETG reforçat"
         }
       ]
     },
     {
-      "id": "pistola-cola-pro",
+      "id": "marcador-posicio",
       "type": "tool",
-      "price": 27.5,
-      "stock": 0,
+      "price": 6.5,
       "cutout": true,
       "labels": [
         "tools"
       ],
       "images": [
-        "assets/img/products/pistola-cola.svg"
+        "assets/img/placeholder.svg"
       ],
       "name": {
-        "ca": "[DEMO] Pistola de cola professional 100 W",
-        "es": "[DEMO] Pistola de cola profesional 100 W",
-        "en": "[DEMO] Professional glue gun 100 W"
+        "ca": "Marcadors de posició reutilitzables",
+        "es": "Marcadores de posición reutilizables",
+        "en": "Reusable position markers"
       },
       "short": {
-        "ca": "Flux constant i broquet fi per a muntatge d'attrezzo.",
-        "es": "Flujo constante y boquilla fina para montaje de atrezo.",
-        "en": "Constant flow and fine nozzle for prop assembly."
+        "ca": "Marca posicions de mobles i attrezzo per repetir presa rere presa.",
+        "es": "Marca posiciones de muebles y atrezo para repetir toma tras toma.",
+        "en": "Mark furniture and prop positions to repeat take after take."
       },
       "description": {
-        "ca": "Producte de demostració (sense estoc, per veure l'estat \"Esgotat\"). Pistola de cola calenta d'ús intensiu.",
-        "es": "Producto de demostración (sin stock, para ver el estado \"Agotado\"). Pistola de cola caliente de uso intensivo.",
-        "en": "Demo product (out of stock, to preview the \"Sold out\" state). Heavy-use hot glue gun."
+        "ca": "Joc de marcadors de posició reutilitzables per deixar mobles i attrezzo exactament al mateix lloc en cada presa. No deixen residu com la cinta i es veuen fins i tot amb poca llum.",
+        "es": "Juego de marcadores de posición reutilizables para dejar muebles y atrezo exactamente en el mismo sitio en cada toma. No dejan residuo como la cinta y se ven incluso con poca luz.",
+        "en": "Set of reusable position markers to put furniture and props back in exactly the same spot every take. No tape residue and visible even in low light."
       },
       "specs": [
         {
           "label": {
-            "ca": "Potència",
-            "es": "Potencia",
-            "en": "Power"
+            "ca": "Contingut",
+            "es": "Contenido",
+            "en": "Contents"
           },
-          "value": "100 W"
+          "value": "12 u."
+        },
+        {
+          "label": {
+            "ca": "Material",
+            "es": "Material",
+            "en": "Material"
+          },
+          "value": "PLA fluor"
         }
       ]
     },
     {
-      "id": "sang-escenica",
-      "type": "std",
-      "price": 9.9,
-      "stock": 30,
+      "id": "suport-monitor",
+      "type": "tool",
+      "price": 18,
       "cutout": true,
       "labels": [
-        "consumables",
-        "props"
+        "tools",
+        "hardware"
       ],
       "images": [
-        "assets/img/products/sang-escenica.svg"
+        "assets/img/placeholder.svg"
       ],
       "name": {
-        "ca": "[DEMO] Sang escènica llavable 250 ml",
-        "es": "[DEMO] Sangre escénica lavable 250 ml",
-        "en": "[DEMO] Washable stage blood 250 ml"
+        "ca": "Suport de monitor amb pinça",
+        "es": "Soporte de monitor con pinza",
+        "en": "Clamp monitor mount"
       },
       "short": {
-        "ca": "Color realista, no taca la roba ni la pell; apta per a boca.",
-        "es": "Color realista, no mancha ropa ni piel; apta para boca.",
-        "en": "Realistic colour, won't stain fabric or skin; mouth-safe."
+        "ca": "Fixa un monitor o referència a qualsevol tub o cantell del set.",
+        "es": "Fija un monitor o referencia a cualquier tubo o canto del set.",
+        "en": "Clamp a monitor or reference to any tube or set edge."
       },
       "description": {
-        "ca": "Producte de demostració. Sang artificial de qualitat professional, es renta amb aigua i sabó.",
-        "es": "Producto de demostración. Sangre artificial de calidad profesional, se lava con agua y jabón.",
-        "en": "Demo product. Professional-grade artificial blood, washes out with soap and water."
+        "ca": "Suport amb pinça per fixar monitors de referència, llistes de rodatge o petits elements a tubs, barres o cantells del decorat. ABS resistent a l'ús intensiu de plató.",
+        "es": "Soporte con pinza para fijar monitores de referencia, listas de rodaje o pequeños elementos a tubos, barras o cantos del decorado. ABS resistente al uso intensivo de plató.",
+        "en": "Clamp mount to fix reference monitors, shot lists or small items to tubes, bars or set edges. ABS built for heavy stage use."
       },
       "specs": [
         {
           "label": {
-            "ca": "Volum",
-            "es": "Volumen",
-            "en": "Volume"
+            "ca": "Obertura pinça",
+            "es": "Apertura pinza",
+            "en": "Clamp opening"
           },
-          "value": "250 ml"
+          "value": "10–45 mm"
+        },
+        {
+          "label": {
+            "ca": "Rosca",
+            "es": "Rosca",
+            "en": "Thread"
+          },
+          "value": "1/4\""
+        },
+        {
+          "label": {
+            "ca": "Material",
+            "es": "Material",
+            "en": "Material"
+          },
+          "value": "ABS"
+        }
+      ]
+    },
+    {
+      "id": "falca-porta",
+      "type": "tool",
+      "price": 5,
+      "cutout": true,
+      "labels": [
+        "tools"
+      ],
+      "images": [
+        "assets/img/placeholder.svg"
+      ],
+      "name": {
+        "ca": "Falca subjecta-portes i panells",
+        "es": "Cuña sujeta-puertas y paneles",
+        "en": "Door & flat holder wedge"
+      },
+      "short": {
+        "ca": "Manté portes i panells oberts o fixats mentre rodeu.",
+        "es": "Mantiene puertas y paneles abiertos o fijados mientras rodáis.",
+        "en": "Holds doors and flats open or fixed while you shoot."
+      },
+      "description": {
+        "ca": "Falca per mantenir portes practicables i panells en posició durant el rodatge, sense sorolls ni rebots. Base de goma antilliscant perquè no es mogui amb el trànsit de plató.",
+        "es": "Cuña para mantener puertas practicables y paneles en posición durante el rodaje, sin ruidos ni rebotes. Base de goma antideslizante para que no se mueva con el tránsito de plató.",
+        "en": "Wedge to keep practical doors and flats in position while filming, with no noise or bounce. Non-slip rubber base so it stays put with stage traffic."
+      },
+      "specs": [
+        {
+          "label": {
+            "ca": "Contingut",
+            "es": "Contenido",
+            "en": "Contents"
+          },
+          "value": "2 u."
+        },
+        {
+          "label": {
+            "ca": "Material",
+            "es": "Material",
+            "en": "Material"
+          },
+          "value": "PLA + goma"
         }
       ]
     }
