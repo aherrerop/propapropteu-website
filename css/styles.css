@@ -1103,3 +1103,11 @@ body.shop .site-header { background: var(--color-hero); }
   .adm-card { flex-wrap: wrap; }
   .adm-card-actions { width: 100%; }
 }
+
+/* ---- form status messages (contact + quote) ---- */
+.form-status { font-size: 0.9rem; margin-top: 14px; padding: 11px 14px; border-radius: 8px; line-height: 1.4; }
+.form-status.ok { color: #1f7a3d; background: #eaf6ee; border: 1px solid #bfe3cb; }
+.form-status.err { color: #b3261e; background: #fdecec; border: 1px solid #f5c2c0; }
+
+/* hide dev filename tags on placeholders in production (kept in markup as a hint) */
+.media-tag { display: none; }

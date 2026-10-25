@@ -28,8 +28,9 @@ function doPost(e) {
     var req = JSON.parse(e.postData.contents || '{}');
     var action = req.action;
 
-    // Public action: login.
+    // Public actions: login + contact form.
     if (action === 'login') return json(login(req));
+    if (action === 'contact') return json(contact(req));
 
     // Everything else needs a valid session token.
     var session = verifyToken(req.token);
@@ -51,6 +52,50 @@ function doPost(e) {
 
 function doGet() {
   return json({ ok: true, service: 'propapropteu-admin', time: new Date().toISOString() });
+}
+
+/* ===================== CONTACT / QUOTE FORM ===================== */
+/* Public: website contact + custom-prop quote forms post here. Each message is
+   stored in the "Messages" sheet tab and emailed to the business. */
+function contact(req) {
+  var name = String(req.name || '').trim();
+  var email = String(req.email || '').trim();
+  var message = String(req.message || '').trim();
+  if (req.company_hp) return { ok: true };                 // honeypot: silently accept bots
+  if (!name || !email || !message) return { ok: false, error: 'missing', message: 'Falten camps obligatoris.' };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
+  if (message.length > 5000) message = message.slice(0, 5000);
+
+  var source = String(req.source || 'contacte');
+  var phone = String(req.phone || '').trim();
+  var company = String(req.company || '').trim();
+  var extra = String(req.extra || '').trim();
+
+  var sh = ensureMessagesSheet();
+  sh.appendRow([new Date(), source, name, email, phone, company, message + (extra ? ('\n\n' + extra) : '')]);
+
+  try {
+    MailApp.sendEmail({
+      to: 'info@propapropteu.com',
+      replyTo: email,
+      subject: '[Web · ' + source + '] ' + name,
+      body: 'Nom: ' + name + '\nEmail: ' + email + '\nTelèfon: ' + phone +
+            '\nEmpresa: ' + company + '\nOrigen: ' + source +
+            (extra ? ('\n' + extra) : '') + '\n\nMissatge:\n' + message
+    });
+  } catch (e) { /* email optional; the row is the durable record */ }
+
+  return { ok: true, message: 'Missatge enviat. Gràcies, et responem aviat.' };
+}
+
+function ensureMessagesSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName('Messages');
+  if (!sh) {
+    sh = ss.insertSheet('Messages');
+    sh.appendRow(['date', 'source', 'name', 'email', 'phone', 'company', 'message']);
+  }
+  return sh;
 }
 
 /* Sheet menu: adds "Prop a Prop Teu > Publicar al web" so managers can publish

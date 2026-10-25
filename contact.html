@@ -64,6 +64,7 @@
           <div class="cf-send">
             <button type="submit"><span data-i18n="form.send"></span> <span aria-hidden="true">&#10230;</span></button>
           </div>
+          <p class="form-status" id="form-status" role="status" hidden></p>
         </div>
       </form>
     </div>
@@ -87,7 +88,32 @@
         .filter(k => s[k])
         .map(k => `<a href="${s[k]}" target="_blank" rel="noopener" aria-label="${k}">${Layout.socialIcons[k] || k}</a>`)
         .join("");
-      document.getElementById("contact-form").action = SITE_CONFIG.formEndpoint;
+      const form = document.getElementById("contact-form");
+      const status = document.getElementById("form-status");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = form.querySelector("button[type=submit]");
+        const d = Object.fromEntries(new FormData(form).entries());
+        const old = btn.innerHTML; btn.disabled = true; btn.textContent = "…";
+        status.hidden = true;
+        let r;
+        try {
+          const res = await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
+            body: JSON.stringify({ action: "contact", source: "contacte",
+              name: d.name, email: d.email, phone: d.phone, company: d.company, message: d.message }) });
+          r = await res.json();
+        } catch (err) { r = { ok: false }; }
+        if (r && r.ok) {
+          form.reset();
+          status.textContent = r.message || "Missatge enviat. Gràcies!";
+          status.className = "form-status ok";
+        } else {
+          status.textContent = (r && r.message) || "No s'ha pogut enviar. Escriu-nos per WhatsApp o a " + SITE_CONFIG.email + ".";
+          status.className = "form-status err";
+        }
+        status.hidden = false;
+        btn.disabled = false; btn.innerHTML = old;
+      });
     });
   </script>
 </body>

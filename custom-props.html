@@ -84,6 +84,7 @@
         <label><span data-i18n="custom.quoteWhat"></span><textarea name="message" required></textarea></label>
         <label><span data-i18n="custom.quoteDeadline"></span><input type="text" name="deadline"></label>
         <button class="btn" type="submit" data-i18n="custom.quoteSend"></button>
+        <p class="form-status" id="quote-status" role="status" hidden></p>
       </form>
     </div>
   </main>
@@ -96,7 +97,27 @@
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
       await Layout.init();
-      document.getElementById("quote-form").action = SITE_CONFIG.formEndpoint;
+      const form = document.getElementById("quote-form");
+      const status = document.getElementById("quote-status");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = form.querySelector("button[type=submit]");
+        const d = Object.fromEntries(new FormData(form).entries());
+        const old = btn.textContent; btn.disabled = true; btn.textContent = "…";
+        status.hidden = true;
+        let r;
+        try {
+          const res = await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
+            body: JSON.stringify({ action: "contact", source: "pressupost",
+              name: d.name, email: d.email, phone: d.phone, message: d.message,
+              extra: d.deadline ? ("Termini: " + d.deadline) : "" }) });
+          r = await res.json();
+        } catch (err) { r = { ok: false }; }
+        if (r && r.ok) { form.reset(); status.textContent = r.message || "Sol·licitud enviada. Gràcies!"; status.className = "form-status ok"; }
+        else { status.textContent = (r && r.message) || ("No s'ha pogut enviar. Escriu-nos a " + SITE_CONFIG.email + "."); status.className = "form-status err"; }
+        status.hidden = false;
+        btn.disabled = false; btn.textContent = old;
+      });
     });
   </script>
 </body>
