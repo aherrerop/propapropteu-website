@@ -397,6 +397,17 @@ function placeOrder(req) {
             (req.note ? ('\n\nNota: ' + req.note) : '') + (lowFlags.length ? ('\n\nMaterial sota mínim: ' + lowFlags.join(', ')) : '')
     });
   } catch (e) { /* email optional */ }
+  // Confirmation to the customer
+  try {
+    MailApp.sendEmail({
+      to: email, name: 'Prop a Prop Teu', replyTo: 'info@propapropteu.com',
+      subject: 'Hemos recibido tu pedido (' + id + ') — Prop a Prop Teu',
+      body: 'Hola ' + name + ',\n\nGracias por tu pedido. Lo hemos recibido correctamente y te contactaremos en breve para confirmar el pago y la entrega.\n\n' +
+            'Pedido ' + id + ':\n' + lines.map(function (l) { return '· ' + l.qty + 'x ' + l.name + ' — ' + (l.price * l.qty).toFixed(2) + ' €'; }).join('\n') +
+            '\n\nTotal: ' + revenue.toFixed(2) + ' € (IVA incl.)' +
+            '\n\nSi tienes cualquier duda, responde a este correo o escríbenos a info@propapropteu.com.\n\nUn saludo,\nEl equipo de Prop a Prop Teu'
+    });
+  } catch (e) { /* customer email optional */ }
   return { ok: true, id: id, message: 'Comanda rebuda. Et contactem per confirmar.' };
 }
 function readOrders() {
