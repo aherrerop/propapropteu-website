@@ -62,7 +62,7 @@
     {
       "id": "penja-quadres-pro",
       "type": "tool",
-      "price": 14.9,
+      "price": 50,
       "featured": true,
       "cutout": true,
       "codename": "ATLAS",
@@ -75,9 +75,9 @@
         "assets/img/products/atlas.png"
       ],
       "name": {
-        "ca": "Penja-quadres ràpid PQ-8",
-        "es": "Cuelga-cuadros rápido PQ-8",
-        "en": "Quick picture hanger PQ-8"
+        "ca": "Penjat Fàcil ATLAS",
+        "es": "Cuelga Fácil ATLAS",
+        "en": "Easy-hang ATLAS"
       },
       "short": {
         "ca": "Penja i despenja quadres en segons, sense eines, fins a 8 kg.",
