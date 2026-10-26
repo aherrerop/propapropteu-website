@@ -69,6 +69,15 @@
     "sortZa": "Order Z-A",
     "iva": "VAT incl."
   },
+  "order": {
+    "cta": "Request",
+    "title": "Place your order",
+    "qty": "Quantity",
+    "note": "Note (optional)",
+    "send": "Send order",
+    "nopay": "No online payment: we receive the order and contact you to confirm and arrange payment and delivery.",
+    "unit": "u."
+  },
   "badge": {
     "own": "Our design",
     "std": "Product",

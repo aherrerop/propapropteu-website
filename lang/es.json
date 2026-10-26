@@ -69,6 +69,15 @@
     "sortZa": "Orden Z-A",
     "iva": "IVA incl."
   },
+  "order": {
+    "cta": "Pedir",
+    "title": "Haz tu pedido",
+    "qty": "Cantidad",
+    "note": "Nota (opcional)",
+    "send": "Enviar pedido",
+    "nopay": "Sin pago online: recibimos el pedido y te contactamos para confirmar y coordinar el pago y el envío.",
+    "unit": "u."
+  },
   "badge": {
     "own": "Diseño propio",
     "std": "Producto",

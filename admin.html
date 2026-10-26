@@ -26,6 +26,13 @@
   <!-- Toast / status line -->
   <div class="admin-toast" id="admin-toast" hidden></div>
 
+  <!-- View switcher -->
+  <nav class="admin-nav" id="admin-nav">
+    <button data-view="list" class="active">Productes</button>
+    <button data-view="orders">Comandes</button>
+    <button data-view="materials">Materials</button>
+  </nav>
+
   <main class="admin-main">
     <!-- LIST VIEW -->
     <section id="view-list">
@@ -39,6 +46,12 @@
 
     <!-- EDITOR VIEW (hidden until editing) -->
     <section id="view-editor" hidden></section>
+
+    <!-- ORDERS VIEW -->
+    <section id="view-orders" hidden></section>
+
+    <!-- MATERIALS VIEW -->
+    <section id="view-materials" hidden></section>
   </main>
 
   <script src="js/config.js"></script>

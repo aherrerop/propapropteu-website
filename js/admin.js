@@ -50,6 +50,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("btn-logout").addEventListener("click", () => { Admin.clear(); location.href = "acceso.html"; });
   $("btn-new").addEventListener("click", () => openEditor(null));
   $("btn-publish").addEventListener("click", publish);
+  document.querySelectorAll("#admin-nav button").forEach(b =>
+    b.addEventListener("click", () => switchView(b.dataset.view)));
   setDirty(isDirty());
 
   await loadLabels();
@@ -206,6 +208,9 @@ function buildEditor(p, isExisting) {
   form.appendChild(el("label", { class: "adm-check" }, [cutChk,
     el("span", {}, ["Imatge sense fons (es mostra sencera dins el marc; desmarca-ho si la foto ja té fons)"])]));
 
+  /* --- cost + bill of materials (internal, never shown on the web) --- */
+  form.appendChild(buildCostBom(p));
+
   /* --- labels --- */
   const labelBox = el("div", { class: "adm-labels" }, State.labels.map(l => {
     const cb = el("input", { type: "checkbox", value: l.id, class: "f-label" });
@@ -303,6 +308,13 @@ function collect() {
   p.stock = stock === "" ? "" : Number(stock);
   p.featured = $("f-featured").checked;
   p.cutout = $("f-cutout").checked;
+  const cst = $("f-cost").value.trim();
+  p.cost = cst === "" ? "" : Number(cst);
+  p.bom = Array.from(document.querySelectorAll(".adm-bom-row")).map(r => ({
+    material: r.querySelector(".bom-mat").value.trim(),
+    color: r.querySelector(".bom-col").value.trim(),
+    grams: Number(r.querySelector(".bom-g").value || 0)
+  })).filter(b => b.material && b.grams > 0);
   const code = $("f-codename").value.trim();
   if (code) p.codename = code;
 
@@ -366,4 +378,128 @@ async function publish() {
   if (!r.ok) { toast(r.message || "No s'ha pogut publicar.", "err"); return; }
   setDirty(false);
   toast(r.message || "Publicat.", "ok");
+}
+
+/* ============================ VIEW SWITCHER ============================ */
+function switchView(v) {
+  document.querySelectorAll("#admin-nav button").forEach(b => b.classList.toggle("active", b.dataset.view === v));
+  $("view-editor").hidden = true; $("view-editor").innerHTML = "";
+  $("view-list").hidden = v !== "list";
+  $("view-orders").hidden = v !== "orders";
+  $("view-materials").hidden = v !== "materials";
+  if (v === "orders") renderOrders();
+  if (v === "materials") renderMaterials();
+}
+
+function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function fmtDate(s) { const d = new Date(s); return isNaN(d) ? String(s).slice(0, 16) : d.toLocaleString("ca-ES", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }); }
+function tile(label, val) { return '<div class="adm-tile"><span class="t-label">' + label + '</span><span class="t-val">' + val + "</span></div>"; }
+
+/* ---------- cost + bill of materials (product editor) ---------- */
+function buildCostBom(p) {
+  const cost = el("input", { id: "f-cost", type: "number", step: "0.01", min: "0", value: (p.cost ?? "") });
+  const rows = el("div", { class: "adm-specs", id: "bom-rows" });
+  (p.bom || []).forEach(b => rows.appendChild(bomRow(b)));
+  const add = el("button", { type: "button", class: "btn-outline",
+    onclick: () => rows.appendChild(bomRow({})) }, ["+ Material"]);
+  return el("div", { class: "adm-costbom" }, [
+    el("h3", {}, ["Cost i materials (intern — no surt al web)"]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["Cost de producció (€) — per calcular el benefici"]), cost]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["Materials per unitat (es descompten de l'estoc a cada comanda)"]), rows, add])
+  ]);
+}
+function bomRow(b) {
+  return el("div", { class: "adm-bom-row" }, [
+    el("input", { type: "text", class: "bom-mat", placeholder: "Material (PLA, PETG…)", value: b.material || "" }),
+    el("input", { type: "text", class: "bom-col", placeholder: "Color", value: b.color || "" }),
+    el("input", { type: "number", class: "bom-g", step: "1", min: "0", placeholder: "grams", value: b.grams || "" }),
+    el("button", { type: "button", class: "adm-img-x", title: "Treure", onclick: e => e.target.closest(".adm-bom-row").remove() }, ["×"])
+  ]);
+}
+
+/* ============================ ORDERS ============================ */
+async function renderOrders() {
+  const v = $("view-orders");
+  v.innerHTML = '<div class="admin-head"><h1>Comandes</h1></div><div id="orders-summary" class="adm-summary"></div><div id="orders-list" class="admin-list"></div>';
+  const s = await Admin.call("summary");
+  if (s.ok) {
+    const t = s.data.totals;
+    let html = tile("Comandes", t.orders) + tile("Ingressos", t.revenue.toFixed(2) + " €") +
+      tile("Cost", t.cost.toFixed(2) + " €") + tile("Benefici", t.profit.toFixed(2) + " €");
+    $("orders-summary").innerHTML = html;
+    if (s.data.lowMaterials && s.data.lowMaterials.length)
+      $("orders-summary").insertAdjacentHTML("beforeend",
+        '<div class="adm-low">Material sota mínim: ' + s.data.lowMaterials.map(m => escapeHtml(m.material + " " + m.color) + " (" + m.stock + "g)").join(", ") + "</div>");
+  }
+  const r = await Admin.call("listOrders");
+  const list = $("orders-list");
+  if (!r.ok) { toast(r.message || "Error en carregar comandes.", "err"); return; }
+  if (!r.data.length) { list.innerHTML = '<p class="admin-empty">Encara no hi ha comandes.</p>'; return; }
+  list.innerHTML = "";
+  r.data.forEach(o => list.appendChild(orderCard(o)));
+}
+const ORDER_STATES = ["nou", "en preparació", "a punt", "entregat", "cancel·lat"];
+function orderCard(o) {
+  const items = o.items.map(i => i.qty + "× " + escapeHtml(i.name)).join(", ");
+  const sel = el("select", { class: "ord-status" },
+    ORDER_STATES.map(st => el("option", { value: st, selected: o.status === st }, [st])));
+  sel.addEventListener("change", async () => {
+    const r = await Admin.call("setOrderStatus", { id: o.id, status: sel.value });
+    toast(r.ok ? "Estat actualitzat." : (r.message || "Error."), r.ok ? "ok" : "err");
+  });
+  return el("div", { class: "adm-card adm-order status-" + o.status.replace(/\s|·/g, "-") }, [
+    el("div", { class: "adm-card-main" }, [
+      el("div", { class: "adm-card-name", html: escapeHtml(o.id) + " · " + escapeHtml(o.name) }),
+      el("div", { class: "adm-card-meta", html: fmtDate(o.date) + " · " + escapeHtml(o.email) + (o.phone ? " · " + escapeHtml(o.phone) : "") }),
+      el("div", { class: "adm-card-meta", html: items }),
+      el("div", { class: "adm-card-meta", html: "<strong>" + o.revenue.toFixed(2) + " €</strong> · benefici " + o.profit.toFixed(2) + " €" + (o.note ? " · " + escapeHtml(o.note) : "") })
+    ]),
+    el("div", { class: "adm-card-actions" }, [sel,
+      el("button", { class: "btn-text danger", onclick: async () => {
+        if (!confirm("Esborrar la comanda " + o.id + "? (no es restaura l'estoc de materials)")) return;
+        const r = await Admin.call("deleteOrder", { id: o.id });
+        toast(r.ok ? "Comanda esborrada." : (r.message || "Error."), r.ok ? "ok" : "err"); renderOrders();
+      } }, ["Esborrar"])])
+  ]);
+}
+
+/* ============================ MATERIALS ============================ */
+async function renderMaterials() {
+  const v = $("view-materials");
+  v.innerHTML = '<div class="admin-head"><h1>Materials</h1><button class="btn" id="mat-new">+ Material</button></div><div id="mat-list" class="admin-list"></div>';
+  $("mat-new").addEventListener("click", openMaterial);
+  const r = await Admin.call("listMaterials");
+  if (!r.ok) { toast(r.message || "Error en carregar materials.", "err"); return; }
+  const list = $("mat-list");
+  if (!r.data.length) { list.innerHTML = '<p class="admin-empty">Encara no hi ha materials. Afegeix-ne un.</p>'; return; }
+  list.innerHTML = "";
+  r.data.forEach(m => list.appendChild(matCard(m)));
+}
+function matCard(m) {
+  const stock = el("input", { type: "number", step: "1", value: m.stock, class: "m-stock" });
+  const cpg = el("input", { type: "number", step: "0.001", value: m.costPerGram, class: "m-cpg" });
+  const low = el("input", { type: "number", step: "1", value: m.lowAt, class: "m-low" });
+  const field = (lab, inp) => el("label", { class: "adm-mat-f" }, [el("span", {}, [lab]), inp]);
+  return el("div", { class: "adm-card adm-mat" + (m.stock <= m.lowAt ? " low" : "") }, [
+    el("div", { class: "adm-mat-name" }, [m.material + " · " + (m.color || "—")]),
+    field("Estoc (g)", stock), field("€/g", cpg), field("Mínim (g)", low),
+    el("div", { class: "adm-card-actions" }, [
+      el("button", { class: "btn-outline", onclick: async () => {
+        const r = await Admin.call("saveMaterial", { material: { material: m.material, color: m.color, stock: +stock.value, costPerGram: +cpg.value, lowAt: +low.value } });
+        toast(r.ok ? "Desat." : (r.message || "Error."), r.ok ? "ok" : "err"); renderMaterials();
+      } }, ["Desar"]),
+      el("button", { class: "btn-text danger", onclick: async () => {
+        if (!confirm("Esborrar " + m.material + " " + m.color + "?")) return;
+        const r = await Admin.call("deleteMaterial", { id: m.id });
+        toast(r.ok ? "Esborrat." : (r.message || "Error."), r.ok ? "ok" : "err"); renderMaterials();
+      } }, ["Esborrar"])
+    ])
+  ]);
+}
+async function openMaterial() {
+  const name = prompt("Material (ex. PLA, PETG, ABS):"); if (!name) return;
+  const color = prompt("Color (ex. negre):") || "";
+  const r = await Admin.call("saveMaterial", { material: { material: name.trim(), color: color.trim(), stock: 0, costPerGram: 0, lowAt: 0 } });
+  toast(r.ok ? "Material afegit." : (r.message || "Error."), r.ok ? "ok" : "err");
+  renderMaterials();
 }

@@ -69,6 +69,15 @@
     "sortZa": "Ordre Z-A",
     "iva": "IVA incl."
   },
+  "order": {
+    "cta": "Demanar",
+    "title": "Fes la teva comanda",
+    "qty": "Quantitat",
+    "note": "Nota (opcional)",
+    "send": "Enviar comanda",
+    "nopay": "Sense pagament en línia: rebem la comanda i et contactem per confirmar i coordinar el pagament i l'enviament.",
+    "unit": "u."
+  },
   "badge": {
     "own": "Disseny propi",
     "std": "Producte",

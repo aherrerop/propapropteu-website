@@ -40,6 +40,25 @@ heroTagline{...}, heroDesc{...}, specs[{label{...}, value}]`
 - **cutout: true** — the card image has no background → show it contained, not
   filled. Set it per product in the dashboard.
 
+## Orders, profit & materials inventory
+
+The dashboard (`/acceso` → **Comandes / Materials**) and the product pages run a
+small shop backend on the same Sheet:
+
+- **Products** carry two *internal* fields (never published to the public site):
+  `cost` (€, production cost → profit) and `bom` (bill of materials:
+  `[{material, color, grams}]`). Set them in the product editor.
+- **Materials** tab = filament stock in grams, by material + colour, with
+  €/gram and a low-stock threshold. Manage it under dashboard → Materials.
+- **Orders** tab: a customer places an order from a product page ("Demanar" →
+  qty + contact, no online payment). The backend records it, computes
+  revenue / cost / **profit**, **deducts the materials** each item uses (BOM ×
+  qty), and emails `info@propapropteu.com`. Managers see every order, change its
+  status, or delete it under dashboard → Comandes (with running profit totals
+  and a low-stock warning).
+
+Deleting an order does **not** restock materials — adjust by hand if needed.
+
 ## Images
 
 - `assets/img/products/<id>.*` — product images (uploads from the dashboard go
