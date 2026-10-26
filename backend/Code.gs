@@ -19,6 +19,8 @@
 
 var SHEET_MANAGERS = 'Managers';
 var SHEET_PRODUCTS = 'Products';
+var SHEET_MATERIALS = 'Materials';
+var SHEET_ORDERS = 'Orders';
 var SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 hours
 
 /* ============================ ROUTER ============================ */
@@ -28,9 +30,10 @@ function doPost(e) {
     var req = JSON.parse(e.postData.contents || '{}');
     var action = req.action;
 
-    // Public actions: login + contact form.
+    // Public actions: login + contact form + place an order.
     if (action === 'login') return json(login(req));
     if (action === 'contact') return json(contact(req));
+    if (action === 'placeOrder') return json(placeOrder(req));
 
     // Everything else needs a valid session token.
     var session = verifyToken(req.token);
@@ -43,6 +46,12 @@ function doPost(e) {
       case 'deleteProduct':return json(deleteProduct(req.id));
       case 'uploadImage':  return json(uploadImage(req));
       case 'publish':      return json(publish(session));
+      case 'listOrders':   return json({ ok: true, data: readOrders() });
+      case 'setOrderStatus': return json(setOrderStatus(req.id, req.status));
+      case 'listMaterials':  return json({ ok: true, data: readMaterials() });
+      case 'saveMaterial':   return json(saveMaterial(req.material));
+      case 'deleteMaterial': return json(deleteMaterial(req.id));
+      case 'summary':        return json({ ok: true, data: summary() });
       default:             return json({ ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action });
     }
   } catch (err) {
@@ -185,9 +194,9 @@ function verifyToken(token) {
  *          labels(json) | images(json) | name(json) | short(json) |
  *          description(json) | heroTagline(json) | heroDesc(json) | specs(json)
  */
-var PRODUCT_COLS = ['id','type','price','stock','featured','cutout','codename','heroImage',
-  'labels','images','name','short','description','heroTagline','heroDesc','specs'];
-var PRODUCT_JSON_COLS = ['labels','images','name','short','description','heroTagline','heroDesc','specs'];
+var PRODUCT_COLS = ['id','type','price','cost','stock','featured','cutout','codename','heroImage',
+  'labels','images','name','short','description','heroTagline','heroDesc','specs','bom'];
+var PRODUCT_JSON_COLS = ['labels','images','name','short','description','heroTagline','heroDesc','specs','bom'];
 
 /* Guarantee the Products header row is exactly PRODUCT_COLS, in order.
    This makes the backend immune to missing/renamed/reordered headers. */
@@ -219,6 +228,7 @@ function rowToProduct(r, col) {
   p.id = String(r[col.id]).trim();
   p.type = String(r[col.type] || 'own').trim();
   p.price = Number(r[col.price] || 0);
+  if (col.cost != null && String(r[col.cost]) !== '') p.cost = Number(r[col.cost]);
   if (String(r[col.stock]) !== '') p.stock = Number(r[col.stock]);
   if (String(r[col.featured]).toLowerCase() === 'true' || r[col.featured] === true) p.featured = true;
   if (col.cutout != null && (String(r[col.cutout]).toLowerCase() === 'true' || r[col.cutout] === true)) p.cutout = true;
@@ -248,6 +258,7 @@ function saveProduct(product) {
     if (k === 'cutout') return product.cutout ? true : false;
     if (k === 'stock') return (product.stock === '' || product.stock == null) ? '' : Number(product.stock);
     if (k === 'price') return Number(product.price || 0);
+    if (k === 'cost') return (product.cost === '' || product.cost == null) ? '' : Number(product.cost);
     if (PRODUCT_JSON_COLS.indexOf(k) >= 0) return product[k] != null ? JSON.stringify(product[k]) : '';
     return product[k] != null ? product[k] : '';
   });
@@ -275,6 +286,147 @@ function deleteProduct(id) {
     if (String(values[i][col.id] || '').trim() === id) { sh.deleteRow(i + 1); return { ok: true, id: id }; }
   }
   return { ok: false, error: 'notfound', message: 'Producte no trobat: ' + id };
+}
+
+/* ======================= MATERIALS (inventory) ======================= */
+/* Materials tab: filament/materials stock in grams, by material + colour.
+   Columns: material | color | stock(g) | costPerGram(€) | lowAt(g) | updated */
+var MATERIAL_COLS = ['material', 'color', 'stock', 'costPerGram', 'lowAt', 'updated'];
+
+function ensureMaterialsSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_MATERIALS);
+  if (!sh) { sh = ss.insertSheet(SHEET_MATERIALS); sh.appendRow(MATERIAL_COLS); return sh; }
+  var n = MATERIAL_COLS.length;
+  var head = sh.getLastColumn() >= n ? sh.getRange(1, 1, 1, n).getValues()[0] : [];
+  if (!MATERIAL_COLS.every(function (k, i) { return String(head[i] || '').trim() === k; }))
+    sh.getRange(1, 1, 1, n).setValues([MATERIAL_COLS]);
+  return sh;
+}
+function matId(material, color) {
+  return (String(material || '').trim() + '|' + String(color || '').trim()).toLowerCase();
+}
+function readMaterials() {
+  var sh = ensureMaterialsSheet();
+  var v = sh.getDataRange().getValues(), col = indexMap(v[0]), out = [];
+  for (var i = 1; i < v.length; i++) {
+    var r = v[i]; if (!String(r[col.material] || '').trim()) continue;
+    out.push({
+      id: matId(r[col.material], r[col.color]),
+      material: String(r[col.material]).trim(), color: String(r[col.color] || '').trim(),
+      stock: Number(r[col.stock] || 0), costPerGram: Number(r[col.costPerGram] || 0),
+      lowAt: Number(r[col.lowAt] || 0), updated: r[col.updated] ? String(r[col.updated]) : ''
+    });
+  }
+  return out;
+}
+function saveMaterial(m) {
+  if (!m || !String(m.material || '').trim()) return { ok: false, error: 'missing', message: 'Falta el material.' };
+  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  var key = matId(m.material, m.color);
+  var row = [String(m.material).trim(), String(m.color || '').trim(), Number(m.stock || 0), Number(m.costPerGram || 0), Number(m.lowAt || 0), new Date()];
+  for (var i = 1; i < v.length; i++)
+    if (matId(v[i][col.material], v[i][col.color]) === key) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); return { ok: true, id: key }; }
+  sh.appendRow(row); return { ok: true, id: key };
+}
+function deleteMaterial(id) {
+  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  for (var i = v.length - 1; i >= 1; i--)
+    if (matId(v[i][col.material], v[i][col.color]) === id) { sh.deleteRow(i + 1); return { ok: true }; }
+  return { ok: false, error: 'notfound', message: 'Material no trobat.' };
+}
+// Subtract grams from a material/colour on an order; returns remaining, or null if untracked.
+function deductMaterial(material, color, grams) {
+  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  var key = matId(material, color);
+  for (var i = 1; i < v.length; i++)
+    if (matId(v[i][col.material], v[i][col.color]) === key) {
+      var next = Number(v[i][col.stock] || 0) - grams;
+      sh.getRange(i + 1, col.stock + 1).setValue(next);
+      sh.getRange(i + 1, col.updated + 1).setValue(new Date());
+      return next;
+    }
+  return null;
+}
+
+/* ======================= ORDERS ======================= */
+var ORDER_COLS = ['date', 'id', 'status', 'name', 'email', 'phone', 'units', 'revenue', 'cost', 'profit', 'items', 'note'];
+function ensureOrdersSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_ORDERS);
+  if (!sh) { sh = ss.insertSheet(SHEET_ORDERS); sh.appendRow(ORDER_COLS); return sh; }
+  var n = ORDER_COLS.length;
+  var head = sh.getLastColumn() >= n ? sh.getRange(1, 1, 1, n).getValues()[0] : [];
+  if (!ORDER_COLS.every(function (k, i) { return String(head[i] || '').trim() === k; }))
+    sh.getRange(1, 1, 1, n).setValues([ORDER_COLS]);
+  return sh;
+}
+// Public: a customer places an order (no payment). Records it, computes profit,
+// deducts material inventory per each product's bill-of-materials, emails the shop.
+function placeOrder(req) {
+  var items = req.items;
+  if (!items || !items.length) return { ok: false, error: 'missing', message: 'Comanda buida.' };
+  var name = String(req.name || '').trim(), email = String(req.email || '').trim();
+  if (!name || !email) return { ok: false, error: 'missing', message: 'Falten nom o email.' };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
+
+  var byId = {}; readProducts().forEach(function (p) { byId[p.id] = p; });
+  var lines = [], units = 0, revenue = 0, cost = 0, lowFlags = [];
+  for (var i = 0; i < items.length; i++) {
+    var p = byId[items[i].id]; if (!p) continue;
+    var qty = Math.max(1, Math.floor(Number(items[i].qty || 1)));
+    units += qty; revenue += p.price * qty; cost += (p.cost || 0) * qty;
+    lines.push({ id: p.id, name: (p.name && (p.name.ca || p.name.es || p.name.en)) || p.id, qty: qty, price: p.price, cost: p.cost || 0 });
+    if (p.bom && p.bom.length) p.bom.forEach(function (b) {
+      var rem = deductMaterial(b.material, b.color, Number(b.grams || 0) * qty);
+      if (rem != null && rem < 0) lowFlags.push(b.material + ' ' + b.color);
+    });
+  }
+  if (!lines.length) return { ok: false, error: 'noitems', message: 'Cap producte vàlid a la comanda.' };
+
+  var profit = revenue - cost;
+  var id = 'ORD-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
+  ensureOrdersSheet().appendRow([new Date(), id, 'nou', name, email, String(req.phone || ''), units, revenue, cost, profit, JSON.stringify(lines), String(req.note || '')]);
+  try {
+    MailApp.sendEmail({
+      to: 'info@propapropteu.com', replyTo: email, subject: '[Comanda ' + id + '] ' + name,
+      body: 'Nova comanda ' + id + '\nClient: ' + name + ' <' + email + '> ' + (req.phone || '') + '\n\n' +
+            lines.map(function (l) { return l.qty + 'x ' + l.name + ' (' + l.price + ' €)'; }).join('\n') +
+            '\n\nIngressos: ' + revenue.toFixed(2) + ' €\nCost: ' + cost.toFixed(2) + ' €\nBenefici: ' + profit.toFixed(2) + ' €' +
+            (req.note ? ('\n\nNota: ' + req.note) : '') + (lowFlags.length ? ('\n\nMaterial sota mínim: ' + lowFlags.join(', ')) : '')
+    });
+  } catch (e) { /* email optional */ }
+  return { ok: true, id: id, message: 'Comanda rebuda. Et contactem per confirmar.' };
+}
+function readOrders() {
+  var sh = ensureOrdersSheet();
+  var v = sh.getDataRange().getValues(), col = indexMap(v[0]), out = [];
+  for (var i = v.length - 1; i >= 1; i--) {
+    var r = v[i]; if (!String(r[col.id] || '').trim()) continue;
+    var items = []; try { items = JSON.parse(r[col.items] || '[]'); } catch (e) {}
+    out.push({
+      date: r[col.date] ? String(r[col.date]) : '', id: String(r[col.id]), status: String(r[col.status] || 'nou'),
+      name: String(r[col.name] || ''), email: String(r[col.email] || ''), phone: String(r[col.phone] || ''),
+      units: Number(r[col.units] || 0), revenue: Number(r[col.revenue] || 0), cost: Number(r[col.cost] || 0),
+      profit: Number(r[col.profit] || 0), items: items, note: String(r[col.note] || '')
+    });
+  }
+  return out;
+}
+function setOrderStatus(id, status) {
+  id = String(id || '').trim();
+  var sh = ensureOrdersSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  for (var i = 1; i < v.length; i++)
+    if (String(v[i][col.id] || '').trim() === id) { sh.getRange(i + 1, col.status + 1).setValue(String(status || 'nou')); return { ok: true }; }
+  return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
+}
+function summary() {
+  var orders = readOrders(), mats = readMaterials();
+  var t = { orders: orders.length, revenue: 0, cost: 0, profit: 0, byStatus: {} };
+  orders.forEach(function (o) { t.revenue += o.revenue; t.cost += o.cost; t.profit += o.profit; t.byStatus[o.status] = (t.byStatus[o.status] || 0) + 1; });
+  var low = mats.filter(function (m) { return m.stock <= m.lowAt; })
+    .map(function (m) { return { material: m.material, color: m.color, stock: m.stock, lowAt: m.lowAt }; });
+  return { totals: t, lowMaterials: low, materialsCount: mats.length };
 }
 
 /* ======================= IMAGE UPLOAD (Drive) ======================= */
@@ -315,10 +467,14 @@ function publish(session) {
 
   // Build products.json, preserving the existing labels + _readme block.
   var existing = sha ? JSON.parse(Utilities.newBlob(Utilities.base64Decode(JSON.parse(get.getContentText()).content)).getDataAsString()) : {};
+  // Strip internal-only fields (cost, bom) before publishing to the public site.
+  var publicProducts = readProducts().map(function (p) {
+    var c = {}; for (var k in p) { if (k !== 'cost' && k !== 'bom') c[k] = p[k]; } return c;
+  });
   var payload = {
     _readme: existing._readme || 'Managed from the admin dashboard. Edit via acceso.html.',
     labels: existing.labels || [],
-    products: readProducts()
+    products: publicProducts
   };
   var content = JSON.stringify(payload, null, 2) + '\n';
 
