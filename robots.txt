@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /acceso.html
+Disallow: /admin.html
+Disallow: /tools/
+
+Sitemap: https://propapropteu.com/sitemap.xml

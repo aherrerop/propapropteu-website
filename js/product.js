@@ -29,6 +29,24 @@ const ProductPage = {
 
     document.title = `${I18N.pick(p.name)} — ${SITE_CONFIG.businessName}`;
 
+    /* SEO: meta description + Product structured data (JSON-LD) */
+    const desc = I18N.pick(p.short) || I18N.pick(p.name);
+    let md = document.querySelector('meta[name="description"]');
+    if (!md) { md = document.createElement("meta"); md.name = "description"; document.head.appendChild(md); }
+    md.content = desc;
+    const ld = {
+      "@context": "https://schema.org", "@type": "Product",
+      name: I18N.pick(p.name), description: desc,
+      image: images.map(s => new URL(s, location.href).href),
+      brand: { "@type": "Brand", name: SITE_CONFIG.businessName },
+      offers: { "@type": "Offer", price: p.price, priceCurrency: "EUR",
+        availability: out ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+        url: location.href }
+    };
+    let lds = document.getElementById("ld-product");
+    if (!lds) { lds = document.createElement("script"); lds.type = "application/ld+json"; lds.id = "ld-product"; document.head.appendChild(lds); }
+    lds.textContent = JSON.stringify(ld);
+
     const thumbs = images.length > 1 ? `
       <div class="gallery-thumbs">
         ${images.map((src, i) =>
