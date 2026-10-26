@@ -48,6 +48,7 @@ function doPost(e) {
       case 'publish':      return json(publish(session));
       case 'listOrders':   return json({ ok: true, data: readOrders() });
       case 'setOrderStatus': return json(setOrderStatus(req.id, req.status));
+      case 'deleteOrder':  return json(deleteOrder(req.id));
       case 'listMaterials':  return json({ ok: true, data: readMaterials() });
       case 'saveMaterial':   return json(saveMaterial(req.material));
       case 'deleteMaterial': return json(deleteMaterial(req.id));
@@ -418,6 +419,14 @@ function setOrderStatus(id, status) {
   var sh = ensureOrdersSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
   for (var i = 1; i < v.length; i++)
     if (String(v[i][col.id] || '').trim() === id) { sh.getRange(i + 1, col.status + 1).setValue(String(status || 'nou')); return { ok: true }; }
+  return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
+}
+// Removes an order row. Does NOT restock materials (do that manually if needed).
+function deleteOrder(id) {
+  id = String(id || '').trim();
+  var sh = ensureOrdersSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  for (var i = v.length - 1; i >= 1; i--)
+    if (String(v[i][col.id] || '').trim() === id) { sh.deleteRow(i + 1); return { ok: true }; }
   return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
 }
 function summary() {
