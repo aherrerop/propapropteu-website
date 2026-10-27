@@ -387,8 +387,10 @@ function switchView(v) {
   $("view-list").hidden = v !== "list";
   $("view-orders").hidden = v !== "orders";
   $("view-materials").hidden = v !== "materials";
+  $("view-messages").hidden = v !== "messages";
   if (v === "orders") renderOrders();
   if (v === "materials") renderMaterials();
+  if (v === "messages") renderMessages();
 }
 
 function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
@@ -438,9 +440,10 @@ async function renderOrders() {
   list.innerHTML = "";
   r.data.forEach(o => list.appendChild(orderCard(o)));
 }
-const ORDER_STATES = ["nou", "en preparació", "a punt", "entregat", "cancel·lat"];
+const ORDER_STATES = ["nou", "pendent pagament", "pagat", "en preparació", "a punt", "entregat", "cancel·lat"];
 function orderCard(o) {
   const items = o.items.map(i => i.qty + "× " + escapeHtml(i.name)).join(", ");
+  const payLabel = o.payment === "transfer" ? "transferència" : (o.payment === "card" ? "targeta" : o.payment);
   const sel = el("select", { class: "ord-status" },
     ORDER_STATES.map(st => el("option", { value: st, selected: o.status === st }, [st])));
   sel.addEventListener("change", async () => {
@@ -452,7 +455,7 @@ function orderCard(o) {
       el("div", { class: "adm-card-name", html: escapeHtml(o.id) + " · " + escapeHtml(o.name) }),
       el("div", { class: "adm-card-meta", html: fmtDate(o.date) + " · " + escapeHtml(o.email) + (o.phone ? " · " + escapeHtml(o.phone) : "") }),
       el("div", { class: "adm-card-meta", html: items }),
-      el("div", { class: "adm-card-meta", html: "<strong>" + o.revenue.toFixed(2) + " €</strong> · benefici " + o.profit.toFixed(2) + " €" + (o.note ? " · " + escapeHtml(o.note) : "") })
+      el("div", { class: "adm-card-meta", html: "<strong>" + o.revenue.toFixed(2) + " €</strong> · benefici " + o.profit.toFixed(2) + " €" + (payLabel ? " · " + escapeHtml(payLabel) : "") + (o.note ? " · " + escapeHtml(o.note) : "") })
     ]),
     el("div", { class: "adm-card-actions" }, [sel,
       el("button", { class: "btn-text danger", onclick: async () => {
@@ -502,4 +505,33 @@ async function openMaterial() {
   const r = await Admin.call("saveMaterial", { material: { material: name.trim(), color: color.trim(), stock: 0, costPerGram: 0, lowAt: 0 } });
   toast(r.ok ? "Material afegit." : (r.message || "Error."), r.ok ? "ok" : "err");
   renderMaterials();
+}
+
+/* ============================ MESSAGES ============================ */
+async function renderMessages() {
+  const v = $("view-messages");
+  v.innerHTML = '<div class="admin-head"><h1>Missatges</h1></div><div id="msg-list" class="admin-list"></div>';
+  const r = await Admin.call("listMessages");
+  if (!r.ok) { toast(r.message || "Error en carregar missatges.", "err"); return; }
+  const list = $("msg-list");
+  if (!r.data.length) { list.innerHTML = '<p class="admin-empty">Cap missatge.</p>'; return; }
+  list.innerHTML = "";
+  r.data.forEach(m => list.appendChild(msgCard(m)));
+}
+function msgCard(m) {
+  return el("div", { class: "adm-card adm-msg" }, [
+    el("div", { class: "adm-card-main" }, [
+      el("div", { class: "adm-card-name", html: escapeHtml(m.name) + (m.source ? ' · <span class="adm-id">' + escapeHtml(m.source) + "</span>" : "") }),
+      el("div", { class: "adm-card-meta", html: fmtDate(m.date) + " · " + escapeHtml(m.email) + (m.phone ? " · " + escapeHtml(m.phone) : "") + (m.company ? " · " + escapeHtml(m.company) : "") }),
+      el("div", { class: "adm-card-meta", html: escapeHtml(m.message) })
+    ]),
+    el("div", { class: "adm-card-actions" }, [
+      el("a", { class: "btn-outline", href: "mailto:" + m.email }, ["Respondre"]),
+      el("button", { class: "btn-text danger", onclick: async () => {
+        if (!confirm("Esborrar aquest missatge?")) return;
+        const r = await Admin.call("deleteMessage", { row: m.row });
+        toast(r.ok ? "Esborrat." : (r.message || "Error."), r.ok ? "ok" : "err"); renderMessages();
+      } }, ["Esborrar"])
+    ])
+  ]);
 }

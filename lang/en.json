@@ -63,6 +63,7 @@
     "empty": "No products match your filters.",
     "addToCart": "Add",
     "addToCartFull": "Add to cart",
+    "allCats": "All",
     "sortRelevance": "Relevance",
     "sortBest": "Best sellers",
     "sortAz": "Order A-Z",
@@ -75,7 +76,12 @@
     "qty": "Quantity",
     "note": "Note (optional)",
     "send": "Send order",
-    "nopay": "No online payment: we receive the order and contact you to confirm and arrange payment and delivery.",
+    "nopay": "We receive the order and contact you to confirm payment and delivery.",
+    "payLabel": "How would you like to pay?",
+    "payTransfer": "Bank transfer",
+    "payCard": "Card (coming soon)",
+    "transferMsg": "Transfer {total} € to {iban} ({holder}) using reference {ref}. We confirm the order once received.",
+    "cardSoon": "Card payment is coming very soon. For now choose transfer and we'll contact you.",
     "unit": "u."
   },
   "badge": {

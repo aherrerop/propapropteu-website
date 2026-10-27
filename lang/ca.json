@@ -63,6 +63,7 @@
     "empty": "Cap producte no coincideix amb els filtres.",
     "addToCart": "Afegeix",
     "addToCartFull": "Afegeix a la cistella",
+    "allCats": "Totes",
     "sortRelevance": "Rellevància",
     "sortBest": "Més venuts",
     "sortAz": "Ordre A-Z",
@@ -75,7 +76,12 @@
     "qty": "Quantitat",
     "note": "Nota (opcional)",
     "send": "Enviar comanda",
-    "nopay": "Sense pagament en línia: rebem la comanda i et contactem per confirmar i coordinar el pagament i l'enviament.",
+    "nopay": "Rebem la comanda i et contactem per confirmar el pagament i l'enviament.",
+    "payLabel": "Com vols pagar?",
+    "payTransfer": "Transferència bancària",
+    "payCard": "Targeta (properament)",
+    "transferMsg": "Fes una transferència de {total} € a {iban} ({holder}) indicant la referència {ref}. Et confirmem la comanda en rebre-la.",
+    "cardSoon": "El pagament amb targeta estarà disponible molt aviat. De moment, tria transferència i et contactem.",
     "unit": "u."
   },
   "badge": {

@@ -63,6 +63,7 @@
     "empty": "Ningún producto coincide con los filtros.",
     "addToCart": "Añadir",
     "addToCartFull": "Añadir a la cesta",
+    "allCats": "Todas",
     "sortRelevance": "Relevancia",
     "sortBest": "Best sellers",
     "sortAz": "Orden A-Z",
@@ -75,7 +76,12 @@
     "qty": "Cantidad",
     "note": "Nota (opcional)",
     "send": "Enviar pedido",
-    "nopay": "Sin pago online: recibimos el pedido y te contactamos para confirmar y coordinar el pago y el envío.",
+    "nopay": "Recibimos el pedido y te contactamos para confirmar el pago y el envío.",
+    "payLabel": "¿Cómo quieres pagar?",
+    "payTransfer": "Transferencia bancaria",
+    "payCard": "Tarjeta (próximamente)",
+    "transferMsg": "Haz una transferencia de {total} € a {iban} ({holder}) indicando la referencia {ref}. Confirmamos el pedido al recibirla.",
+    "cardSoon": "El pago con tarjeta estará disponible muy pronto. De momento, elige transferencia y te contactamos.",
     "unit": "u."
   },
   "badge": {

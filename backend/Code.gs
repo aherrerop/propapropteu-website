@@ -49,6 +49,8 @@ function doPost(e) {
       case 'listOrders':   return json({ ok: true, data: readOrders() });
       case 'setOrderStatus': return json(setOrderStatus(req.id, req.status));
       case 'deleteOrder':  return json(deleteOrder(req.id));
+      case 'listMessages':   return json({ ok: true, data: readMessages() });
+      case 'deleteMessage':  return json(deleteMessage(req.row));
       case 'listMaterials':  return json({ ok: true, data: readMaterials() });
       case 'saveMaterial':   return json(saveMaterial(req.material));
       case 'deleteMaterial': return json(deleteMaterial(req.id));
@@ -106,6 +108,23 @@ function ensureMessagesSheet() {
     sh.appendRow(['date', 'source', 'name', 'email', 'phone', 'company', 'message']);
   }
   return sh;
+}
+// Manager: list contact/quote messages (newest first), with their sheet row number.
+function readMessages() {
+  var sh = ensureMessagesSheet();
+  var v = sh.getDataRange().getValues(), col = indexMap(v[0]), out = [];
+  for (var i = v.length - 1; i >= 1; i--) {
+    var r = v[i]; if (!String(r[col.email] || r[col.name] || '').trim()) continue;
+    out.push({ row: i + 1, date: r[col.date] ? String(r[col.date]) : '', source: String(r[col.source] || ''),
+      name: String(r[col.name] || ''), email: String(r[col.email] || ''), phone: String(r[col.phone] || ''),
+      company: String(r[col.company] || ''), message: String(r[col.message] || '') });
+  }
+  return out;
+}
+function deleteMessage(row) {
+  row = Number(row); if (!row || row < 2) return { ok: false, error: 'bad', message: 'Fila no vàlida.' };
+  ensureMessagesSheet().deleteRow(row);
+  return { ok: true };
 }
 
 /* Sheet menu: adds "Prop a Prop Teu > Publicar al web" so managers can publish
@@ -351,7 +370,7 @@ function deductMaterial(material, color, grams) {
 }
 
 /* ======================= ORDERS ======================= */
-var ORDER_COLS = ['date', 'id', 'status', 'name', 'email', 'phone', 'units', 'revenue', 'cost', 'profit', 'items', 'note'];
+var ORDER_COLS = ['date', 'id', 'status', 'payment', 'name', 'email', 'phone', 'units', 'revenue', 'cost', 'profit', 'items', 'note'];
 function ensureOrdersSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_ORDERS);
@@ -386,8 +405,10 @@ function placeOrder(req) {
   if (!lines.length) return { ok: false, error: 'noitems', message: 'Cap producte vàlid a la comanda.' };
 
   var profit = revenue - cost;
+  var payment = (String(req.payment || 'transfer') === 'card') ? 'card' : 'transfer';
+  var status = payment === 'transfer' ? 'pendent pagament' : 'nou';
   var id = 'ORD-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
-  ensureOrdersSheet().appendRow([new Date(), id, 'nou', name, email, String(req.phone || ''), units, revenue, cost, profit, JSON.stringify(lines), String(req.note || '')]);
+  ensureOrdersSheet().appendRow([new Date(), id, status, payment, name, email, String(req.phone || ''), units, revenue, cost, profit, JSON.stringify(lines), String(req.note || '')]);
   try {
     MailApp.sendEmail({
       to: 'info@propapropteu.com', replyTo: email, subject: '[Comanda ' + id + '] ' + name,
@@ -418,6 +439,7 @@ function readOrders() {
     var items = []; try { items = JSON.parse(r[col.items] || '[]'); } catch (e) {}
     out.push({
       date: r[col.date] ? String(r[col.date]) : '', id: String(r[col.id]), status: String(r[col.status] || 'nou'),
+      payment: col.payment != null ? String(r[col.payment] || '') : '',
       name: String(r[col.name] || ''), email: String(r[col.email] || ''), phone: String(r[col.phone] || ''),
       units: Number(r[col.units] || 0), revenue: Number(r[col.revenue] || 0), cost: Number(r[col.cost] || 0),
       profit: Number(r[col.profit] || 0), items: items, note: String(r[col.note] || '')

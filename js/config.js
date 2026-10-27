@@ -41,6 +41,12 @@ const SITE_CONFIG = {
     facebook: ""
   },
 
+  // --- PAYMENTS ---
+  // Bank transfer: shown to the customer after they place a "transferencia" order.
+  // Replace with the real account holder + IBAN when ready.
+  bankHolder: "Prop a Prop Teu",
+  bankIban: "ES00 0000 0000 0000 0000 0000",  // PLACEHOLDER — put the real IBAN here
+
   // --- MANAGER LOGIN BACKEND ---
   // Paste the Apps Script Web app URL here (ends in /exec). See backend/SETUP.md.
   // Leave "" until the backend is deployed; the login page will say so.

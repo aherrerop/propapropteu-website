@@ -1152,3 +1152,20 @@ body.shop .site-header { background: var(--color-hero); }
 .adm-costbom h3 { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; font-size: 1.05rem; letter-spacing: 0.03em; }
 .adm-bom-row { display: grid; grid-template-columns: 1.3fr 1fr 0.8fr auto; gap: 8px; align-items: center; }
 .adm-bom-row input { font-family: var(--font-body); font-size: 0.95rem; padding: 8px 10px; border: 1px solid var(--color-line); border-radius: 8px; }
+
+/* ---- shop search + category filter + sold-out ---- */
+.shop-tools { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.shop-search { font-family: var(--font-body); font-size: 0.95rem; padding: 10px 16px; border: 1px solid var(--color-line); border-radius: 999px; min-width: 240px; background: #fff; }
+.shop-search:focus { outline: none; border-color: var(--color-ink); }
+.shop-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+.shop-filters button { font-family: var(--font-body); font-size: 0.8rem; padding: 6px 14px; border: 1px solid var(--color-line); border-radius: 999px; background: #fff; color: var(--color-muted); cursor: pointer; transition: background .15s, color .15s; }
+.shop-filters button.active { background: var(--color-ink); color: #fff; border-color: var(--color-ink); }
+.sc-soldout { position: absolute; top: 10px; left: 10px; z-index: 3; background: var(--color-ink); color: #fff; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 999px; }
+.shop-card.sold-out .sc-img img { opacity: 0.45; }
+
+/* ---- order payment method + admin messages ---- */
+.of-pay { border: 1px solid var(--color-line); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.of-pay legend { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); padding: 0 4px; }
+.of-radio { flex-direction: row; align-items: center; gap: 8px; text-transform: none; letter-spacing: normal; font-size: 0.95rem; color: var(--color-ink); }
+.of-radio input { width: auto; }
+.adm-msg .adm-card-main > div:last-child { white-space: pre-wrap; color: var(--color-ink); margin-top: 4px; }
