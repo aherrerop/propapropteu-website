@@ -18,6 +18,7 @@
  */
 
 var SHEET_MANAGERS = 'Managers';
+var SHEET_CLIENTS = 'Clients';
 var SHEET_PRODUCTS = 'Products';
 var SHEET_MATERIALS = 'Materials';
 var SHEET_ORDERS = 'Orders';
@@ -32,6 +33,7 @@ function doPost(e) {
 
     // Public actions: login + contact form + place an order.
     if (action === 'login') return json(login(req));
+    if (action === 'register') return json(register(req));
     if (action === 'contact') return json(contact(req));
     if (action === 'placeOrder') return json(placeOrder(req));
 
@@ -41,6 +43,10 @@ function doPost(e) {
 
     switch (action) {
       case 'me':           return json({ ok: true, user: session });
+      case 'myAccount':    return json(myAccount(session));
+      case 'updateProfile':return json(updateProfile(session, req.data || req));
+      case 'reorder':      return json(reorder(session, req.id));
+      case 'getInvoice':   return json(getInvoice(session, req.id));
       case 'listProducts': return json({ ok: true, data: readProducts() });
       case 'saveProduct':  return json(saveProduct(req.product));
       case 'deleteProduct':return json(deleteProduct(req.id));
@@ -156,7 +162,9 @@ function login(req) {
   var password = String(req.password || '');
   if (!email || !password) return { ok: false, error: 'missing', message: 'Falta email o contrasenya.' };
 
+  // Managers first, then clients.
   var row = findManager(email);
+  if (!row || row.active === false) row = findClient(email);
   if (!row || row.active === false) return { ok: false, error: 'badcreds', message: 'Credencials incorrectes.' };
 
   var hash = sha256Hex(row.salt + password);
@@ -185,6 +193,79 @@ function findManager(email) {
     }
   }
   return null;
+}
+
+/* ---------- Clients (customer accounts) ---------- */
+var CLIENT_COLS = ['email', 'salt', 'hash', 'name', 'phone', 'address', 'active', 'created'];
+function ensureClientsSheet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(SHEET_CLIENTS);
+  if (!sh) { sh = ss.insertSheet(SHEET_CLIENTS); sh.appendRow(CLIENT_COLS); return sh; }
+  var n = CLIENT_COLS.length;
+  var head = sh.getLastColumn() >= n ? sh.getRange(1, 1, 1, n).getValues()[0] : [];
+  if (!CLIENT_COLS.every(function (k, i) { return String(head[i] || '').trim() === k; }))
+    sh.getRange(1, 1, 1, n).setValues([CLIENT_COLS]);
+  return sh;
+}
+function findClient(email) {
+  var sh = ensureClientsSheet();
+  var v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  for (var i = 1; i < v.length; i++) {
+    if (String(v[i][col.email] || '').trim().toLowerCase() === email) {
+      return {
+        email: email, salt: String(v[i][col.salt] || ''), hash: String(v[i][col.hash] || ''),
+        name: String(v[i][col.name] || ''), phone: String(v[i][col.phone] || ''),
+        address: String(v[i][col.address] || ''), role: 'client',
+        active: String(v[i][col.active]).toLowerCase() !== 'false' && v[i][col.active] !== false, row: i + 1
+      };
+    }
+  }
+  return null;
+}
+// Public: a customer creates an account.
+function register(req) {
+  var email = String(req.email || '').trim().toLowerCase();
+  var password = String(req.password || '');
+  var name = String(req.name || '').trim();
+  if (!email || !password || !name) return { ok: false, error: 'missing', message: 'Falten nom, email o contrasenya.' };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
+  if (password.length < 6) return { ok: false, error: 'weak', message: 'La contrasenya ha de tenir 6 caràcters o més.' };
+  if (findManager(email) || findClient(email)) return { ok: false, error: 'exists', message: 'Ja existeix un compte amb aquest email.' };
+  var salt = Utilities.getUuid(), hash = sha256Hex(salt + password);
+  ensureClientsSheet().appendRow([email, salt, hash, name, String(req.phone || ''), String(req.address || ''), true, new Date()]);
+  var user = { email: email, name: name, role: 'client' };
+  return { ok: true, token: makeToken(user), user: user };
+}
+// Client: update own profile (name/phone/address; optional new password).
+function updateProfile(session, data) {
+  if (!session || session.role !== 'client') return { ok: false, error: 'auth', message: 'Només clients.' };
+  var c = findClient(session.email); if (!c) return { ok: false, error: 'notfound', message: 'Compte no trobat.' };
+  var sh = ensureClientsSheet(), col = indexMap(sh.getDataRange().getValues()[0]);
+  if (data.name != null) sh.getRange(c.row, col.name + 1).setValue(String(data.name).trim());
+  if (data.phone != null) sh.getRange(c.row, col.phone + 1).setValue(String(data.phone).trim());
+  if (data.address != null) sh.getRange(c.row, col.address + 1).setValue(String(data.address).trim());
+  if (data.password && String(data.password).length >= 6) {
+    var salt = Utilities.getUuid();
+    sh.getRange(c.row, col.salt + 1).setValue(salt);
+    sh.getRange(c.row, col.hash + 1).setValue(sha256Hex(salt + String(data.password)));
+  }
+  return { ok: true };
+}
+// Client: fetch my profile + my orders.
+function myAccount(session) {
+  if (!session || session.role !== 'client') return { ok: false, error: 'auth', message: 'Només clients.' };
+  var c = findClient(session.email) || {};
+  var mine = readOrders().filter(function (o) { return String(o.email).trim().toLowerCase() === session.email; });
+  return { ok: true, profile: { email: session.email, name: c.name || session.name, phone: c.phone || '', address: c.address || '' }, orders: mine };
+}
+// Client: re-order a previous order's items.
+function reorder(session, orderId) {
+  if (!session || session.role !== 'client') return { ok: false, error: 'auth', message: 'Només clients.' };
+  var o = readOrders().filter(function (x) { return x.id === orderId && String(x.email).trim().toLowerCase() === session.email; })[0];
+  if (!o) return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
+  var c = findClient(session.email) || {};
+  return placeOrder({ name: c.name || session.name, email: session.email, phone: c.phone || '',
+    payment: 'transfer', items: o.items.map(function (i) { return { id: i.id, qty: i.qty }; }), note: 'Re-comanda de ' + orderId });
 }
 
 /* Stateless signed token: base64(payloadJson).hmacHex  */
@@ -370,7 +451,7 @@ function deductMaterial(material, color, grams) {
 }
 
 /* ======================= ORDERS ======================= */
-var ORDER_COLS = ['date', 'id', 'status', 'payment', 'name', 'email', 'phone', 'units', 'revenue', 'cost', 'profit', 'items', 'note'];
+var ORDER_COLS = ['date', 'id', 'status', 'payment', 'name', 'email', 'phone', 'units', 'revenue', 'cost', 'profit', 'items', 'note', 'invoiceNo'];
 function ensureOrdersSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_ORDERS);
@@ -408,7 +489,7 @@ function placeOrder(req) {
   var payment = (String(req.payment || 'transfer') === 'card') ? 'card' : 'transfer';
   var status = payment === 'transfer' ? 'pendent pagament' : 'nou';
   var id = 'ORD-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
-  ensureOrdersSheet().appendRow([new Date(), id, status, payment, name, email, String(req.phone || ''), units, revenue, cost, profit, JSON.stringify(lines), String(req.note || '')]);
+  ensureOrdersSheet().appendRow([new Date(), id, status, payment, name, email, String(req.phone || ''), units, revenue, cost, profit, JSON.stringify(lines), String(req.note || ''), '']);
   try {
     MailApp.sendEmail({
       to: 'info@propapropteu.com', replyTo: email, subject: '[Comanda ' + id + '] ' + name,
@@ -442,7 +523,8 @@ function readOrders() {
       payment: col.payment != null ? String(r[col.payment] || '') : '',
       name: String(r[col.name] || ''), email: String(r[col.email] || ''), phone: String(r[col.phone] || ''),
       units: Number(r[col.units] || 0), revenue: Number(r[col.revenue] || 0), cost: Number(r[col.cost] || 0),
-      profit: Number(r[col.profit] || 0), items: items, note: String(r[col.note] || '')
+      profit: Number(r[col.profit] || 0), items: items, note: String(r[col.note] || ''),
+      invoiceNo: col.invoiceNo != null ? String(r[col.invoiceNo] || '') : ''
     });
   }
   return out;
@@ -462,6 +544,73 @@ function deleteOrder(id) {
     if (String(v[i][col.id] || '').trim() === id) { sh.deleteRow(i + 1); return { ok: true }; }
   return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
 }
+/* ---------- Invoices (VAT PDF) ---------- */
+function fiscalData() {
+  return {
+    name: prop('FISCAL_NAME') || '[NOMBRE FISCAL / AUTÓNOMO]',
+    nif: prop('FISCAL_NIF') || '[NIF]',
+    addr: prop('FISCAL_ADDR') || '[DIRECCIÓN FISCAL COMPLETA]',
+    email: 'info@propapropteu.com'
+  };
+}
+function assignInvoiceNo(orderId) {
+  var sh = ensureOrdersSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  for (var i = 1; i < v.length; i++) {
+    if (String(v[i][col.id] || '').trim() === orderId) {
+      var cur = String(v[i][col.invoiceNo] || '').trim();
+      if (cur) return cur;
+      var props = PropertiesService.getScriptProperties();
+      var seq = Number(props.getProperty('INVOICE_SEQ') || '0') + 1;
+      props.setProperty('INVOICE_SEQ', String(seq));
+      var no = 'F' + new Date().getFullYear() + '-' + ('0000' + seq).slice(-4);
+      sh.getRange(i + 1, col.invoiceNo + 1).setValue(no);
+      return no;
+    }
+  }
+  return null;
+}
+// Manager (any) or the owning client: generate/fetch a VAT invoice PDF, return its link.
+function getInvoice(session, orderId) {
+  var o = readOrders().filter(function (x) { return x.id === orderId; })[0];
+  if (!o) return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
+  if (session.role !== 'manager' && String(o.email).trim().toLowerCase() !== session.email)
+    return { ok: false, error: 'auth', message: 'No autoritzat.' };
+
+  var no = assignInvoiceNo(orderId);
+  var f = fiscalData();
+  var total = o.revenue, base = total / 1.21, iva = total - base;
+  var rows = o.items.map(function (l) {
+    var lt = l.price * l.qty;
+    return '<tr><td>' + l.qty + '</td><td>' + esc(l.name) + '</td><td class="r">' + l.price.toFixed(2) + ' €</td><td class="r">' + lt.toFixed(2) + ' €</td></tr>';
+  }).join('');
+  function esc(s) { return String(s).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  var html =
+    '<html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;color:#111;font-size:12px;padding:30px}' +
+    'h1{font-size:20px;letter-spacing:1px}table{width:100%;border-collapse:collapse;margin-top:16px}' +
+    'th,td{border-bottom:1px solid #ddd;padding:7px;text-align:left}.r{text-align:right}' +
+    '.tot td{border:none;padding:3px 7px}.tot .r{font-weight:bold}.muted{color:#666}</style></head><body>' +
+    '<h1>FACTURA</h1>' +
+    '<p><strong>' + esc(f.name) + '</strong><br>NIF: ' + esc(f.nif) + '<br>' + esc(f.addr) + '<br>' + esc(f.email) + '</p>' +
+    '<p class="muted">Factura nº <strong>' + no + '</strong> · ' + Utilities.formatDate(new Date(), 'GMT+1', 'dd/MM/yyyy') + ' · Comanda ' + esc(orderId) + '</p>' +
+    '<p><strong>Cliente:</strong><br>' + esc(o.name) + '<br>' + esc(o.email) + (o.phone ? '<br>' + esc(o.phone) : '') + '</p>' +
+    '<table><tr><th>Ud.</th><th>Concepto</th><th class="r">Precio</th><th class="r">Importe</th></tr>' + rows + '</table>' +
+    '<table class="tot" style="width:40%;margin-left:auto;margin-top:12px">' +
+    '<tr><td>Base imponible</td><td class="r">' + base.toFixed(2) + ' €</td></tr>' +
+    '<tr><td>IVA (21%)</td><td class="r">' + iva.toFixed(2) + ' €</td></tr>' +
+    '<tr><td><strong>TOTAL</strong></td><td class="r">' + total.toFixed(2) + ' €</td></tr></table>' +
+    '<p class="muted" style="margin-top:30px">Los precios incluyen IVA. Documento generado automáticamente.</p>' +
+    '</body></html>';
+  var pdf = Utilities.newBlob(html, 'text/html', no + '.html').getAs('application/pdf').setName(no + ' - ' + orderId + '.pdf');
+
+  var folderId = prop('DRIVE_FOLDER_ID');
+  var parent = folderId ? DriveApp.getFolderById(folderId) : DriveApp.getRootFolder();
+  var subs = parent.getFoldersByName('Factures');
+  var folder = subs.hasNext() ? subs.next() : parent.createFolder('Factures');
+  var file = folder.createFile(pdf);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return { ok: true, invoiceNo: no, url: file.getUrl() };
+}
+
 function summary() {
   var orders = readOrders(), mats = readMaterials();
   var t = { orders: orders.length, revenue: 0, cost: 0, profit: 0, byStatus: {} };

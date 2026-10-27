@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Prop a Prop Teu — Mi cuenta</title>
+  <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="admin-body">
+  <header class="admin-top">
+    <a class="admin-brand" href="./"><img src="assets/logo_mark.svg" alt="" height="34"></a>
+    <span class="admin-who" id="client-who"></span>
+    <div class="admin-top-actions">
+      <a class="btn-outline" href="shop.html">Seguir comprando</a>
+      <button class="btn-text" id="btn-logout">Salir</button>
+    </div>
+  </header>
+
+  <nav class="admin-nav" id="client-nav">
+    <button data-view="orders" class="active">Mis pedidos</button>
+    <button data-view="profile">Mis datos</button>
+  </nav>
+
+  <div class="admin-toast" id="admin-toast" hidden></div>
+
+  <main class="admin-main">
+    <section id="view-orders"></section>
+    <section id="view-profile" hidden></section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/session.js"></script>
+  <script src="js/client.js"></script>
+</body>
+</html>

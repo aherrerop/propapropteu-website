@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Prop a Prop Teu — Accés</title>
+  <title>Prop a Prop Teu — Acceso</title>
   <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -17,54 +17,77 @@
       <img src="assets/logo_mark.svg" alt="Prop a Prop Teu" height="56">
     </a>
 
+    <!-- LOGIN -->
     <form class="auth-card" id="login-form" autocomplete="on">
-      <h1>Accés</h1>
-      <p class="auth-sub">Panell de gestió · només equip</p>
-
-      <div class="cf-field">
-        <label for="email">Correu</label>
-        <input type="email" id="email" name="email" required autocomplete="username">
-      </div>
-      <div class="cf-field">
-        <label for="password">Contrasenya</label>
-        <input type="password" id="password" name="password" required autocomplete="current-password">
-      </div>
-
-      <p class="auth-error" id="auth-error" hidden></p>
-
+      <h1>Acceso</h1>
+      <p class="auth-sub">Entra para ver tus pedidos y facturas.</p>
+      <div class="cf-field"><label for="l-email">Correo</label>
+        <input type="email" id="l-email" required autocomplete="username"></div>
+      <div class="cf-field"><label for="l-pass">Contraseña</label>
+        <input type="password" id="l-pass" required autocomplete="current-password"></div>
+      <p class="auth-error" id="login-error" hidden></p>
       <button class="btn" type="submit" id="login-btn">Entrar</button>
+      <p class="auth-switch">¿No tienes cuenta? <a href="#" id="to-register">Crear cuenta</a></p>
+    </form>
+
+    <!-- REGISTER -->
+    <form class="auth-card" id="register-form" autocomplete="on" hidden>
+      <h1>Crear cuenta</h1>
+      <p class="auth-sub">Guarda tus datos y sigue tus pedidos.</p>
+      <div class="cf-field"><label for="r-name">Nombre</label>
+        <input type="text" id="r-name" required autocomplete="name"></div>
+      <div class="cf-field"><label for="r-email">Correo</label>
+        <input type="email" id="r-email" required autocomplete="email"></div>
+      <div class="cf-field"><label for="r-phone">Teléfono (opcional)</label>
+        <input type="tel" id="r-phone" autocomplete="tel"></div>
+      <div class="cf-field"><label for="r-pass">Contraseña (mín. 6)</label>
+        <input type="password" id="r-pass" required minlength="6" autocomplete="new-password"></div>
+      <p class="auth-error" id="register-error" hidden></p>
+      <button class="btn" type="submit" id="register-btn">Crear cuenta</button>
+      <p class="auth-switch">¿Ya tienes cuenta? <a href="#" id="to-login">Entrar</a></p>
     </form>
   </main>
 
   <script src="js/config.js"></script>
   <script src="js/session.js"></script>
   <script>
-    const form = document.getElementById("login-form");
-    const errEl = document.getElementById("auth-error");
-    const btn = document.getElementById("login-btn");
+    const loginForm = document.getElementById("login-form");
+    const regForm = document.getElementById("register-form");
 
-    // Already logged in? Go straight to the dashboard.
-    if (Admin.token) location.href = "admin.html";
+    function routeByRole(user) {
+      location.href = (user && user.role === "manager") ? "admin.html" : "client.html";
+    }
+    // Already logged in? Go to the right place.
+    if (Admin.token && Admin.user) routeByRole(Admin.user);
 
-    function showError(msg) { errEl.textContent = msg; errEl.hidden = false; }
+    document.getElementById("to-register").addEventListener("click", e => { e.preventDefault(); loginForm.hidden = true; regForm.hidden = false; });
+    document.getElementById("to-login").addEventListener("click", e => { e.preventDefault(); regForm.hidden = true; loginForm.hidden = false; });
 
-    form.addEventListener("submit", async (e) => {
+    function err(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.hidden = false; }
+
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      errEl.hidden = true;
-      btn.disabled = true;
-      btn.textContent = "Entrant…";
-      const r = await Admin.call("login", {
-        email: document.getElementById("email").value.trim(),
-        password: document.getElementById("password").value
+      document.getElementById("login-error").hidden = true;
+      const btn = document.getElementById("login-btn"); btn.disabled = true; btn.textContent = "Entrando…";
+      const r = await Admin.call("login", { email: document.getElementById("l-email").value.trim(), password: document.getElementById("l-pass").value });
+      if (r.ok) { Admin.setSession(r.token, r.user); routeByRole(r.user); return; }
+      err("login-error", r.message || "No se ha podido iniciar sesión.");
+      btn.disabled = false; btn.textContent = "Entrar";
+    });
+
+    regForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      document.getElementById("register-error").hidden = true;
+      const btn = document.getElementById("register-btn"); btn.disabled = true; btn.textContent = "Creando…";
+      const r = await Admin.call("register", {
+        name: document.getElementById("r-name").value.trim(),
+        email: document.getElementById("r-email").value.trim(),
+        phone: document.getElementById("r-phone").value.trim(),
+        password: document.getElementById("r-pass").value
       });
-      if (r.ok) {
-        Admin.setSession(r.token, r.user);
-        location.href = "admin.html";
-        return;
-      }
-      showError(r.message || "No s'ha pogut iniciar la sessió.");
-      btn.disabled = false;
-      btn.textContent = "Entrar";
+      if (r.ok) { Admin.setSession(r.token, r.user); routeByRole(r.user); return; }
+      err("register-error", r.message || "No se ha podido crear la cuenta.");
+      btn.disabled = false; btn.textContent = "Crear cuenta";
     });
   </script>
 </body>

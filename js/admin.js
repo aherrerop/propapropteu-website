@@ -458,6 +458,12 @@ function orderCard(o) {
       el("div", { class: "adm-card-meta", html: "<strong>" + o.revenue.toFixed(2) + " €</strong> · benefici " + o.profit.toFixed(2) + " €" + (payLabel ? " · " + escapeHtml(payLabel) : "") + (o.note ? " · " + escapeHtml(o.note) : "") })
     ]),
     el("div", { class: "adm-card-actions" }, [sel,
+      el("button", { class: "btn-text", onclick: async (e) => {
+        const b = e.target, old = b.textContent; b.disabled = true; b.textContent = "…";
+        const r = await Admin.call("getInvoice", { id: o.id });
+        b.disabled = false; b.textContent = old;
+        if (r.ok) window.open(r.url, "_blank", "noopener"); else toast(r.message || "Error.", "err");
+      } }, ["Factura"]),
       el("button", { class: "btn-text danger", onclick: async () => {
         if (!confirm("Esborrar la comanda " + o.id + "? (no es restaura l'estoc de materials)")) return;
         const r = await Admin.call("deleteOrder", { id: o.id });
