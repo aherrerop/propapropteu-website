@@ -84,6 +84,10 @@
     "cardSoon": "Card payment is coming very soon. For now choose transfer and we'll contact you.",
     "unit": "u."
   },
+  "ship": {
+    "title": "Shipping & returns",
+    "note": "How shipping, payments and returns work."
+  },
   "badge": {
     "own": "Our design",
     "std": "Product",

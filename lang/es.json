@@ -84,6 +84,10 @@
     "cardSoon": "El pago con tarjeta estará disponible muy pronto. De momento, elige transferencia y te contactamos.",
     "unit": "u."
   },
+  "ship": {
+    "title": "Envíos y devoluciones",
+    "note": "Cómo funcionan los envíos, los pagos y las devoluciones."
+  },
   "badge": {
     "own": "Diseño propio",
     "std": "Producto",

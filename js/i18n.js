@@ -41,6 +41,7 @@ const I18N = {
   },
 
   apply(root = document) {
+    try { document.documentElement.lang = this.lang; } catch (e) {}
     root.querySelectorAll("[data-i18n]").forEach(el => {
       el.innerHTML = this.t(el.dataset.i18n);
     });

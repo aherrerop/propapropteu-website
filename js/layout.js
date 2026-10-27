@@ -108,6 +108,7 @@ const Layout = {
             <a href="shop.html" data-i18n="nav.catalog"></a>
             <a href="custom-props.html" data-i18n="nav.custom"></a>
             <a href="packs.html" data-i18n="nav.packs"></a>
+            <a href="envios.html" data-i18n="ship.title"></a>
             <a href="faq.html" data-i18n="nav.faq"></a>
           </div>
           <div>
@@ -188,8 +189,24 @@ const Layout = {
     document.body.appendChild(js);
   },
 
+  // Accessibility: keyboard skip-link to the main content.
+  renderSkipLink() {
+    const main = document.querySelector("main");
+    if (!main) return;
+    if (!main.id) main.id = "maincontent";
+    main.setAttribute("tabindex", "-1");
+    if (!document.querySelector(".skip-link")) {
+      const a = document.createElement("a");
+      a.className = "skip-link";
+      a.href = "#" + main.id;
+      a.textContent = "Saltar al contenido";
+      document.body.insertBefore(a, document.body.firstChild);
+    }
+  },
+
   async init() {
     await I18N.init();
+    this.renderSkipLink();
     this.renderHeader();
     this.renderFooter();
     this.renderWhatsApp();
