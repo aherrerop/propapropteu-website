@@ -53,11 +53,8 @@ const ShopPage = {
     const img = document.getElementById("sf-img");
     img.src = Catalog.heroImage(p); img.alt = I18N.pick(p.name);
     const add = document.getElementById("sf-add");
-    add.dataset.itemId = p.id;
-    add.dataset.itemPrice = p.price;
-    add.dataset.itemUrl = "product.html?id=" + p.id;
-    add.dataset.itemName = I18N.pick(p.name);
-    add.dataset.itemImage = Catalog.mainImage(p);
+    add.classList.remove("snipcart-add-item");
+    add.onclick = () => Cart.add(p.id);
     document.getElementById("sf-dots").innerHTML = this.featured.map((_, i) =>
       `<button data-i="${i}" class="${i === this.fi ? "active" : ""}" aria-label="${i + 1}"></button>`).join("");
   },

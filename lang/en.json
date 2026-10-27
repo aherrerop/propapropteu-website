@@ -88,6 +88,11 @@
     "title": "Shipping & returns",
     "note": "How shipping, payments and returns work."
   },
+  "cart": {
+    "empty": "Your cart is empty.",
+    "total": "Total",
+    "checkout": "Checkout"
+  },
   "badge": {
     "own": "Our design",
     "std": "Product",

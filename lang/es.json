@@ -88,6 +88,11 @@
     "title": "Envíos y devoluciones",
     "note": "Cómo funcionan los envíos, los pagos y las devoluciones."
   },
+  "cart": {
+    "empty": "La cesta está vacía.",
+    "total": "Total",
+    "checkout": "Finalizar pedido"
+  },
   "badge": {
     "own": "Diseño propio",
     "std": "Producto",

@@ -88,6 +88,11 @@
     "title": "Enviaments i devolucions",
     "note": "Com funcionen els enviaments, els pagaments i les devolucions."
   },
+  "cart": {
+    "empty": "La cistella és buida.",
+    "total": "Total",
+    "checkout": "Finalitzar comanda"
+  },
   "badge": {
     "own": "Disseny propi",
     "std": "Producte",

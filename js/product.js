@@ -77,29 +77,12 @@ const ProductPage = {
           <span class="price">${Catalog.formatPrice(p.price)} <span class="iva">${I18N.t("catalog.iva")}</span></span>
           <span class="stock-flag ${stock.cls}">${I18N.t(stock.key)}</span>
           <div class="buy-row">
-            <button class="btn" id="order-open" ${out ? "disabled" : ""}>
-              ${I18N.t(out ? "stock.out" : "order.cta")}
+            <button class="btn" id="add-cart" ${out ? "disabled" : ""}>
+              ${I18N.t(out ? "stock.out" : "catalog.addToCartFull")}
             </button>
             <a class="btn btn-outline" href="shop.html">${I18N.t("product.backToCatalog")}</a>
           </div>
-          <form class="order-form" id="order-form" hidden>
-            <h3>${I18N.t("order.title")}</h3>
-            <div class="of-grid">
-              <label class="of-qty"><span>${I18N.t("order.qty")}</span><input type="number" id="of-qty" min="1" value="1"></label>
-              <label><span>${I18N.t("form.name")} *</span><input type="text" id="of-name" required></label>
-              <label><span>${I18N.t("form.email")} *</span><input type="email" id="of-email" required></label>
-              <label><span>${I18N.t("form.phone")}</span><input type="tel" id="of-phone"></label>
-            </div>
-            <label class="of-full"><span>${I18N.t("order.note")}</span><textarea id="of-note"></textarea></label>
-            <fieldset class="of-pay">
-              <legend>${I18N.t("order.payLabel")}</legend>
-              <label class="of-radio"><input type="radio" name="pay" value="transfer" checked> <span>${I18N.t("order.payTransfer")}</span></label>
-              <label class="of-radio"><input type="radio" name="pay" value="card"> <span>${I18N.t("order.payCard")}</span></label>
-            </fieldset>
-            <p class="of-nopay">${I18N.t("order.nopay")}</p>
-            <button class="btn" type="submit" id="of-send">${I18N.t("order.send")}</button>
-            <p class="form-status" id="of-status" role="status" hidden></p>
-          </form>
+          <p class="of-nopay">${I18N.t("order.nopay")}</p>
           <p class="description">${I18N.pick(p.description)}</p>
           ${specs}
           <div class="labels-row">${labels}</div>
@@ -115,47 +98,9 @@ const ProductPage = {
       });
     });
 
-    /* order flow (no online payment — records the order in the backend) */
-    const openBtn = document.getElementById("order-open");
-    const form = document.getElementById("order-form");
-    if (openBtn && form) {
-      openBtn.addEventListener("click", () => {
-        form.hidden = false; openBtn.hidden = true;
-        document.getElementById("of-name").focus();
-      });
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const g = id => (document.getElementById(id).value || "").trim();
-        const btn = document.getElementById("of-send");
-        const status = document.getElementById("of-status");
-        const qty = Number(document.getElementById("of-qty").value || 1);
-        const pay = (form.querySelector('input[name="pay"]:checked') || {}).value || "transfer";
-        const old = btn.textContent; btn.disabled = true; btn.textContent = "…"; status.hidden = true;
-        let r;
-        try {
-          r = await (await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
-            body: JSON.stringify({ action: "placeOrder", name: g("of-name"), email: g("of-email"),
-              phone: g("of-phone"), note: g("of-note"), payment: pay,
-              items: [{ id: p.id, qty: qty }] }) })).json();
-        } catch (err) { r = { ok: false }; }
-        if (r && r.ok) {
-          let msg;
-          if (pay === "transfer") {
-            msg = I18N.t("order.transferMsg")
-              .replace("{total}", (p.price * qty).toFixed(2))
-              .replace("{iban}", SITE_CONFIG.bankIban || "")
-              .replace("{holder}", SITE_CONFIG.bankHolder || "")
-              .replace("{ref}", r.id || "");
-          } else { msg = I18N.t("order.cardSoon"); }
-          form.reset();
-          status.textContent = msg; status.className = "form-status ok";
-        } else {
-          status.textContent = (r && r.message) || ("No s'ha pogut enviar. Escriu-nos a " + SITE_CONFIG.email + ".");
-          status.className = "form-status err";
-        }
-        status.hidden = false; btn.disabled = false; btn.textContent = old;
-      });
-    }
+    /* add to cart (checkout happens in the cart drawer) */
+    const addBtn = document.getElementById("add-cart");
+    if (addBtn && !out) addBtn.addEventListener("click", () => Cart.add(p.id));
 
     this.renderRelated();
   },

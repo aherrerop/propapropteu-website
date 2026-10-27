@@ -77,9 +77,9 @@ const Layout = {
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             <span data-i18n="nav.login"></span>
           </a>
-          <button class="cart-btn snipcart-checkout" title="Cart">
+          <button class="cart-btn" title="Cistella" onclick="Cart.open()">
             <span data-i18n="nav.cart"></span>
-            <span class="cart-count snipcart-items-count">0</span>
+            <span class="cart-count">0</span>
           </button>
           <button class="nav-toggle" aria-label="Menu" aria-expanded="false" onclick="Layout.toggleNav()">
             <span></span><span></span><span></span>
@@ -213,6 +213,7 @@ const Layout = {
     this.renderCookieBanner();
     this.loadSnipcart();
     I18N.apply();
+    Cart.updateCount();
   }
 };
 
@@ -275,5 +276,106 @@ const Catalog = {
       data-item-name="${name}"
       data-item-image="${this.mainImage(p)}"
       ${p.stock !== undefined ? `data-item-max-quantity="${p.stock}"` : ""}`;
+  }
+};
+
+/* ---------- multi-item cart (localStorage + slide-over drawer) ---------- */
+const Cart = {
+  key: "ppt-cart",
+  byId: {},
+  get items() { try { return JSON.parse(localStorage.getItem(this.key) || "[]"); } catch (e) { return []; } },
+  write(items) { try { localStorage.setItem(this.key, JSON.stringify(items)); } catch (e) {} this.updateCount(); },
+  count() { return this.items.reduce((n, i) => n + i.qty, 0); },
+  updateCount() { const n = this.count(); document.querySelectorAll(".cart-count").forEach(el => el.textContent = n); },
+  async add(id, qty = 1) {
+    const items = this.items, e = items.find(x => x.id === id);
+    if (e) e.qty += qty; else items.push({ id: id, qty: qty });
+    this.write(items); await this.open();
+  },
+  setQty(id, qty) {
+    let items = this.items;
+    if (qty <= 0) items = items.filter(x => x.id !== id);
+    else { const e = items.find(x => x.id === id); if (e) e.qty = qty; }
+    this.write(items); this.render();
+  },
+  total() { return this.items.reduce((s, i) => { const p = this.byId[i.id]; return s + (p ? p.price * i.qty : 0); }, 0); },
+  ensureDrawer() {
+    if (document.getElementById("cart-drawer")) return;
+    const d = document.createElement("div");
+    d.id = "cart-drawer"; d.className = "cart-drawer"; d.hidden = true;
+    d.innerHTML =
+      '<div class="cart-overlay" onclick="Cart.close()"></div>' +
+      '<aside class="cart-panel" role="dialog" aria-label="Cistella">' +
+      '<div class="cart-head"><h2 data-i18n="nav.cart"></h2><button class="cart-x" aria-label="Tancar" onclick="Cart.close()">&times;</button></div>' +
+      '<div class="cart-body" id="cart-body"></div><div class="cart-foot" id="cart-foot"></div></aside>';
+    document.body.appendChild(d);
+  },
+  async open() {
+    this.ensureDrawer();
+    await Catalog.load();
+    this.byId = {}; Catalog.data.products.forEach(p => this.byId[p.id] = p);
+    document.getElementById("cart-drawer").hidden = false;
+    document.body.style.overflow = "hidden";
+    this.render();
+  },
+  close() { const d = document.getElementById("cart-drawer"); if (d) d.hidden = true; document.body.style.overflow = ""; },
+  render() {
+    const body = document.getElementById("cart-body"), foot = document.getElementById("cart-foot");
+    const items = this.items;
+    if (!items.length) { body.innerHTML = '<p class="cart-empty" data-i18n="cart.empty"></p>'; foot.innerHTML = ""; I18N.apply(body); return; }
+    body.innerHTML = items.map(i => {
+      const p = this.byId[i.id]; if (!p) return "";
+      return '<div class="cart-row"><img src="' + Catalog.mainImage(p) + '" alt="">' +
+        '<div class="cart-row-main"><div class="cart-row-name">' + I18N.pick(p.name) + '</div>' +
+        '<div class="cart-row-price">' + Catalog.formatPrice(p.price) + '</div></div>' +
+        '<div class="cart-qty"><button aria-label="-" onclick="Cart.setQty(\'' + p.id + '\',' + (i.qty - 1) + ')">&minus;</button>' +
+        '<span>' + i.qty + '</span><button aria-label="+" onclick="Cart.setQty(\'' + p.id + '\',' + (i.qty + 1) + ')">+</button></div></div>';
+    }).join("");
+    foot.innerHTML = '<div class="cart-total"><span data-i18n="cart.total"></span><strong>' + Catalog.formatPrice(this.total()) + '</strong></div>' +
+      '<button class="btn" onclick="Cart.checkout()" data-i18n="cart.checkout"></button>';
+    I18N.apply(document.getElementById("cart-drawer"));
+  },
+  checkout() {
+    const foot = document.getElementById("cart-foot");
+    foot.innerHTML =
+      '<form id="cart-form" class="cart-form">' +
+      '<input id="c-name" type="text" required placeholder="' + I18N.t("form.name") + '">' +
+      '<input id="c-email" type="email" required placeholder="' + I18N.t("form.emailShort") + '">' +
+      '<input id="c-phone" type="tel" placeholder="' + I18N.t("form.phoneLabel") + '">' +
+      '<textarea id="c-note" placeholder="' + I18N.t("order.note") + '"></textarea>' +
+      '<fieldset class="of-pay"><legend>' + I18N.t("order.payLabel") + '</legend>' +
+      '<label class="of-radio"><input type="radio" name="cpay" value="transfer" checked> <span>' + I18N.t("order.payTransfer") + '</span></label>' +
+      '<label class="of-radio"><input type="radio" name="cpay" value="card"> <span>' + I18N.t("order.payCard") + '</span></label></fieldset>' +
+      '<div class="cart-total"><span data-i18n="cart.total"></span><strong>' + Catalog.formatPrice(this.total()) + '</strong></div>' +
+      '<button class="btn" type="submit" id="c-send">' + I18N.t("order.send") + '</button>' +
+      '<p class="form-status" id="c-status" hidden></p></form>';
+    I18N.apply(foot);
+    const self = this, form = document.getElementById("cart-form");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const g = id => (document.getElementById(id).value || "").trim();
+      const pay = (form.querySelector('input[name="cpay"]:checked') || {}).value || "transfer";
+      const btn = document.getElementById("c-send"), status = document.getElementById("c-status");
+      const old = btn.textContent; btn.disabled = true; btn.textContent = "…"; status.hidden = true;
+      const total = self.total();
+      let r;
+      try {
+        r = await (await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
+          body: JSON.stringify({ action: "placeOrder", name: g("c-name"), email: g("c-email"), phone: g("c-phone"), note: g("c-note"), payment: pay, items: self.items }) })).json();
+      } catch (err) { r = { ok: false }; }
+      if (r && r.ok) {
+        const msg = pay === "transfer"
+          ? I18N.t("order.transferMsg").replace("{total}", total.toFixed(2)).replace("{iban}", SITE_CONFIG.bankIban || "").replace("{holder}", SITE_CONFIG.bankHolder || "").replace("{ref}", r.id || "")
+          : I18N.t("order.cardSoon");
+        self.write([]);
+        document.getElementById("cart-body").innerHTML = "";
+        status.textContent = msg; status.className = "form-status ok"; status.hidden = false;
+        btn.remove();
+      } else {
+        status.textContent = (r && r.message) || ("No s'ha pogut enviar. Escriu-nos a " + SITE_CONFIG.email + ".");
+        status.className = "form-status err"; status.hidden = false;
+        btn.disabled = false; btn.textContent = old;
+      }
+    });
   }
 };
