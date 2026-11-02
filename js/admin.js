@@ -9,7 +9,7 @@ const LANG_LABEL = { ca: "Català", es: "Español", en: "English" };
 const TYPE_LABEL = { own: "Disseny propi", std: "Producte estàndard", tool: "Eina" };
 const DIRTY_KEY = "ppt-admin-dirty";
 
-const State = { products: [], labels: [], images: [], editingOriginalId: null };
+const State = { products: [], labels: [], images: [], editingOriginalId: null, query: "" };
 
 /* ---------- tiny DOM helper ---------- */
 function el(tag, attrs, children) {
@@ -52,6 +52,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("btn-publish").addEventListener("click", publish);
   document.querySelectorAll("#admin-nav button").forEach(b =>
     b.addEventListener("click", () => switchView(b.dataset.view)));
+  const ps = $("prod-search");
+  if (ps) ps.addEventListener("input", () => { State.query = ps.value.trim(); renderList(); });
   setDirty(isDirty());
 
   await loadLabels();
@@ -79,29 +81,49 @@ function pick(obj) { return obj ? (obj.es || obj.ca || obj.en || "") : ""; }
 function renderList() {
   const wrap = $("product-list");
   wrap.innerHTML = "";
+  const q = (State.query || "").toLowerCase();
+  const list = q ? State.products.filter(p => (p.id + " " + pick(p.name)).toLowerCase().includes(q)) : State.products;
   $("list-empty").hidden = State.products.length > 0;
 
-  State.products.forEach(p => {
+  list.forEach(p => {
     const img = (p.images && p.images[0]) || "";
+    const hidden = p.active === false;
     const stock = (p.stock === undefined || p.stock === null || p.stock === "")
       ? '<span class="stk stk-inf">∞</span>'
       : (Number(p.stock) <= 0 ? '<span class="stk stk-0">Esgotat</span>' : '<span class="stk">' + p.stock + ' u.</span>');
-    const card = el("div", { class: "adm-card" }, [
+    const card = el("div", { class: "adm-card" + (hidden ? " adm-hidden" : "") }, [
       el("div", { class: "adm-card-img", html: img ? '<img src="' + img + '" alt="">' : '<span>sense foto</span>' }),
       el("div", { class: "adm-card-main" }, [
-        el("div", { class: "adm-card-name", html: (p.featured ? "★ " : "") + (pick(p.name) || p.id) }),
+        el("div", { class: "adm-card-name", html: (hidden ? "🚫 " : "") + (p.featured ? "★ " : "") + (pick(p.name) || p.id) }),
         el("div", { class: "adm-card-meta", html:
+          (hidden ? "<strong>Ocult</strong> · " : "") +
           (TYPE_LABEL[p.type] || p.type || "") + " · " +
           "<strong>" + Number(p.price || 0).toFixed(2) + " €</strong> · " + stock +
           ' · <span class="adm-id">' + p.id + "</span>" })
       ]),
       el("div", { class: "adm-card-actions" }, [
         el("button", { class: "btn-outline", onclick: () => openEditor(p.id) }, ["Editar"]),
+        el("button", { class: "btn-text", onclick: () => duplicateProduct(p.id) }, ["Duplicar"]),
         el("button", { class: "btn-text danger", onclick: () => removeProduct(p.id) }, ["Esborrar"])
       ])
     ]);
     wrap.appendChild(card);
   });
+}
+
+function duplicateProduct(id) {
+  const src = State.products.find(p => p.id === id);
+  if (!src) return;
+  const clone = JSON.parse(JSON.stringify(src));
+  clone.id = "";
+  if (clone.name) Object.keys(clone.name).forEach(k => clone.name[k] = (clone.name[k] || "") + " (còpia)");
+  clone.featured = false;
+  State.editingOriginalId = null;
+  State.images = (clone.images || []).slice();
+  const v = $("view-editor");
+  v.innerHTML = "";
+  v.appendChild(buildEditor(clone, false));
+  $("view-list").hidden = true; v.hidden = false; window.scrollTo(0, 0);
 }
 
 /* ============================ EDITOR ============================ */
@@ -208,6 +230,11 @@ function buildEditor(p, isExisting) {
   form.appendChild(el("label", { class: "adm-check" }, [cutChk,
     el("span", {}, ["Imatge sense fons (es mostra sencera dins el marc; desmarca-ho si la foto ja té fons)"])]));
 
+  const actChk = el("input", { id: "f-active", type: "checkbox" });
+  actChk.checked = p.active !== false;
+  form.appendChild(el("label", { class: "adm-check" }, [actChk,
+    el("span", {}, ["Visible a la botiga (desmarca per ocultar-lo del web sense esborrar-lo)"])]));
+
   /* --- cost + bill of materials (internal, never shown on the web) --- */
   form.appendChild(buildCostBom(p));
 
@@ -308,6 +335,7 @@ function collect() {
   p.stock = stock === "" ? "" : Number(stock);
   p.featured = $("f-featured").checked;
   p.cutout = $("f-cutout").checked;
+  p.active = $("f-active").checked;
   const cst = $("f-cost").value.trim();
   p.cost = cst === "" ? "" : Number(cst);
   p.bom = Array.from(document.querySelectorAll(".adm-bom-row")).map(r => ({

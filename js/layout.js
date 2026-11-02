@@ -204,8 +204,19 @@ const Layout = {
     }
   },
 
+  // SEO: a canonical URL for the current page.
+  renderCanonical() {
+    try {
+      let c = document.querySelector('link[rel="canonical"]');
+      if (!c) { c = document.createElement("link"); c.rel = "canonical"; document.head.appendChild(c); }
+      const path = location.pathname.replace(/index\.html$/, "");
+      c.href = location.origin + path + (path.endsWith("product.html") ? location.search : "");
+    } catch (e) {}
+  },
+
   async init() {
     await I18N.init();
+    this.renderCanonical();
     this.renderSkipLink();
     this.renderHeader();
     this.renderFooter();
@@ -329,10 +340,12 @@ const Cart = {
         '<div class="cart-row-main"><div class="cart-row-name">' + I18N.pick(p.name) + '</div>' +
         '<div class="cart-row-price">' + Catalog.formatPrice(p.price) + '</div></div>' +
         '<div class="cart-qty"><button aria-label="-" onclick="Cart.setQty(\'' + p.id + '\',' + (i.qty - 1) + ')">&minus;</button>' +
-        '<span>' + i.qty + '</span><button aria-label="+" onclick="Cart.setQty(\'' + p.id + '\',' + (i.qty + 1) + ')">+</button></div></div>';
+        '<span>' + i.qty + '</span><button aria-label="+" onclick="Cart.setQty(\'' + p.id + '\',' + (i.qty + 1) + ')">+</button></div>' +
+        '<button class="cart-rm" aria-label="Treure" title="Treure" onclick="Cart.setQty(\'' + p.id + '\',0)">&times;</button></div>';
     }).join("");
     foot.innerHTML = '<div class="cart-total"><span data-i18n="cart.total"></span><strong>' + Catalog.formatPrice(this.total()) + '</strong></div>' +
-      '<button class="btn" onclick="Cart.checkout()" data-i18n="cart.checkout"></button>';
+      '<button class="btn" onclick="Cart.checkout()" data-i18n="cart.checkout"></button>' +
+      '<button class="cart-continue" onclick="Cart.close()" data-i18n="cart.continue"></button>';
     I18N.apply(document.getElementById("cart-drawer"));
   },
   checkout() {

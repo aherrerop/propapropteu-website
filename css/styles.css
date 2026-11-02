@@ -1206,3 +1206,16 @@ body.shop .site-header { background: var(--color-hero); }
 .cart-form { display: flex; flex-direction: column; gap: 10px; }
 .cart-form input, .cart-form textarea { font-family: var(--font-body); font-size: .95rem; padding: 10px 12px; border: 1px solid var(--color-line); border-radius: 8px; }
 .cart-form textarea { min-height: 54px; resize: vertical; }
+
+/* ---- shop card quick-add, cart extras, hidden products ---- */
+.shop-card { color: var(--color-ink); display: flex; flex-direction: column; }
+.sc-link { color: var(--color-ink); display: flex; flex-direction: column; text-decoration: none; }
+.sc-link:hover { color: var(--color-ink); }
+.sc-add { margin-top: 10px; align-self: flex-start; font-family: var(--font-body); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 8px 16px; border: 1px solid var(--color-ink); border-radius: var(--radius-pill, 8px); background: #fff; color: var(--color-ink); cursor: pointer; transition: background .15s, color .15s; }
+.sc-add:hover { background: var(--color-ink); color: #fff; }
+.sc-out-label { margin-top: 10px; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); }
+.cart-rm { border: none; background: none; color: var(--color-muted); font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0 2px; }
+.cart-rm:hover { color: #b3261e; }
+.cart-continue { background: none; border: none; color: var(--color-muted); font-size: 0.9rem; cursor: pointer; text-decoration: underline; padding: 4px; }
+.adm-hidden { opacity: 0.6; }
+.adm-hidden .adm-card-img { filter: grayscale(1); }

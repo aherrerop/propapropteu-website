@@ -91,18 +91,23 @@ const ShopPage = {
     document.getElementById("shop-grid").innerHTML = items.map(p => {
       const out = p.stock === 0;
       return `
-      <a class="shop-card${out ? " sold-out" : ""}" href="product.html?id=${p.id}">
-        <div class="sc-img ${Catalog.isCutout(p) ? "cut" : "photo"}">
-          <span class="sc-corner" aria-hidden="true"></span>
-          ${out ? `<span class="sc-soldout" data-i18n="stock.out"></span>` : ""}
-          <img src="${Catalog.mainImage(p)}" alt="${this.esc(I18N.pick(p.name))}" loading="lazy">
-        </div>
-        <div class="sc-name">${I18N.pick(p.name)}</div>
-        <div class="sc-short">${I18N.pick(p.short)}</div>
-        <div class="sc-price">${Catalog.formatPrice(p.price)}</div>
-      </a>`;
+      <div class="shop-card${out ? " sold-out" : ""}">
+        <a class="sc-link" href="product.html?id=${p.id}">
+          <div class="sc-img ${Catalog.isCutout(p) ? "cut" : "photo"}">
+            <span class="sc-corner" aria-hidden="true"></span>
+            ${out ? `<span class="sc-soldout" data-i18n="stock.out"></span>` : ""}
+            <img src="${Catalog.mainImage(p)}" alt="${this.esc(I18N.pick(p.name))}" loading="lazy">
+          </div>
+          <div class="sc-name">${I18N.pick(p.name)}</div>
+          <div class="sc-short">${I18N.pick(p.short)}</div>
+          <div class="sc-price">${Catalog.formatPrice(p.price)}</div>
+        </a>
+        ${out ? `<span class="sc-out-label" data-i18n="stock.out"></span>` : `<button class="sc-add" data-id="${p.id}" data-i18n="catalog.addToCart"></button>`}
+      </div>`;
     }).join("");
-    I18N.apply(document.getElementById("shop-grid"));
+    const grid = document.getElementById("shop-grid");
+    I18N.apply(grid);
+    grid.querySelectorAll(".sc-add").forEach(b => b.addEventListener("click", () => Cart.add(b.dataset.id)));
   }
 };
 

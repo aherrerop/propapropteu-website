@@ -46,6 +46,22 @@
   <script src="js/config.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/layout.js"></script>
-  <script>document.addEventListener("DOMContentLoaded", () => Layout.init());</script>
+  <script>
+    function faqSchema() {
+      const items = [...document.querySelectorAll(".faq-item")].map(d => ({
+        "@type": "Question",
+        name: (d.querySelector("summary").textContent || "").trim(),
+        acceptedAnswer: { "@type": "Answer", text: (d.querySelector("p").textContent || "").trim() }
+      })).filter(q => q.name && q.acceptedAnswer.text);
+      let s = document.getElementById("ld-faq");
+      if (!s) { s = document.createElement("script"); s.type = "application/ld+json"; s.id = "ld-faq"; document.head.appendChild(s); }
+      s.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: items });
+    }
+    document.addEventListener("DOMContentLoaded", async () => {
+      await Layout.init();
+      faqSchema();
+      document.addEventListener("langchange", faqSchema);
+    });
+  </script>
 </body>
 </html>

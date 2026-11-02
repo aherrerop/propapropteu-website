@@ -39,7 +39,10 @@
     <section id="view-list">
       <div class="admin-head">
         <h1>Productes</h1>
-        <button class="btn" id="btn-new">+ Nou producte</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input type="search" id="prod-search" class="shop-search" placeholder="Cerca…" aria-label="Cerca productes" style="min-width:160px">
+          <button class="btn" id="btn-new">+ Nou producte</button>
+        </div>
       </div>
       <div class="admin-list" id="product-list"></div>
       <p class="admin-empty" id="list-empty" hidden>Encara no hi ha productes. Crea el primer.</p>

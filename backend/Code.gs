@@ -296,7 +296,7 @@ function verifyToken(token) {
  *          description(json) | heroTagline(json) | heroDesc(json) | specs(json)
  */
 var PRODUCT_COLS = ['id','type','price','cost','stock','featured','cutout','codename','heroImage',
-  'labels','images','name','short','description','heroTagline','heroDesc','specs','bom'];
+  'labels','images','name','short','description','heroTagline','heroDesc','specs','bom','active'];
 var PRODUCT_JSON_COLS = ['labels','images','name','short','description','heroTagline','heroDesc','specs','bom'];
 
 /* Guarantee the Products header row is exactly PRODUCT_COLS, in order.
@@ -333,6 +333,7 @@ function rowToProduct(r, col) {
   if (String(r[col.stock]) !== '') p.stock = Number(r[col.stock]);
   if (String(r[col.featured]).toLowerCase() === 'true' || r[col.featured] === true) p.featured = true;
   if (col.cutout != null && (String(r[col.cutout]).toLowerCase() === 'true' || r[col.cutout] === true)) p.cutout = true;
+  if (col.active != null && (String(r[col.active]).toLowerCase() === 'false' || r[col.active] === false)) p.active = false;
   if (String(r[col.codename] || '').trim()) p.codename = String(r[col.codename]).trim();
   if (col.heroImage != null && String(r[col.heroImage] || '').trim()) p.heroImage = String(r[col.heroImage]).trim();
   PRODUCT_JSON_COLS.forEach(function (k) {
@@ -357,6 +358,7 @@ function saveProduct(product) {
     if (col[k] == null) return '';
     if (k === 'featured') return product.featured ? true : false;
     if (k === 'cutout') return product.cutout ? true : false;
+    if (k === 'active') return product.active === false ? false : true;
     if (k === 'stock') return (product.stock === '' || product.stock == null) ? '' : Number(product.stock);
     if (k === 'price') return Number(product.price || 0);
     if (k === 'cost') return (product.cost === '' || product.cost == null) ? '' : Number(product.cost);
@@ -658,9 +660,9 @@ function publish(session) {
 
   // Build products.json, preserving the existing labels + _readme block.
   var existing = sha ? JSON.parse(Utilities.newBlob(Utilities.base64Decode(JSON.parse(get.getContentText()).content)).getDataAsString()) : {};
-  // Strip internal-only fields (cost, bom) before publishing to the public site.
-  var publicProducts = readProducts().map(function (p) {
-    var c = {}; for (var k in p) { if (k !== 'cost' && k !== 'bom') c[k] = p[k]; } return c;
+  // Publish only visible products; strip internal-only fields (cost, bom, active).
+  var publicProducts = readProducts().filter(function (p) { return p.active !== false; }).map(function (p) {
+    var c = {}; for (var k in p) { if (k !== 'cost' && k !== 'bom' && k !== 'active') c[k] = p[k]; } return c;
   });
   var payload = {
     _readme: existing._readme || 'Managed from the admin dashboard. Edit via acceso.html.',

@@ -91,7 +91,8 @@
   "cart": {
     "empty": "Your cart is empty.",
     "total": "Total",
-    "checkout": "Checkout"
+    "checkout": "Checkout",
+    "continue": "Continue shopping"
   },
   "badge": {
     "own": "Our design",

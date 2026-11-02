@@ -91,7 +91,8 @@
   "cart": {
     "empty": "La cistella és buida.",
     "total": "Total",
-    "checkout": "Finalitzar comanda"
+    "checkout": "Finalitzar comanda",
+    "continue": "Seguir comprant"
   },
   "badge": {
     "own": "Disseny propi",
