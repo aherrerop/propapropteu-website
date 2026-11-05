@@ -46,6 +46,17 @@ const ProductPage = {
     let lds = document.getElementById("ld-product");
     if (!lds) { lds = document.createElement("script"); lds.type = "application/ld+json"; lds.id = "ld-product"; document.head.appendChild(lds); }
     lds.textContent = JSON.stringify(ld);
+    const crumbs = {
+      "@context": "https://schema.org", "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: SITE_CONFIG.businessName, item: location.origin + "/" },
+        { "@type": "ListItem", position: 2, name: I18N.t("nav.catalog"), item: location.origin + "/shop.html" },
+        { "@type": "ListItem", position: 3, name: I18N.pick(p.name), item: location.href }
+      ]
+    };
+    let bc = document.getElementById("ld-crumbs");
+    if (!bc) { bc = document.createElement("script"); bc.type = "application/ld+json"; bc.id = "ld-crumbs"; document.head.appendChild(bc); }
+    bc.textContent = JSON.stringify(crumbs);
 
     const thumbs = images.length > 1 ? `
       <div class="gallery-thumbs">
