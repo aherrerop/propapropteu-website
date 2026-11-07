@@ -64,6 +64,13 @@ function doPost(e) {
       case 'deleteMaterial': return json(deleteMaterial(req.id));
       case 'summary':        return json({ ok: true, data: summary() });
       case 'logs':           return json(readLogs());
+      case 'listExpenses':   return json(readExpenses());
+      case 'saveExpense':    return json(saveExpense(req.expense, session));
+      case 'deleteExpense':  return json(deleteExpense(req.id));
+      case 'listPayouts':    return json(readPayouts());
+      case 'savePayout':     return json(savePayout(req.payout, session));
+      case 'deletePayout':   return json(deletePayout(req.id));
+      case 'pnl':            return json(pnl());
       default:             return json({ ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action });
     }
   } catch (err) {
@@ -805,7 +812,7 @@ function addManager() {
    every tab with its header row, seeds settings and migrates the current draft's core data. */
 
 // Script Property name that holds each spreadsheet's id.
-var SS_KEYS = { catalog: 'SS_CATALOG', ops: 'SS_OPERATIONS', inv: 'SS_INVENTORY', clients: 'SS_CLIENTS', config: 'SS_CONFIG' };
+var SS_KEYS = { catalog: 'SS_CATALOG', ops: 'SS_OPERATIONS', inv: 'SS_INVENTORY', clients: 'SS_CLIENTS', config: 'SS_CONFIG', finance: 'SS_FINANCE' };
 
 // The whole schema: spreadsheet -> tab -> header columns. Add a column at the END of a list,
 // never in the middle, so existing rows stay aligned.
@@ -836,6 +843,10 @@ function systemSchema() {
       Settings: ['key', 'value'],
       Invoices: ['number', 'orderId', 'date', 'total', 'pdfUrl'],
       Messages: ['date', 'source', 'name', 'email', 'phone', 'company', 'message']
+    }},
+    finance: { name: 'Prop a Prop Teu · Finance', tabs: {
+      Expenses: ['id', 'date', 'category', 'description', 'amount', 'vat', 'supplier', 'recurring', 'by', 'notes'],
+      Payouts: ['id', 'date', 'manager', 'amount', 'period', 'notes']
     }}
   };
 }
@@ -985,4 +996,75 @@ function readLogs() {
     return out;
   }
   return { ok: true, usage: tail('inv', 'Usage', 20), opsHistory: tail('ops', 'History', 20), invHistory: tail('inv', 'History', 20) };
+}
+
+/* ================= FINANCE: other costs, manager payouts, profit/loss ================= */
+// Make a short unique id for an expense or payout row.
+function finId_(prefix) { return prefix + '-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss'); }
+
+// Read every row of a Finance tab, newest first, as objects keyed by header name.
+function readFinance_(name) {
+  var out = [];
+  try {
+    var sh = tab_('finance', name), v = sh.getDataRange().getValues(), head = v[0];
+    for (var i = v.length - 1; i >= 1; i--) {
+      if (!String(v[i][0] || '').trim()) continue;
+      var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; });
+      if (o.date) o.date = String(o.date);
+      out.push(o);
+    }
+  } catch (e) {}
+  return out;
+}
+
+// Insert or update one Finance row, matched by its id; fills each column by header name.
+function saveFinance_(name, prefix, obj, session) {
+  var sh = tab_('finance', name), v = sh.getDataRange().getValues(), head = v[0];
+  var id = String(obj.id || '').trim() || finId_(prefix);
+  obj.id = id;
+  if (obj.by == null && session) obj.by = session.email;
+  if (!obj.date) obj.date = new Date();
+  obj.amount = Number(obj.amount || 0);
+  var row = head.map(function (h) { var k = String(h).trim(); return obj[k] != null ? obj[k] : ''; });
+  for (var i = 1; i < v.length; i++)
+    if (String(v[i][0] || '').trim() === id) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); return { ok: true, id: id }; }
+  sh.appendRow(row); return { ok: true, id: id };
+}
+
+function deleteFinance_(name, id) {
+  id = String(id || '').trim();
+  var sh = tab_('finance', name), v = sh.getDataRange().getValues();
+  for (var i = v.length - 1; i >= 1; i--)
+    if (String(v[i][0] || '').trim() === id) { sh.deleteRow(i + 1); return { ok: true }; }
+  return { ok: false, error: 'notfound', message: 'No trobat.' };
+}
+
+function readExpenses() { return { ok: true, data: readFinance_('Expenses') }; }
+function saveExpense(e, session) { if (!e) return { ok: false, error: 'missing', message: 'Falta la despesa.' }; return saveFinance_('Expenses', 'EXP', e, session); }
+function deleteExpense(id) { return deleteFinance_('Expenses', id); }
+function readPayouts() { return { ok: true, data: readFinance_('Payouts') }; }
+function savePayout(p, session) { if (!p) return { ok: false, error: 'missing', message: 'Falta el pagament.' }; return saveFinance_('Payouts', 'PAY', p, session); }
+function deletePayout(id) { return deleteFinance_('Payouts', id); }
+
+// Profit and loss: revenue from orders, minus production cost and other expenses, minus manager payouts.
+function pnl() {
+  var orders = readOrders();
+  var revenue = 0, productionCost = 0;
+  orders.forEach(function (o) { revenue += Number(o.revenue || 0); productionCost += Number(o.cost || 0); });
+  var expenses = readFinance_('Expenses'), payouts = readFinance_('Payouts');
+  var byCat = {}, otherExpenses = 0;
+  expenses.forEach(function (e) { var a = Number(e.amount || 0); otherExpenses += a; var c = String(e.category || 'altres'); byCat[c] = (byCat[c] || 0) + a; });
+  var payoutTotal = 0, byManager = {};
+  payouts.forEach(function (p) { var a = Number(p.amount || 0); payoutTotal += a; var m = String(p.manager || '?'); byManager[m] = (byManager[m] || 0) + a; });
+  // Filament consumption cost (informational; already part of production cost).
+  var filamentUsed = 0; try { var u = tab_('inv', 'Usage').getDataRange().getValues(), cc = indexMap(u[0]).cost; for (var i = 1; i < u.length; i++) filamentUsed += Number(u[i][cc] || 0); } catch (e) {}
+  var grossProfit = revenue - productionCost - otherExpenses;
+  return {
+    ok: true, data: {
+      ordersCount: orders.length, revenue: revenue, productionCost: productionCost,
+      otherExpenses: otherExpenses, expensesByCategory: byCat, filamentUsed: filamentUsed,
+      grossProfit: grossProfit, payouts: payoutTotal, payoutsByManager: byManager,
+      net: grossProfit - payoutTotal
+    }
+  };
 }
