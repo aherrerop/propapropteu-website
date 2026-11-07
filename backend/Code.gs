@@ -55,14 +55,15 @@ function doPost(e) {
       case 'uploadImage':  return json(uploadImage(req));
       case 'publish':      return json(publish(session));
       case 'listOrders':   return json({ ok: true, data: readOrders() });
-      case 'setOrderStatus': return json(setOrderStatus(req.id, req.status));
-      case 'deleteOrder':  return json(deleteOrder(req.id));
+      case 'setOrderStatus': return json(setOrderStatus(session, req.id, req.status));
+      case 'deleteOrder':  return json(deleteOrder(session, req.id));
       case 'listMessages':   return json({ ok: true, data: readMessages() });
       case 'deleteMessage':  return json(deleteMessage(req.row));
       case 'listMaterials':  return json({ ok: true, data: readMaterials() });
-      case 'saveMaterial':   return json(saveMaterial(req.material));
+      case 'saveMaterial':   return json(saveMaterial(req.material, session));
       case 'deleteMaterial': return json(deleteMaterial(req.id));
       case 'summary':        return json({ ok: true, data: summary() });
+      case 'logs':           return json(readLogs());
       default:             return json({ ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action });
     }
   } catch (err) {
@@ -435,7 +436,7 @@ function readMaterials() {
   }
   return out;
 }
-function saveMaterial(m) {
+function saveMaterial(m, session) {
   if (!m || !String(m.material || '').trim()) return { ok: false, error: 'missing', message: 'Falta el material.' };
   var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
   var head = v[0], key = matId(m.material, m.color);
@@ -449,6 +450,7 @@ function saveMaterial(m) {
     active: m.active === false ? false : true, updated: new Date()
   };
   var row = head.map(function (h) { var k = String(h).trim(); return byName[k] != null ? byName[k] : ''; });
+  logInvHistory_(byName.material, byName.color, '', byName.grams, 'manual edit', session ? session.email : '');
   for (var i = 1; i < v.length; i++)
     if (matId(v[i][col.material], v[i][col.color]) === key) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); return { ok: true, id: key }; }
   sh.appendRow(row); return { ok: true, id: key };
@@ -476,6 +478,8 @@ function deductMaterial(material, color, grams) {
 /* ======================= ORDERS ======================= */
 var ORDER_COLS = ['date', 'id', 'status', 'payment', 'name', 'email', 'phone', 'units', 'revenue', 'cost', 'profit', 'items', 'note', 'invoiceNo'];
 function ensureOrdersSheet() {
+  // New system: orders live in the Operations spreadsheet's Orders tab.
+  try { return tab_('ops', 'Orders'); } catch (e) {}
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_ORDERS);
   if (!sh) { sh = ss.insertSheet(SHEET_ORDERS); sh.appendRow(ORDER_COLS); return sh; }
@@ -494,15 +498,23 @@ function placeOrder(req) {
   if (!name || !email) return { ok: false, error: 'missing', message: 'Falten nom o email.' };
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
 
+  // The order id is made first so each filament usage row can reference it.
+  var id = 'ORD-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
   var byId = {}; readProducts().forEach(function (p) { byId[p.id] = p; });
+  var fil = {}; readMaterials().forEach(function (f) { fil[matId(f.material, f.color)] = f; });
   var lines = [], units = 0, revenue = 0, cost = 0, lowFlags = [];
   for (var i = 0; i < items.length; i++) {
     var p = byId[items[i].id]; if (!p) continue;
     var qty = Math.max(1, Math.floor(Number(items[i].qty || 1)));
     units += qty; revenue += p.price * qty; cost += (p.cost || 0) * qty;
     lines.push({ id: p.id, name: (p.name && (p.name.ca || p.name.es || p.name.en)) || p.id, qty: qty, price: p.price, cost: p.cost || 0 });
+    // Deduct each material this product uses and log the consumption + stock movement.
     if (p.bom && p.bom.length) p.bom.forEach(function (b) {
-      var rem = deductMaterial(b.material, b.color, Number(b.grams || 0) * qty);
+      var g = Number(b.grams || 0) * qty;
+      var rem = deductMaterial(b.material, b.color, g);
+      var f = fil[matId(b.material, b.color)];
+      logUsage_(id, b.material, b.color, g, 'product', g * (f ? f.costPerGram : 0));
+      logInvHistory_(b.material, b.color, -g, rem, 'order ' + id, '');
       if (rem != null && rem < 0) lowFlags.push(b.material + ' ' + b.color);
     });
   }
@@ -511,8 +523,20 @@ function placeOrder(req) {
   var profit = revenue - cost;
   var payment = (String(req.payment || 'transfer') === 'card') ? 'card' : 'transfer';
   var status = payment === 'transfer' ? 'pendent pagament' : 'nou';
-  var id = 'ORD-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
-  ensureOrdersSheet().appendRow([new Date(), id, status, payment, name, email, String(req.phone || ''), units, revenue, cost, profit, JSON.stringify(lines), String(req.note || ''), '']);
+  // IVA-inclusive prices: split the total into base + tax for the record.
+  var IVA = 0.21, total = revenue, base = total / (1 + IVA), ivaAmt = total - base;
+  // Fill each Orders column by header name, so this works on the new and old layouts.
+  var ordersSh = ensureOrdersSheet();
+  var oHead = ordersSh.getRange(1, 1, 1, ordersSh.getLastColumn()).getValues()[0];
+  var oVals = {
+    id: id, date: new Date(), source: String(req.source || 'web'), status: status, payment: payment,
+    customerName: name, name: name, email: email, phone: String(req.phone || ''),
+    items: JSON.stringify(lines), subtotal: base, iva: ivaAmt, total: total,
+    revenue: total, cost: cost, profit: profit, units: units,
+    invoiceNo: '', assignedTo: '', notes: String(req.note || ''), note: String(req.note || '')
+  };
+  ordersSh.appendRow(oHead.map(function (h) { var k = String(h).trim(); return oVals[k] != null ? oVals[k] : ''; }));
+  logOps_('order', id, 'created', '', 'source ' + String(req.source || 'web') + ', total ' + total.toFixed(2));
   try {
     MailApp.sendEmail({
       to: 'info@propapropteu.com', replyTo: email, subject: '[Comanda ' + id + '] ' + name,
@@ -538,33 +562,47 @@ function placeOrder(req) {
 function readOrders() {
   var sh = ensureOrdersSheet();
   var v = sh.getDataRange().getValues(), col = indexMap(v[0]), out = [];
+  // Read a value by its header name, with a fallback header for the old layout.
+  function g(r, a, b) { var i = col[a] != null ? col[a] : col[b]; return i == null ? '' : r[i]; }
   for (var i = v.length - 1; i >= 1; i--) {
     var r = v[i]; if (!String(r[col.id] || '').trim()) continue;
-    var items = []; try { items = JSON.parse(r[col.items] || '[]'); } catch (e) {}
+    var items = []; try { items = JSON.parse(g(r, 'items') || '[]'); } catch (e) {}
+    var total = Number(g(r, 'total', 'revenue') || 0);
+    // Cost and units are derived from the stored line items when the columns aren't present.
+    var cost = col.cost != null ? Number(r[col.cost] || 0) : items.reduce(function (s, it) { return s + Number(it.cost || 0) * Number(it.qty || 0); }, 0);
+    var units = col.units != null ? Number(r[col.units] || 0) : items.reduce(function (s, it) { return s + Number(it.qty || 0); }, 0);
     out.push({
-      date: r[col.date] ? String(r[col.date]) : '', id: String(r[col.id]), status: String(r[col.status] || 'nou'),
-      payment: col.payment != null ? String(r[col.payment] || '') : '',
-      name: String(r[col.name] || ''), email: String(r[col.email] || ''), phone: String(r[col.phone] || ''),
-      units: Number(r[col.units] || 0), revenue: Number(r[col.revenue] || 0), cost: Number(r[col.cost] || 0),
-      profit: Number(r[col.profit] || 0), items: items, note: String(r[col.note] || ''),
-      invoiceNo: col.invoiceNo != null ? String(r[col.invoiceNo] || '') : ''
+      date: g(r, 'date') ? String(g(r, 'date')) : '', id: String(r[col.id]), status: String(g(r, 'status') || 'nou'),
+      payment: String(g(r, 'payment') || ''), source: String(g(r, 'source') || ''),
+      name: String(g(r, 'customerName', 'name') || ''), email: String(g(r, 'email') || ''), phone: String(g(r, 'phone') || ''),
+      units: units, revenue: total, cost: cost, profit: total - cost, items: items,
+      note: String(g(r, 'notes', 'note') || ''), invoiceNo: String(g(r, 'invoiceNo') || '')
     });
   }
   return out;
 }
-function setOrderStatus(id, status) {
+function setOrderStatus(session, id, status) {
   id = String(id || '').trim();
   var sh = ensureOrdersSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
   for (var i = 1; i < v.length; i++)
-    if (String(v[i][col.id] || '').trim() === id) { sh.getRange(i + 1, col.status + 1).setValue(String(status || 'nou')); return { ok: true }; }
+    if (String(v[i][col.id] || '').trim() === id) {
+      sh.getRange(i + 1, col.status + 1).setValue(String(status || 'nou'));
+      logOps_('order', id, 'status:' + String(status || 'nou'), session ? session.email : '', '');
+      return { ok: true };
+    }
   return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
 }
-// Removes an order row. Does NOT restock materials (do that manually if needed).
-function deleteOrder(id) {
+// Archive the order to History, then remove the row. Does NOT restock materials.
+function deleteOrder(session, id) {
   id = String(id || '').trim();
   var sh = ensureOrdersSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
   for (var i = v.length - 1; i >= 1; i--)
-    if (String(v[i][col.id] || '').trim() === id) { sh.deleteRow(i + 1); return { ok: true }; }
+    if (String(v[i][col.id] || '').trim() === id) {
+      var snapshot = {}; v[0].forEach(function (h, j) { snapshot[String(h).trim()] = v[i][j]; });
+      logOps_('order', id, 'deleted', session ? session.email : '', JSON.stringify(snapshot));
+      sh.deleteRow(i + 1);
+      return { ok: true };
+    }
   return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
 }
 /* ---------- Invoices (VAT PDF) ---------- */
@@ -780,12 +818,14 @@ function systemSchema() {
     ops: { name: 'Prop a Prop Teu · Operations', tabs: {
       Orders: ['id', 'date', 'source', 'status', 'payment', 'customerName', 'email', 'phone', 'items', 'subtotal', 'iva', 'total', 'invoiceNo', 'assignedTo', 'notes'],
       Jobs: ['id', 'created', 'category', 'owner', 'source', 'productId', 'link', 'material', 'color', 'anyColor', 'units', 'gramsEst', 'priority', 'status', 'orderRef', 'batchId', 'notes'],
-      Links: ['url', 'title', 'category', 'material', 'color', 'timesPrinted', 'notes']
+      Links: ['url', 'title', 'category', 'material', 'color', 'timesPrinted', 'notes'],
+      History: ['date', 'type', 'id', 'action', 'by', 'detail']
     }},
     inv: { name: 'Prop a Prop Teu · Inventory', tabs: {
       Filaments: ['material', 'color', 'hex', 'brand', 'grams', 'costPerGram', 'lowAt', 'active'],
       Purchases: ['date', 'material', 'color', 'grams', 'cost', 'supplier', 'by'],
-      Usage: ['date', 'jobId', 'material', 'color', 'grams', 'category', 'cost']
+      Usage: ['date', 'ref', 'material', 'color', 'grams', 'category', 'cost'],
+      History: ['date', 'material', 'color', 'change', 'newGrams', 'reason', 'by']
     }},
     clients: { name: 'Prop a Prop Teu · Clients', tabs: {
       Accounts: ['email', 'salt', 'hash', 'name', 'phone', 'address', 'active', 'created'],
@@ -916,4 +956,33 @@ function copyRows_(src, dst) {
   }
   if (out.length) dst.getRange(2, 1, out.length, dHead.length).setValues(out);
   return out.length;
+}
+
+/* ================= HISTORY & USAGE LOGS (append-only; never overwritten) ================= */
+// Record an operations event (order/job created, status changed, deleted) for the audit trail.
+function logOps_(type, id, action, by, detail) {
+  try { tab_('ops', 'History').appendRow([new Date(), type, id, action, by || '', detail || '']); } catch (e) {}
+}
+// Record a filament consumption line so we can run the numbers by category later.
+function logUsage_(ref, material, color, grams, category, cost) {
+  try { tab_('inv', 'Usage').appendRow([new Date(), ref, material, color, grams, category, cost]); } catch (e) {}
+}
+// Record a filament stock movement (deduction, manual edit, restock) with the resulting grams.
+function logInvHistory_(material, color, change, newGrams, reason, by) {
+  try { tab_('inv', 'History').appendRow([new Date(), material, color, change, newGrams, reason, by || '']); } catch (e) {}
+}
+
+// Manager: read the tail of the append-only logs (for verification + future analytics views).
+function readLogs() {
+  function tail(key, name, n) {
+    var out = [];
+    try {
+      var sh = tab_(key, name), v = sh.getDataRange().getValues(), head = v[0];
+      for (var i = v.length - 1; i >= 1 && out.length < n; i--) {
+        var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; }); out.push(o);
+      }
+    } catch (e) {}
+    return out;
+  }
+  return { ok: true, usage: tail('inv', 'Usage', 20), opsHistory: tail('ops', 'History', 20), invHistory: tail('inv', 'History', 20) };
 }
