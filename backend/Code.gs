@@ -109,6 +109,8 @@ function contact(req) {
 }
 
 function ensureMessagesSheet() {
+  // New system: the Messages tab lives in the Config spreadsheet.
+  try { return tab_('config', 'Messages'); } catch (e) {}
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName('Messages');
   if (!sh) {
@@ -200,6 +202,8 @@ function findManager(email) {
 /* ---------- Clients (customer accounts) ---------- */
 var CLIENT_COLS = ['email', 'salt', 'hash', 'name', 'phone', 'address', 'active', 'created'];
 function ensureClientsSheet() {
+  // New system: client accounts live in the Clients spreadsheet's Accounts tab.
+  try { return tab_('clients', 'Accounts'); } catch (e) {}
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_CLIENTS);
   if (!sh) { sh = ss.insertSheet(SHEET_CLIENTS); sh.appendRow(CLIENT_COLS); return sh; }
@@ -399,6 +403,8 @@ function deleteProduct(id) {
 var MATERIAL_COLS = ['material', 'color', 'stock', 'costPerGram', 'lowAt', 'updated'];
 
 function ensureMaterialsSheet() {
+  // New system: filament inventory is the Inventory spreadsheet's Filaments tab.
+  try { return tab_('inv', 'Filaments'); } catch (e) {}
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_MATERIALS);
   if (!sh) { sh = ss.insertSheet(SHEET_MATERIALS); sh.appendRow(MATERIAL_COLS); return sh; }
@@ -411,16 +417,20 @@ function ensureMaterialsSheet() {
 function matId(material, color) {
   return (String(material || '').trim() + '|' + String(color || '').trim()).toLowerCase();
 }
+// The grams column is called "grams" in the new sheet and "stock" in the old draft.
+function gramsCol_(col) { return col.grams != null ? col.grams : col.stock; }
+
 function readMaterials() {
   var sh = ensureMaterialsSheet();
-  var v = sh.getDataRange().getValues(), col = indexMap(v[0]), out = [];
+  var v = sh.getDataRange().getValues(), col = indexMap(v[0]), gc = gramsCol_(col), out = [];
   for (var i = 1; i < v.length; i++) {
     var r = v[i]; if (!String(r[col.material] || '').trim()) continue;
     out.push({
       id: matId(r[col.material], r[col.color]),
       material: String(r[col.material]).trim(), color: String(r[col.color] || '').trim(),
-      stock: Number(r[col.stock] || 0), costPerGram: Number(r[col.costPerGram] || 0),
-      lowAt: Number(r[col.lowAt] || 0), updated: r[col.updated] ? String(r[col.updated]) : ''
+      stock: Number(r[gc] || 0), costPerGram: Number(r[col.costPerGram] || 0), lowAt: Number(r[col.lowAt] || 0),
+      hex: col.hex != null ? String(r[col.hex] || '') : '', brand: col.brand != null ? String(r[col.brand] || '') : '',
+      active: col.active == null ? true : (String(r[col.active]).toLowerCase() !== 'false' && r[col.active] !== false)
     });
   }
   return out;
@@ -428,8 +438,17 @@ function readMaterials() {
 function saveMaterial(m) {
   if (!m || !String(m.material || '').trim()) return { ok: false, error: 'missing', message: 'Falta el material.' };
   var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
-  var key = matId(m.material, m.color);
-  var row = [String(m.material).trim(), String(m.color || '').trim(), Number(m.stock || 0), Number(m.costPerGram || 0), Number(m.lowAt || 0), new Date()];
+  var head = v[0], key = matId(m.material, m.color);
+  var g = (m.stock != null ? m.stock : m.grams);
+  // Fill each column by its header name, so the same code works for the new and old layouts.
+  var byName = {
+    material: String(m.material).trim(), color: String(m.color || '').trim(),
+    hex: String(m.hex || ''), brand: String(m.brand || ''),
+    grams: Number(g || 0), stock: Number(g || 0),
+    costPerGram: Number(m.costPerGram || 0), lowAt: Number(m.lowAt || 0),
+    active: m.active === false ? false : true, updated: new Date()
+  };
+  var row = head.map(function (h) { var k = String(h).trim(); return byName[k] != null ? byName[k] : ''; });
   for (var i = 1; i < v.length; i++)
     if (matId(v[i][col.material], v[i][col.color]) === key) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); return { ok: true, id: key }; }
   sh.appendRow(row); return { ok: true, id: key };
@@ -442,13 +461,13 @@ function deleteMaterial(id) {
 }
 // Subtract grams from a material/colour on an order; returns remaining, or null if untracked.
 function deductMaterial(material, color, grams) {
-  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]), gc = gramsCol_(col);
   var key = matId(material, color);
   for (var i = 1; i < v.length; i++)
     if (matId(v[i][col.material], v[i][col.color]) === key) {
-      var next = Number(v[i][col.stock] || 0) - grams;
-      sh.getRange(i + 1, col.stock + 1).setValue(next);
-      sh.getRange(i + 1, col.updated + 1).setValue(new Date());
+      var next = Number(v[i][gc] || 0) - grams;
+      sh.getRange(i + 1, gc + 1).setValue(next);
+      if (col.updated != null) sh.getRange(i + 1, col.updated + 1).setValue(new Date());
       return next;
     }
   return null;
@@ -690,6 +709,9 @@ function publish(session) {
 /* ============================ HELPERS ============================ */
 
 function sheet(name) {
+  // Route the core tables to the new five-spreadsheet system; fall back to the bound draft.
+  var map = { Managers: ['config', 'Managers'], Products: ['catalog', 'Products'], Messages: ['config', 'Messages'] };
+  if (map[name]) { try { return tab_(map[name][0], map[name][1]); } catch (e) {} }
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(name);
   if (!sh) throw new Error('Falta la pestanya "' + name + '" al full.');
