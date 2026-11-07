@@ -71,6 +71,12 @@ function doPost(e) {
       case 'savePayout':     return json(savePayout(req.payout, session));
       case 'deletePayout':   return json(deletePayout(req.id));
       case 'pnl':            return json(pnl());
+      case 'listJobs':       return json({ ok: true, data: readJobs(req.filter) });
+      case 'saveJob':        return json(saveJob(req.job, session));
+      case 'setJobStatus':   return json(setJobStatus(session, req.id, req.status));
+      case 'deleteJob':      return json(deleteJob(session, req.id));
+      case 'listLinks':      return json(readLinks());
+      case 'batchPlan':      return json(batchPlan(req.perc));
       default:             return json({ ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action });
     }
   } catch (err) {
@@ -508,22 +514,12 @@ function placeOrder(req) {
   // The order id is made first so each filament usage row can reference it.
   var id = 'ORD-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
   var byId = {}; readProducts().forEach(function (p) { byId[p.id] = p; });
-  var fil = {}; readMaterials().forEach(function (f) { fil[matId(f.material, f.color)] = f; });
   var lines = [], units = 0, revenue = 0, cost = 0, lowFlags = [];
   for (var i = 0; i < items.length; i++) {
     var p = byId[items[i].id]; if (!p) continue;
     var qty = Math.max(1, Math.floor(Number(items[i].qty || 1)));
     units += qty; revenue += p.price * qty; cost += (p.cost || 0) * qty;
     lines.push({ id: p.id, name: (p.name && (p.name.ca || p.name.es || p.name.en)) || p.id, qty: qty, price: p.price, cost: p.cost || 0 });
-    // Deduct each material this product uses and log the consumption + stock movement.
-    if (p.bom && p.bom.length) p.bom.forEach(function (b) {
-      var g = Number(b.grams || 0) * qty;
-      var rem = deductMaterial(b.material, b.color, g);
-      var f = fil[matId(b.material, b.color)];
-      logUsage_(id, b.material, b.color, g, 'product', g * (f ? f.costPerGram : 0));
-      logInvHistory_(b.material, b.color, -g, rem, 'order ' + id, '');
-      if (rem != null && rem < 0) lowFlags.push(b.material + ' ' + b.color);
-    });
   }
   if (!lines.length) return { ok: false, error: 'noitems', message: 'Cap producte vàlid a la comanda.' };
 
@@ -544,6 +540,8 @@ function placeOrder(req) {
   };
   ordersSh.appendRow(oHead.map(function (h) { var k = String(h).trim(); return oVals[k] != null ? oVals[k] : ''; }));
   logOps_('order', id, 'created', '', 'source ' + String(req.source || 'web') + ', total ' + total.toFixed(2));
+  // Turn each order line into print jobs (filament is deducted when Albert marks them done).
+  try { createJobsForOrder_(id, lines, byId); } catch (e) {}
   try {
     MailApp.sendEmail({
       to: 'info@propapropteu.com', replyTo: email, subject: '[Comanda ' + id + '] ' + name,
@@ -1067,4 +1065,152 @@ function pnl() {
       net: grossProfit - payoutTotal
     }
   };
+}
+
+/* ================= PRINT JOBS: the queue Albert prints from ================= */
+// Read jobs (newest first) as objects, optionally filtered by status/category/owner.
+function readJobs(filter) {
+  var out = [];
+  try {
+    var sh = tab_('ops', 'Jobs'), v = sh.getDataRange().getValues(), head = v[0];
+    for (var i = v.length - 1; i >= 1; i--) {
+      if (!String(v[i][0] || '').trim()) continue;
+      var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; });
+      o.gramsEst = Number(o.gramsEst || 0); o.units = Number(o.units || 0);
+      o.anyColor = String(o.anyColor).toLowerCase() === 'true' || o.anyColor === true;
+      if (o.created) o.created = String(o.created);
+      out.push(o);
+    }
+  } catch (e) {}
+  if (filter) out = out.filter(function (j) {
+    return (!filter.status || j.status === filter.status) &&
+           (!filter.category || j.category === filter.category) &&
+           (!filter.owner || j.owner === filter.owner);
+  });
+  return out;
+}
+
+// Insert or update one job (manager-created, or auto-made from an order). Keyed by id.
+function saveJob(job, session) {
+  if (!job) return { ok: false, error: 'missing', message: 'Falta la feina.' };
+  var sh = tab_('ops', 'Jobs'), v = sh.getDataRange().getValues(), head = v[0];
+  var id = String(job.id || '').trim() || 'JOB-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
+  var existed = !!String(job.id || '').trim();
+  var vals = {
+    id: id, created: job.created || new Date(), category: String(job.category || 'product'),
+    owner: String(job.owner || ''), source: String(job.source || 'direct'),
+    productId: String(job.productId || ''), link: String(job.link || ''),
+    material: String(job.material || ''), color: String(job.color || ''),
+    anyColor: job.anyColor ? true : false, units: Number(job.units || 1),
+    gramsEst: Number(job.gramsEst || 0), priority: Number(job.priority || 0),
+    status: String(job.status || 'pending'), orderRef: String(job.orderRef || ''),
+    batchId: String(job.batchId || ''), notes: String(job.notes || '')
+  };
+  var row = head.map(function (h) { var k = String(h).trim(); return vals[k] != null ? vals[k] : ''; });
+  // Remember a saved link in the reusable library.
+  if (vals.link) { try { logLink_(vals.link, vals.category, vals.material, vals.color); } catch (e) {} }
+  for (var i = 1; i < v.length; i++)
+    if (String(v[i][0] || '').trim() === id) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); logOps_('job', id, 'edited', session ? session.email : '', vals.category); return { ok: true, id: id }; }
+  sh.appendRow(row);
+  logOps_('job', id, 'created', session ? session.email : '', vals.category);
+  return { ok: true, id: id };
+}
+
+// Move a job through pending -> printing -> done. On "done" the filament is deducted and logged.
+function setJobStatus(session, id, status) {
+  id = String(id || '').trim(); status = String(status || 'pending');
+  var sh = tab_('ops', 'Jobs'), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  for (var i = 1; i < v.length; i++) {
+    if (String(v[i][col.id] || '').trim() !== id) continue;
+    var wasDone = String(v[i][col.status] || '') === 'done';
+    sh.getRange(i + 1, col.status + 1).setValue(status);
+    // Deduct filament only on the first transition into "done".
+    if (status === 'done' && !wasDone) {
+      var material = String(v[i][col.material] || ''), color = String(v[i][col.color] || '');
+      var grams = Number(v[i][col.gramsEst] || 0), category = String(v[i][col.category] || 'product');
+      if (grams > 0 && material) {
+        var fil = {}; readMaterials().forEach(function (f) { fil[matId(f.material, f.color)] = f; });
+        var f = fil[matId(material, color)];
+        var rem = deductMaterial(material, color, grams);
+        logUsage_(id, material, color, grams, category, grams * (f ? f.costPerGram : 0));
+        logInvHistory_(material, color, -grams, rem, 'job ' + id, session ? session.email : '');
+      }
+    }
+    logOps_('job', id, 'status:' + status, session ? session.email : '', '');
+    return { ok: true };
+  }
+  return { ok: false, error: 'notfound', message: 'Feina no trobada.' };
+}
+
+function deleteJob(session, id) {
+  id = String(id || '').trim();
+  var sh = tab_('ops', 'Jobs'), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  for (var i = v.length - 1; i >= 1; i--)
+    if (String(v[i][col.id] || '').trim() === id) {
+      var snap = {}; v[0].forEach(function (h, j) { snap[String(h).trim()] = v[i][j]; });
+      logOps_('job', id, 'deleted', session ? session.email : '', JSON.stringify(snap));
+      sh.deleteRow(i + 1); return { ok: true };
+    }
+  return { ok: false, error: 'notfound', message: 'Feina no trobada.' };
+}
+
+// Save/refresh a MakerWorld/Thingiverse link in the reusable Links library.
+function logLink_(url, category, material, color) {
+  var sh = tab_('ops', 'Links'), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
+  for (var i = 1; i < v.length; i++)
+    if (String(v[i][col.url] || '').trim() === url) { sh.getRange(i + 1, col.timesPrinted + 1).setValue(Number(v[i][col.timesPrinted] || 0) + 1); return; }
+  sh.appendRow([url, '', category || '', material || '', color || '', 1, '']);
+}
+function readLinks() { try { var sh = tab_('ops', 'Links'), v = sh.getDataRange().getValues(), head = v[0], out = []; for (var i = 1; i < v.length; i++) { if (!String(v[i][0] || '').trim()) continue; var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; }); out.push(o); } return { ok: true, data: out }; } catch (e) { return { ok: true, data: [] }; } }
+
+// One order line can use several materials; make a print job for each, deferring deduction to print time.
+function createJobsForOrder_(orderId, lines, productsById) {
+  var sh = tab_('ops', 'Jobs'), head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  lines.forEach(function (line) {
+    var p = productsById[line.id];
+    var bom = (p && p.bom && p.bom.length) ? p.bom : [{ material: '', color: '', grams: 0 }];
+    bom.forEach(function (b) {
+      var id = 'JOB-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss') + '-' + Math.floor(Math.random() * 1000);
+      var vals = {
+        id: id, created: new Date(), category: 'product', owner: '', source: 'order',
+        productId: line.id, link: '', material: String(b.material || ''), color: String(b.color || ''),
+        anyColor: false, units: Number(line.qty || 1), gramsEst: Number(b.grams || 0) * Number(line.qty || 1),
+        priority: 0, status: 'pending', orderRef: orderId, batchId: '', notes: line.name
+      };
+      sh.appendRow(head.map(function (h) { var k = String(h).trim(); return vals[k] != null ? vals[k] : ''; }));
+    });
+  });
+}
+
+// Order the pending queue: mix categories by percentage, and keep same material/colour together to cut filament changes.
+function batchPlan(perc) {
+  var jobs = readJobs({ status: 'pending' });
+  var cats = { product: [], research: [], personal: [] };
+  jobs.forEach(function (j) { var c = (j.category === 'research' || j.category === 'personal') ? j.category : 'product'; cats[c].push(j); });
+  var sortMC = function (a, b) {
+    return String(a.material).localeCompare(String(b.material)) ||
+           ((a.anyColor ? 1 : 0) - (b.anyColor ? 1 : 0)) ||
+           String(a.color).localeCompare(String(b.color));
+  };
+  ['product', 'research', 'personal'].forEach(function (k) { cats[k].sort(sortMC); });
+
+  var p = perc || { product: 60, research: 30, personal: 10 };
+  var totalW = (Number(p.product) || 0) + (Number(p.research) || 0) + (Number(p.personal) || 0) || 100;
+  var credit = { product: 0, research: 0, personal: 0 }, order = [], last = null, changes = 0;
+
+  while (cats.product.length || cats.research.length || cats.personal.length) {
+    credit.product += Number(p.product) || 0; credit.research += Number(p.research) || 0; credit.personal += Number(p.personal) || 0;
+    // Pick the category most "owed" a turn that still has jobs.
+    var pick = null, best = -Infinity;
+    ['product', 'research', 'personal'].forEach(function (c) { if (cats[c].length && credit[c] > best) { best = credit[c]; pick = c; } });
+    if (!pick) break;
+    credit[pick] -= totalW;
+    // Within that category, prefer a job on the same material/colour as the last one printed.
+    var bucket = cats[pick], idx = 0;
+    if (last) { for (var k = 0; k < bucket.length; k++) { if (bucket[k].material === last.material && (bucket[k].anyColor || bucket[k].color === last.color)) { idx = k; break; } } }
+    var job = bucket.splice(idx, 1)[0];
+    if (last && (last.material !== job.material || (!job.anyColor && last.color !== job.color))) changes++;
+    order.push(job); last = job;
+  }
+  return { ok: true, order: order, filamentChanges: changes, count: order.length };
 }
