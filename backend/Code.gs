@@ -43,6 +43,8 @@ function doPost(e) {
 
     switch (action) {
       case 'me':           return json({ ok: true, user: session });
+      case 'setupSystem':  return json(setupSystem(session));
+      case 'systemStatus': return json(systemStatus());
       case 'myAccount':    return json(myAccount(session));
       case 'updateProfile':return json(updateProfile(session, req.data || req));
       case 'reorder':      return json(reorder(session, req.id));
@@ -735,4 +737,161 @@ function addManager() {
   }
   sh.appendRow([email, salt, hash, name, role, true]);
   Logger.log('Added ' + email);
+}
+
+/* ================= NEW SYSTEM: five fresh Google Sheets as the database =================
+   One engine, five spreadsheets (one per part of the business). The engine finds each by
+   an id stored in Script Properties. setupSystem() creates any that don't exist yet, builds
+   every tab with its header row, seeds settings and migrates the current draft's core data. */
+
+// Script Property name that holds each spreadsheet's id.
+var SS_KEYS = { catalog: 'SS_CATALOG', ops: 'SS_OPERATIONS', inv: 'SS_INVENTORY', clients: 'SS_CLIENTS', config: 'SS_CONFIG' };
+
+// The whole schema: spreadsheet -> tab -> header columns. Add a column at the END of a list,
+// never in the middle, so existing rows stay aligned.
+function systemSchema() {
+  return {
+    catalog: { name: 'Prop a Prop Teu · Catalog', tabs: {
+      Products: PRODUCT_COLS,
+      Categories: ['id', 'name_ca', 'name_es', 'name_en']
+    }},
+    ops: { name: 'Prop a Prop Teu · Operations', tabs: {
+      Orders: ['id', 'date', 'source', 'status', 'payment', 'customerName', 'email', 'phone', 'items', 'subtotal', 'iva', 'total', 'invoiceNo', 'assignedTo', 'notes'],
+      Jobs: ['id', 'created', 'category', 'owner', 'source', 'productId', 'link', 'material', 'color', 'anyColor', 'units', 'gramsEst', 'priority', 'status', 'orderRef', 'batchId', 'notes'],
+      Links: ['url', 'title', 'category', 'material', 'color', 'timesPrinted', 'notes']
+    }},
+    inv: { name: 'Prop a Prop Teu · Inventory', tabs: {
+      Filaments: ['material', 'color', 'hex', 'brand', 'grams', 'costPerGram', 'lowAt', 'active'],
+      Purchases: ['date', 'material', 'color', 'grams', 'cost', 'supplier', 'by'],
+      Usage: ['date', 'jobId', 'material', 'color', 'grams', 'category', 'cost']
+    }},
+    clients: { name: 'Prop a Prop Teu · Clients', tabs: {
+      Accounts: ['email', 'salt', 'hash', 'name', 'phone', 'address', 'active', 'created'],
+      Contacts: ['name', 'email', 'phone', 'notes', 'firstOrder', 'lastOrder']
+    }},
+    config: { name: 'Prop a Prop Teu · Config', tabs: {
+      Managers: ['email', 'salt', 'hash', 'name', 'role', 'active'],
+      Settings: ['key', 'value'],
+      Invoices: ['number', 'orderId', 'date', 'total', 'pdfUrl'],
+      Messages: ['date', 'source', 'name', 'email', 'phone', 'company', 'message']
+    }}
+  };
+}
+
+// Report which spreadsheets exist and their links (so a manager can see setup state).
+function systemStatus() {
+  var props = PropertiesService.getScriptProperties(), out = {};
+  for (var key in SS_KEYS) {
+    var id = props.getProperty(SS_KEYS[key]);
+    var info = { configured: !!id };
+    if (id) { try { var ss = SpreadsheetApp.openById(id); info.url = ss.getUrl(); info.name = ss.getName(); } catch (e) { info.configured = false; } }
+    out[key] = info;
+  }
+  return { ok: true, sheets: out };
+}
+
+// Create the five spreadsheets (idempotent), build their tabs, seed settings, migrate drafts.
+function setupSystem(session) {
+  if (session && session.role !== 'manager') return { ok: false, error: 'auth', message: 'Nomes gestors.' };
+  var schema = systemSchema(), props = PropertiesService.getScriptProperties(), out = {};
+
+  // One spreadsheet at a time: open it if we have an id, otherwise create and remember the id.
+  for (var key in schema) {
+    var def = schema[key], id = props.getProperty(SS_KEYS[key]), ss = null;
+    if (id) { try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; } }
+    if (!ss) { ss = SpreadsheetApp.create(def.name); props.setProperty(SS_KEYS[key], ss.getId()); }
+
+    // Build each tab: reuse the empty default sheet for the first tab, insert the rest, write headers.
+    var firstTabDone = false;
+    for (var tab in def.tabs) {
+      var sh = ss.getSheetByName(tab);
+      if (!sh) {
+        if (!firstTabDone && ss.getSheets().length === 1 && ss.getSheets()[0].getLastRow() === 0) { sh = ss.getSheets()[0]; sh.setName(tab); }
+        else sh = ss.insertSheet(tab);
+      }
+      var cols = def.tabs[tab];
+      sh.getRange(1, 1, 1, cols.length).setValues([cols]);
+      sh.setFrozenRows(1);
+      firstTabDone = true;
+    }
+    out[key] = { id: ss.getId(), url: ss.getUrl(), name: def.name };
+  }
+
+  seedSettings_();
+  var migrated = migrateFromDraft_();
+  return { ok: true, sheets: out, migrated: migrated };
+}
+
+// Open one of the five spreadsheets by its Script-Property id.
+function ss_(key) {
+  var id = PropertiesService.getScriptProperties().getProperty(SS_KEYS[key]);
+  if (!id) throw new Error('System not set up: missing ' + SS_KEYS[key]);
+  return SpreadsheetApp.openById(id);
+}
+function tab_(key, name) {
+  var sh = ss_(key).getSheetByName(name);
+  if (!sh) throw new Error('Missing tab ' + name + ' in ' + key);
+  return sh;
+}
+
+// Fill Config/Settings with the keys managers will edit, taking current values where we have them.
+function seedSettings_() {
+  var sh = tab_('config', 'Settings');
+  if (sh.getLastRow() > 1) return;
+  var P = PropertiesService.getScriptProperties();
+  var rows = [
+    ['BANK_HOLDER', 'Prop a Prop Teu'],
+    ['BANK_IBAN', 'ES00 0000 0000 0000 0000 0000'],
+    ['FISCAL_NAME', P.getProperty('FISCAL_NAME') || '[NOMBRE FISCAL / AUTONOMO]'],
+    ['FISCAL_NIF', P.getProperty('FISCAL_NIF') || '[NIF]'],
+    ['FISCAL_ADDR', P.getProperty('FISCAL_ADDR') || '[DIRECCION FISCAL]'],
+    ['IVA', '21'],
+    ['INVOICE_SEQ', '0'],
+    ['SHIPPING_NOTE', 'Entrega personalizada; te confirmamos coste y plazo por email.']
+  ];
+  sh.getRange(2, 1, rows.length, 2).setValues(rows);
+}
+
+// Copy the current draft spreadsheet's core data into the new sheets (only when the target is empty).
+function migrateFromDraft_() {
+  var draft = SpreadsheetApp.getActiveSpreadsheet(), done = {};
+
+  done.managers = copyRows_(draft.getSheetByName('Managers'), tab_('config', 'Managers'));
+  done.accounts = copyRows_(draft.getSheetByName('Clients'), tab_('clients', 'Accounts'));
+  done.products = copyRows_(draft.getSheetByName('Products'), tab_('catalog', 'Products'));
+  done.messages = copyRows_(draft.getSheetByName('Messages'), tab_('config', 'Messages'));
+
+  // Materials -> Filaments needs a small remap (stock becomes grams; add hex/brand/active).
+  var mat = draft.getSheetByName('Materials'), fil = tab_('inv', 'Filaments');
+  if (mat && fil.getLastRow() <= 1) {
+    var v = mat.getDataRange().getValues(), col = indexMap(v[0]), rows = [];
+    for (var i = 1; i < v.length; i++) {
+      if (!String(v[i][col.material] || '').trim()) continue;
+      rows.push([v[i][col.material], v[i][col.color], '', '', Number(v[i][col.stock] || 0), Number(v[i][col.costPerGram] || 0), Number(v[i][col.lowAt] || 0), true]);
+    }
+    if (rows.length) fil.getRange(2, 1, rows.length, 8).setValues(rows);
+    done.filaments = rows.length;
+  } else done.filaments = 0;
+
+  return done;
+}
+
+// Append every data row of a source sheet onto a target sheet, matching by header name. Skips a non-empty target.
+function copyRows_(src, dst) {
+  if (!src || dst.getLastRow() > 1) return 0;
+  var sv = src.getDataRange().getValues(); if (sv.length < 2) return 0;
+  var sCol = indexMap(sv[0]);
+  var dHead = dst.getRange(1, 1, 1, dst.getLastColumn()).getValues()[0];
+  var out = [];
+  for (var i = 1; i < sv.length; i++) {
+    var blank = true, row = dHead.map(function (h) {
+      var idx = sCol[String(h).trim()];
+      var val = idx == null ? '' : sv[i][idx];
+      if (val !== '' && val != null) blank = false;
+      return val == null ? '' : val;
+    });
+    if (!blank) out.push(row);
+  }
+  if (out.length) dst.getRange(2, 1, out.length, dHead.length).setValues(out);
+  return out.length;
 }
