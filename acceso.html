@@ -42,6 +42,7 @@
         <input type="tel" id="r-phone" autocomplete="tel"></div>
       <div class="cf-field"><label for="r-pass">Contraseña (mín. 6)</label>
         <input type="password" id="r-pass" required minlength="6" autocomplete="new-password"></div>
+      <input id="r-hp" class="hp-field" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
       <p class="auth-error" id="register-error" hidden></p>
       <button class="btn" type="submit" id="register-btn">Crear cuenta</button>
       <p class="auth-switch">¿Ya tienes cuenta? <a href="#" id="to-login">Entrar</a></p>
@@ -83,7 +84,8 @@
         name: document.getElementById("r-name").value.trim(),
         email: document.getElementById("r-email").value.trim(),
         phone: document.getElementById("r-phone").value.trim(),
-        password: document.getElementById("r-pass").value
+        password: document.getElementById("r-pass").value,
+        company_hp: document.getElementById("r-hp").value.trim()
       });
       if (r.ok) { Admin.setSession(r.token, r.user); routeByRole(r.user); return; }
       err("register-error", r.message || "No se ha podido crear la cuenta.");

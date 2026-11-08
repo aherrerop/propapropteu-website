@@ -356,6 +356,7 @@ const Cart = {
       '<input id="c-email" type="email" required placeholder="' + I18N.t("form.emailShort") + '">' +
       '<input id="c-phone" type="tel" placeholder="' + I18N.t("form.phoneLabel") + '">' +
       '<textarea id="c-note" placeholder="' + I18N.t("order.note") + '"></textarea>' +
+      '<input id="c-hp" class="hp-field" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">' +
       '<fieldset class="of-pay"><legend>' + I18N.t("order.payLabel") + '</legend>' +
       '<label class="of-radio"><input type="radio" name="cpay" value="transfer" checked> <span>' + I18N.t("order.payTransfer") + '</span></label>' +
       '<label class="of-radio"><input type="radio" name="cpay" value="card"> <span>' + I18N.t("order.payCard") + '</span></label></fieldset>' +
@@ -374,7 +375,7 @@ const Cart = {
       let r;
       try {
         r = await (await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
-          body: JSON.stringify({ action: "placeOrder", name: g("c-name"), email: g("c-email"), phone: g("c-phone"), note: g("c-note"), payment: pay, items: self.items }) })).json();
+          body: JSON.stringify({ action: "placeOrder", name: g("c-name"), email: g("c-email"), phone: g("c-phone"), note: g("c-note"), payment: pay, company_hp: g("c-hp"), items: self.items }) })).json();
       } catch (err) { r = { ok: false }; }
       if (r && r.ok) {
         const msg = pay === "transfer"
