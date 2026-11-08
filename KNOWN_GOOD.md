@@ -9,4 +9,4 @@ Fall back with `git checkout known-good -- .` then redeploy.
 
 | Date | Commit | Engine ver. | Note |
 |------|--------|-------------|------|
-| 2026-11-08 | _blessed below_ | 2026-11-08.1 | First blessed baseline: full system + resilience layer (health/self-test/errors view/reconcile/backup/quota guard), tooling, docs. Live-tested. |
+| 2026-11-08 | 18287e9 | 2026-11-08.1 (deploy @29) | First blessed baseline: full system + resilience layer (health/self-test/errors view/reconcile/backup/quota guard), tooling, docs. Live-tested. |
