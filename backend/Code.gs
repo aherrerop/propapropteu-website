@@ -34,7 +34,7 @@ var MUTATING = {
   setOrderStatus: 1, deleteOrder: 1, saveMaterial: 1, purchaseMaterial: 1, deleteMaterial: 1,
   saveExpense: 1, deleteExpense: 1, savePayout: 1, deletePayout: 1,
   saveJob: 1, setJobStatus: 1, deleteJob: 1, saveSettings: 1, deleteClient: 1, verifyPayment: 1,
-  addManager: 1, deleteManager: 1, selfTest: 1, reconcileJobs: 1, purgeDemo: 1
+  addManager: 1, deleteManager: 1, selfTest: 1, reconcileJobs: 1, purgeDemo: 1, ackErrors: 1
 };
 
 function doPost(e) {
@@ -119,6 +119,7 @@ function dispatch_(action, req) {
     case 'deleteManager':  return deleteManager(session, req.email);
     case 'health':         return health();
     case 'listErrors':     return listErrors();
+    case 'ackErrors':      return ackErrors(session);
     case 'selfTest':       return selfTest(session);
     case 'reconcileJobs':  return reconcileJobs(session);
     case 'snapshot':       return snapshotAll_(session);
@@ -1768,7 +1769,7 @@ function planQueue_(jobs, perc) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-08.4';
+var ENGINE_VERSION = '2026-11-08.5';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.
@@ -1800,18 +1801,30 @@ function sendMail_(opts, where) {
 }
 
 // Recent error rows from Operations!History (type = error), newest first.
+// Recent UNACKNOWLEDGED error rows. Acknowledging (ackErrors) sets a timestamp and
+// hides everything up to it — the audit log is untouched, the dashboard just reads clean.
 function recentErrors_(limit) {
-  var out = [];
+  var out = [], ackMs = 0;
+  var ack = getSetting_('ERRORS_ACK_AT', ''); if (ack) { var t = new Date(ack).getTime(); if (!isNaN(t)) ackMs = t; }
   try {
     var sh = tab_('ops', 'History'), v = sh.getDataRange().getValues(), c = indexMap(v[0]);
     for (var i = v.length - 1; i >= 1 && out.length < (limit || 50); i--) {
       if (String(v[i][c.type]) !== 'error') continue;
+      var d = v[i][c.date], dm = (d instanceof Date) ? d.getTime() : new Date(d).getTime();
+      if (ackMs && !isNaN(dm) && dm <= ackMs) continue;   // acknowledged → hidden
       out.push({ date: String(v[i][c.date]), where: String(v[i][c.id]), detail: String(v[i][c.detail]) });
     }
   } catch (e) {}
   return out;
 }
 function listErrors() { return { ok: true, data: recentErrors_(100) }; }
+// Mark all current errors as reviewed — they drop off the dashboard; the log stays.
+function ackErrors(session) {
+  var n = recentErrors_(1000).length;
+  setSetting_('ERRORS_ACK_AT', new Date().toISOString());
+  logOps_('errors', 'ack', 'reviewed', session ? session.email : '', n + ' errors acknowledged');
+  return { ok: true, acknowledged: n };
+}
 
 // Quick health snapshot (manager): version, sheets, counts, mail quota, recent errors, timings.
 function health() {

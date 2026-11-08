@@ -975,9 +975,15 @@ async function renderHealth() {
       '<button class="btn-outline" id="h-reconcile">Reconciliar feines</button>' +
       '<button class="btn-outline" id="h-backup">Fer còpia de seguretat</button>' +
     '</div><pre id="h-out" class="h-out" hidden></pre>' +
-    '<div class="admin-head"><h2 class="adm-subhead">Errors recents</h2></div><div id="h-errors" class="admin-list"></div>';
+    '<div class="admin-head"><h2 class="adm-subhead">Errors recents</h2><button class="btn-outline" id="h-ack">Marcar com a revisats</button></div><div id="h-errors" class="admin-list"></div>';
   $("h-refresh").addEventListener("click", renderHealth);
   $("h-selftest").addEventListener("click", () => runHealthAction("selfTest", "Auto-test"));
+  $("h-ack").addEventListener("click", async () => {
+    if (!confirm("Marcar tots els errors actuals com a revisats? (desapareixen del tauler; el registre es conserva)")) return;
+    const r = await Admin.call("ackErrors");
+    toast(r.ok ? (r.acknowledged + " errors revisats.") : (r.message || "Error."), r.ok ? "ok" : "err");
+    renderHealth();
+  });
   $("h-reconcile").addEventListener("click", () => runHealthAction("reconcileJobs", "Reconciliació"));
   $("h-backup").addEventListener("click", () => runHealthAction("snapshot", "Còpia de seguretat"));
 
