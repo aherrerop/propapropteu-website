@@ -981,6 +981,10 @@ function uid_(prefix) {
 function period_(d) { return Utilities.formatDate(d || new Date(), 'GMT+1', 'yyyy-MM'); }
 function nextPeriod_(p) { var y = Number(p.slice(0, 4)), m = Number(p.slice(5, 7)); m++; if (m > 12) { m = 1; y++; } return y + '-' + ('0' + m).slice(-2); }
 function prevPeriod_() { var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return period_(d); }
+// Normalise a stored period cell to "YYYY-MM" (Sheets may coerce the text to a Date).
+function pstr_(v) { if (v instanceof Date) return Utilities.formatDate(v, Session.getScriptTimeZone(), 'yyyy-MM'); return String(v == null ? '' : v).slice(0, 7); }
+// Force a 1-based column to plain-text format so "YYYY-MM" values aren't coerced to dates.
+function textCol_(sh, col1) { try { sh.getRange(1, col1, Math.max(sh.getMaxRows(), 2), 1).setNumberFormat('@'); } catch (e) {} }
 
 // Read a Config/Settings value by key (falls back to a default).
 function getSetting_(key, dflt) {
@@ -1220,25 +1224,33 @@ function closeMonth_(period) {
   var jobsDone = readJobsDone_(period);
   var grossProfit = revenue - productionCost - otherExpenses, net = grossProfit - payoutTotal;
 
-  // 1) one row per month in Finance!Monthly (keyed by period).
+  // 1) one row per month in Finance!Monthly (keyed by period). Period column is
+  // kept as plain text so "YYYY-MM" isn't silently turned into a date by Sheets.
   var mSh = ensureTab_('finance', 'Monthly', systemSchema().finance.tabs.Monthly);
+  textCol_(mSh, 1);
   var mv = mSh.getDataRange().getValues(), mHead = mv[0];
   var row = { period: period, ordersCount: orders.length, revenue: revenue, productionCost: productionCost, filamentCost: filamentCost, otherExpenses: otherExpenses, grossProfit: grossProfit, payouts: payoutTotal, net: net, jobsDone: jobsDone.length, closedAt: new Date() };
   var rowArr = mHead.map(function (h) { var k = String(h).trim(); return row[k] != null ? row[k] : ''; });
-  var found = -1; for (var r = 1; r < mv.length; r++) if (String(mv[r][0]) === period) { found = r; break; }
-  if (found >= 0) mSh.getRange(found + 1, 1, 1, rowArr.length).setValues([rowArr]);
-  else mSh.appendRow(rowArr);
+  // Collect every row for this period: overwrite the first, delete any extras
+  // (self-heals duplicates), or append if none exists yet.
+  var matches = []; for (var r = 1; r < mv.length; r++) if (pstr_(mv[r][0]) === period) matches.push(r);
+  if (matches.length) {
+    mSh.getRange(matches[0] + 1, 1, 1, rowArr.length).setValues([rowArr]);
+    for (var d = matches.length - 1; d >= 1; d--) mSh.deleteRow(matches[d] + 1);
+  } else {
+    mSh.appendRow(rowArr);
+  }
 
   // 2) a per-month detail sheet (overwritten each run so it's always current).
   var ss = ss_('finance'), name = 'Mes ' + period, dSh = ss.getSheetByName(name);
   if (!dSh) dSh = ss.insertSheet(name); else dSh.clear();
   var block = [
-    ['Tancament mensual', period], [''],
+    ['Tancament mensual', period], ['', ''],
     ['Comandes', orders.length], ['Ingressos (€)', revenue.toFixed(2)],
     ['Cost de producció (€)', productionCost.toFixed(2)], ['Cost filament consumit (€)', filamentCost.toFixed(2)],
     ['Altres despeses (€)', otherExpenses.toFixed(2)], ['Benefici brut (€)', grossProfit.toFixed(2)],
     ['Pagaments a gestors (€)', payoutTotal.toFixed(2)], ['Net (€)', net.toFixed(2)],
-    ['Feines impreses', jobsDone.length], ['']
+    ['Feines impreses', jobsDone.length], ['', '']
   ];
   dSh.getRange(1, 1, block.length, 2).setValues(block);
   var rowN = block.length + 1;
@@ -1286,7 +1298,7 @@ function maybeCloseMonths_() {
 function readMonthly_() {
   try {
     var sh = ensureTab_('finance', 'Monthly', systemSchema().finance.tabs.Monthly), v = sh.getDataRange().getValues(), head = v[0], out = [];
-    for (var i = v.length - 1; i >= 1; i--) { if (!String(v[i][0] || '').trim()) continue; var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; }); out.push(o); }
+    for (var i = v.length - 1; i >= 1; i--) { if (!String(v[i][0] || '').trim()) continue; var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; }); o.period = pstr_(o.period); out.push(o); }
     return out;
   } catch (e) { return []; }
 }
@@ -1411,6 +1423,8 @@ function setJobStatus(session, id, status) {
     snap.status = 'done'; snap.doneDate = new Date(); snap.doneBy = by; snap.period = period_(new Date());
     var doneSh = ensureTab_('ops', 'JobsDone', JOBSDONE_COLS);
     var dh = doneSh.getRange(1, 1, 1, doneSh.getLastColumn()).getValues()[0];
+    var periodCol = dh.map(function (h) { return String(h).trim(); }).indexOf('period');
+    if (periodCol >= 0) textCol_(doneSh, periodCol + 1);     // keep "YYYY-MM" as text
     doneSh.appendRow(dh.map(function (h) { var k = String(h).trim(); return snap[k] != null ? snap[k] : ''; }));
     sh.deleteRow(i + 1);
     logOps_('job', id, 'done', by, 'archived');
@@ -1426,7 +1440,8 @@ function readJobsDone_(period) {
     for (var i = v.length - 1; i >= 1; i--) {
       if (!String(v[i][0] || '').trim()) continue;
       var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; });
-      if (period && String(o.period) !== period) continue;
+      o.period = pstr_(o.period);
+      if (period && o.period !== period) continue;
       out.push(o);
     }
     return out;
