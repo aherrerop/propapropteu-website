@@ -1267,14 +1267,19 @@ function closeMonth_(period) {
 // Lazily close any finished months we haven't closed yet (no time-trigger needed): runs
 // cheaply on every dashboard load and does nothing once the previous month is recorded.
 function maybeCloseMonths_() {
-  var last = getSetting_('LAST_CLOSED_MONTH', ''), target = prevPeriod_();
-  if (last && last >= target) return;
-  var toClose = [];
-  if (!last) toClose = [target];                       // first run: just the previous month
-  else { var p = nextPeriod_(last); while (p <= target) { toClose.push(p); p = nextPeriod_(p); } }
-  if (toClose.length > 12) toClose = toClose.slice(-12);
-  toClose.forEach(function (pp) { try { closeMonth_(pp); } catch (e) { logErr_('closeMonth ' + pp, e); } });
-  setSetting_('LAST_CLOSED_MONTH', target);
+  // Cheap pre-check (no lock): nothing to do once the previous month is recorded.
+  if (getSetting_('LAST_CLOSED_MONTH', '') >= prevPeriod_()) return;
+  withLock_(function () {
+    // Re-check inside the lock so two concurrent loads don't both close.
+    var last = getSetting_('LAST_CLOSED_MONTH', ''), target = prevPeriod_();
+    if (last && last >= target) return;
+    var toClose = [];
+    if (!last) toClose = [target];                     // first run: just the previous month
+    else { var p = nextPeriod_(last); while (p <= target) { toClose.push(p); p = nextPeriod_(p); } }
+    if (toClose.length > 12) toClose = toClose.slice(-12);
+    toClose.forEach(function (pp) { try { closeMonth_(pp); } catch (e) { logErr_('closeMonth ' + pp, e); } });
+    setSetting_('LAST_CLOSED_MONTH', target);
+  });
 }
 
 // Manager: read the monthly ledger (newest first).
