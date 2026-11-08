@@ -1,0 +1,14 @@
+{
+  "name": "propapropteu-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prop a Prop Teu — static site + Apps Script engine. Tooling: test gate, gated deploy, known-good/bless.",
+  "scripts": {
+    "test": "node tools/run-tests.js",
+    "knowngood": "git rev-parse --short known-good",
+    "compare": "git diff known-good..HEAD --stat",
+    "compare:full": "git diff known-good..HEAD",
+    "bless": "node tools/bless.js",
+    "deploy:backend": "node tools/deploy-backend.js"
+  }
+}

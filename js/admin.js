@@ -45,7 +45,7 @@ function isDirty() { try { return !!sessionStorage.getItem(DIRTY_KEY); } catch (
 /* ============================ INIT ============================ */
 document.addEventListener("DOMContentLoaded", async () => {
   if (!(await Admin.requireLogin())) return;
-  $("admin-who").textContent = "Hola, " + (Admin.user?.name || Admin.user?.email || "");
+  $("admin-who").textContent = "Hola, " + (Admin.user?.name || Admin.user?.email || "") + (typeof SITE_VERSION !== "undefined" ? "  ·  v" + SITE_VERSION : "");
   // (UI in Catalan — manager-facing)
   $("btn-logout").addEventListener("click", () => { Admin.clear(); location.href = "acceso.html"; });
   $("btn-new").addEventListener("click", () => openEditor(null));
@@ -423,6 +423,7 @@ function switchView(v) {
   $("view-finance").hidden = v !== "finance";
   $("view-clients").hidden = v !== "clients";
   $("view-config").hidden = v !== "config";
+  $("view-health").hidden = v !== "health";
   if (v === "orders") renderOrders();
   if (v === "materials") renderMaterials();
   if (v === "messages") renderMessages();
@@ -430,6 +431,7 @@ function switchView(v) {
   if (v === "finance") renderFinance();
   if (v === "clients") renderClients();
   if (v === "config") renderConfig();
+  if (v === "health") renderHealth();
 }
 
 function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
@@ -950,4 +952,56 @@ async function renderManagers() {
     toast(r2.ok ? "Gestor afegit." : (r2.message || "Error."), r2.ok ? "ok" : "err");
     if (r2.ok) renderManagers();
   };
+}
+
+/* ============================ ESTAT (health / self-test / recovery) ============================ */
+async function renderHealth() {
+  const v = $("view-health");
+  v.innerHTML = '<div class="admin-head"><h1>Estat del sistema</h1><button class="btn-outline" id="h-refresh">Refrescar</button></div>' +
+    '<div id="h-tiles" class="adm-summary"></div>' +
+    '<p class="adm-hint" id="h-ver"></p>' +
+    '<div class="admin-head"><h2 class="adm-subhead">Accions de manteniment</h2></div>' +
+    '<div class="h-actions">' +
+      '<button class="btn" id="h-selftest">Executar auto-test</button>' +
+      '<button class="btn-outline" id="h-reconcile">Reconciliar feines</button>' +
+      '<button class="btn-outline" id="h-backup">Fer còpia de seguretat</button>' +
+    '</div><pre id="h-out" class="h-out" hidden></pre>' +
+    '<div class="admin-head"><h2 class="adm-subhead">Errors recents</h2></div><div id="h-errors" class="admin-list"></div>';
+  $("h-refresh").addEventListener("click", renderHealth);
+  $("h-selftest").addEventListener("click", () => runHealthAction("selfTest", "Auto-test"));
+  $("h-reconcile").addEventListener("click", () => runHealthAction("reconcileJobs", "Reconciliació"));
+  $("h-backup").addEventListener("click", () => runHealthAction("snapshot", "Còpia de seguretat"));
+
+  const h = await Admin.call("health");
+  const tiles = $("h-tiles");
+  if (!h.ok && h.error) { tiles.innerHTML = '<p class="admin-empty">No s\'ha pogut llegir l\'estat.</p>'; return; }
+  const sheetsOk = h.sheets ? Object.values(h.sheets).every(s => s.configured) : false;
+  tiles.innerHTML =
+    tile("Motor", h.ok ? "✅ OK" : "⚠️ Revisar") +
+    tile("Fulls", (sheetsOk ? "6/6" : "⚠️") ) +
+    tile("Comandes", h.counts?.orders ?? "—") +
+    tile("Cua", h.counts?.jobsPending ?? "—") +
+    tile("Quota email", (h.mailQuotaRemaining ?? "—") + (typeof h.mailQuotaRemaining === "number" && h.mailQuotaRemaining <= 10 ? " ⚠️" : "")) +
+    tile("Errors", h.errorCount ?? 0);
+  $("h-ver").textContent = "Motor v" + (h.version || "?") + " · web v" + (typeof SITE_VERSION !== "undefined" ? SITE_VERSION : "?") +
+    " · lectura " + (h.timings?.readsMs ?? "?") + "ms" + (h.cardEnabled ? " · targeta activa" : "");
+
+  const errBox = $("h-errors");
+  const er = await Admin.call("listErrors");
+  errBox.innerHTML = "";
+  const rows = (er.ok && er.data) ? er.data : [];
+  if (!rows.length) { errBox.innerHTML = '<p class="admin-empty">Cap error registrat. 🎉</p>'; return; }
+  rows.slice(0, 40).forEach(e => errBox.appendChild(el("div", { class: "adm-card" }, [
+    el("div", { class: "adm-card-main" }, [
+      el("div", { class: "adm-card-name", html: escapeHtml(e.where || "") }),
+      el("div", { class: "adm-card-meta", html: fmtDate(e.date) + " · " + escapeHtml(String(e.detail || "")).slice(0, 300) })
+    ])
+  ])));
+}
+async function runHealthAction(action, label) {
+  const out = $("h-out"); out.hidden = false; out.textContent = label + "… ";
+  const r = await Admin.call(action);
+  out.textContent = label + ":\n" + JSON.stringify(r, null, 2);
+  if (action === "snapshot" && r.ok && r.url) window.open(r.url, "_blank", "noopener");
+  toast(r.ok ? (label + " OK.") : (r.message || "Error."), r.ok ? "ok" : "err");
 }

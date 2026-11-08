@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
+  <!-- Manager page: never serve a stale cached shell. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Prop a Prop Teu — Gestió</title>
   <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,6 +40,7 @@
     <button data-view="clients">Clients</button>
     <button data-view="messages">Missatges</button>
     <button data-view="config">Configuració</button>
+    <button data-view="health">Estat</button>
   </nav>
 
   <main class="admin-main">
@@ -75,10 +80,13 @@
 
     <!-- CONFIG VIEW -->
     <section id="view-config" hidden></section>
+
+    <!-- HEALTH / STATUS VIEW -->
+    <section id="view-health" hidden></section>
   </main>
 
-  <script src="js/config.js"></script>
-  <script src="js/session.js"></script>
-  <script src="js/admin.js"></script>
+  <script src="js/config.js?v=2026-11-08.1"></script>
+  <script src="js/session.js?v=2026-11-08.1"></script>
+  <script src="js/admin.js?v=2026-11-08.1"></script>
 </body>
 </html>

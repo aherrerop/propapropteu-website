@@ -1136,9 +1136,11 @@ body.shop .site-header { background: var(--color-hero); }
 .pay-banner.ok { background: #eaf6ee; color: #1f7a3d; border: 1px solid #bfe3cb; }
 .pay-banner.err { background: #fdecec; color: #b3261e; border: 1px solid #f5c2c0; }
 
-/* ---- admin: config + clients ---- */
+/* ---- admin: config + clients + estat ---- */
 .adm-subhead { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; letter-spacing: .03em; font-size: 1.1rem; margin: 22px 0 10px; }
 .adm-hint { color: var(--color-muted); font-size: 0.9rem; margin: 0 0 14px; }
+.h-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.h-out { background: #1e1e1e; color: #e6e6e6; padding: 14px; border-radius: 8px; font-size: 0.82rem; line-height: 1.45; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 360px; }
 
 /* ---- form status messages (contact + quote) ---- */
 .form-status { font-size: 0.9rem; margin-top: 14px; padding: 11px 14px; border-radius: 8px; line-height: 1.4; }

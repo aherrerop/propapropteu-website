@@ -4,6 +4,26 @@ The system is built and tested. Everything below you can do yourself from the
 **dashboard** (`/acceso.html` → log in), with no code changes. Items are ordered
 by priority.
 
+## 0. ⚠️ Authorize Gmail (one-time, required for alert emails)
+
+The alert emails (new order / new job to `propapropteu@gmail.com`) currently
+**fail silently** — the Apps Script project was never granted permission to send
+mail. The dashboard's **Estat** screen shows these as errors
+("No tienes permiso para llamar a MailApp.sendEmail").
+
+Fix it once:
+1. Open the Apps Script editor: https://script.google.com → the **Admin Project**
+   (signed in as `propapropteu@gmail.com`).
+2. Pick any function (e.g. `health`) in the toolbar and press **Run**.
+3. Google shows an authorization prompt → **Review permissions** → choose the
+   `propapropteu@gmail.com` account → **Allow** (it now asks for "Send email as
+   you" among the permissions).
+4. Done — alert emails will send from then on. Verify from **Estat → Executar
+   auto-test** (it sends one test email) and check the inbox.
+
+Until this is done, orders and jobs are still recorded correctly; only the email
+notification is missing.
+
 ## 1. Products — prices, photos, internal info
 Screen: **Productes**
 - Set the real **price** and upload **photos** for each product.

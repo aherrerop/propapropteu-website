@@ -50,9 +50,14 @@ await call('placeOrder', { name:'TEST', items:[{id:'SOME-ID', qty:1}] });  // th
 
 ## 2. Where the logs are
 
+**First stop: the dashboard → Estat screen.** It shows the engine version, sheet
+health, pending/order counts, remaining Gmail quota, and the recent error rows
+(from `listErrors`) — plus buttons for self-test, reconcile, and backup. Most
+problems are visible there without opening a sheet.
+
 | Log | Location | Written by |
 |---|---|---|
-| Swallowed engine errors | **Operations!History**, rows with `type = error` | `logErr_` |
+| Swallowed engine errors | **Operations!History**, rows with `type = error` (shown in Estat) | `logErr_` |
 | Order/job/status/delete audit | **Operations!History** | `logOps_` |
 | Filament movements | **Inventory!History** + **Inventory!Usage** | `logInvHistory_`, `logUsage_` |
 | Raw exceptions + `Logger.log` | Apps Script editor → **Executions** | the runtime |
@@ -65,37 +70,45 @@ If the handler wraps work in `try { … } catch (e) { logErr_(...) }`, the cause
 ## 3. How to test a change
 
 ```bash
-# syntax (both .gs files) — .gs is just JS
-cp backend/Code.gs /tmp/c.js && node --check /tmp/c.js
-cp backend/Tests.gs /tmp/t.js && node --check /tmp/t.js
-node --check js/admin.js && node --check js/layout.js
+npm test          # the gate: syntax-checks every .gs/.js, fails on duplicate
+                  # functions, and runs the engine's pure functions (loaded from
+                  # the REAL Code.gs via vm, no drift) against assertions.
 ```
 
-- **Logic tests:** in the Apps Script editor, run `runAllTests()` (pure, safe) or
-  `runAllTests(true)` (adds self-cleaning integration tests for stock + archival).
-- **Pure algorithms** (e.g. `planQueue_`): copy the function into a Node file and
-  assert — that's how the batch planner, status mapping and IVA were verified.
-- **Sheets behavior** (coercion, column counts, formats): **cannot** be caught by
-  the above. You must run the real action once (§1) and inspect the sheet.
+- `npm test` runs automatically before `npm run deploy:backend` and `npm run bless`
+  — a red gate blocks the deploy (nothing ships broken).
+- **Deeper logic tests:** in the Apps Script editor, run `runAllTests()` (pure,
+  safe) or `runAllTests(true)` (adds self-cleaning integration tests).
+- **Live self-test:** dashboard **Estat → Executar auto-test** (or call `selfTest`)
+  exercises the real write path (filament → job → done → archive → cleanup) and
+  times each step. Use it after every deploy.
+- **Sheets behavior** (coercion, column counts, formats): only a real run catches
+  these — the self-test and a live API call (§1) are how.
 
 ---
 
 ## 4. Deploy + verify / rollback
 
 ```bash
-# deploy a backend fix
-cd backend
-clasp -u propapat push -f
-clasp -u propapat redeploy AKfycbx03Ql3nWT1bFbsRDfTm6AXQXG-hS4J6KHPxpaKsnIviajJxj56xyFh9dF77qCp84sn -d "fix: …"
-
-# deploy a frontend fix
-git add -A && git commit -m "fix: …" && git push origin main
+# deploy the engine — runs the test gate FIRST and aborts if red
+npm run deploy:backend -- "fix: …"      # bump ENGINE_VERSION in Code.gs first
+# deploy the site
+git add -A && git commit -m "fix: …" && git push origin main   # bump SITE_VERSION
 ```
 
-**Rollback a bad backend deploy:** `clasp -u propapat deployments` lists versions;
-redeploy the same deployment id at an earlier `@version` from the clasp history, or
-`git revert` the Code.gs commit, `push -f`, and redeploy. **Rollback the site:**
-`git revert <commit> && git push`.
+- After deploying, confirm the live engine version in **Estat** (or `health`) and
+  run the **self-test**. Bump `ENGINE_VERSION` (Code.gs) / `SITE_VERSION`
+  (js/config.js + the `?v=` on admin.html scripts) so you can see the deploy took.
+
+**Known-good baseline (safety net):**
+```bash
+npm run knowngood     # show the blessed commit
+npm run compare       # what changed since known-good
+npm run bless -- "note"   # promote HEAD → known-good (only if the gate passes); logs in KNOWN_GOOD.md
+```
+**Roll back to known-good:** `git checkout known-good -- .` then redeploy
+(`npm run deploy:backend` for the engine, `git push` for the site). Or `git revert`
+a single bad commit. `clasp -u propapat deployments` lists engine versions.
 
 ---
 
@@ -112,7 +125,7 @@ redeploy the same deployment id at an earlier `@version` from the clasp history,
 | **Invoice numbers repeat / jump** | Two invoices generated at once, or `INVOICE_SEQ` edited. | `getInvoice` must stay in `MUTATING` (lock). Counter lives in Config!Settings `INVOICE_SEQ`. |
 | **Filament didn't go down after a print** | Job wasn't marked *done*, or grams/material empty on the job. | `setJobStatus` deducts only on first `done`; needs `gramsEst>0` and a `material`. |
 | **Stock warning "sense estoc"** | Deduction exceeded stock (expected). | `deductMaterial` floors at 0 and returns `short`; restock in Materials. |
-| **No new-order / new-job email** | `NOTIFY_EMAIL` wrong, or MailApp daily quota hit (~100/day). | Config!Settings `NOTIFY_EMAIL`; `notifyNewJobs_`/`placeOrder` mail blocks (wrapped in try/catch — check Operations!History). |
+| **No new-order / new-job email** | (a) Gmail scope not authorized → Estat shows "No tienes permiso para llamar a MailApp.sendEmail"; (b) `NOTIFY_EMAIL` wrong; (c) MailApp daily quota (~100/day) — Estat shows "mail-quota skipped". | (a) authorize once: Apps Script editor → Run `health` → Allow (see GOING-LIVE §0); (b) Config!Settings `NOTIFY_EMAIL`; all sends go through `sendMail_` which logs to Estat. |
 | **Order status in a weird language/value** | Legacy Catalan value or a typo'd code. | `normStatus_` maps it; labels live in `ORDER_STATE_LABELS` (admin.js). |
 | **"Publicar" didn't update the public site** | GitHub token/commit failed, or Pages still building (~1 min). | `publish()` + `GH_TOKEN`/`GH_REPO` Script Properties; check Executions log. |
 | **Public product shows an internal field** (cost, BOM…) | New internal field not stripped. | Invariant #7: add it to the strip-list in `publish()`. |
@@ -189,8 +202,10 @@ Each line is also a bug you can cause by ignoring it.
 
 ## 9. Quick reference
 
-- **Engine source:** `backend/Code.gs` · **Tests:** `backend/Tests.gs` (`runAllTests()`)
+- **Engine source:** `backend/Code.gs` · **Tests:** `npm test` + `backend/Tests.gs` (`runAllTests()`)
 - **Schema (source of truth):** `systemSchema()` · **Router:** `doPost` → `dispatch_` · **Lock list:** `MUTATING`
-- **API URL:** `SITE_CONFIG.adminApi` (`js/config.js`) · **Dashboard:** `js/admin.js`
-- **Deploy:** `clasp -u propapat push -f` then `redeploy <id>` · **Site:** `git push`
-- **Last-minute setup for the owner:** [../GOING-LIVE.md](../GOING-LIVE.md)
+- **API URL:** `SITE_CONFIG.adminApi` (`js/config.js`) · **Dashboard:** `js/admin.js` · **Health/version:** `health()` / Estat screen
+- **Deploy engine:** `npm run deploy:backend -- "msg"` (gated) · **Site:** `git push`
+- **Baseline:** `npm run bless` / `git checkout known-good -- .` · log in `KNOWN_GOOD.md`
+- **Resilience:** Estat screen (health, errors, self-test, reconcile, backup); `snapshot` → dated JSON in Drive/Backups
+- **Last-minute setup for the owner:** [../GOING-LIVE.md](../GOING-LIVE.md) (start with §0 Gmail auth)

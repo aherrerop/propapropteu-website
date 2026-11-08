@@ -34,7 +34,7 @@ var MUTATING = {
   setOrderStatus: 1, deleteOrder: 1, saveMaterial: 1, deleteMaterial: 1,
   saveExpense: 1, deleteExpense: 1, savePayout: 1, deletePayout: 1,
   saveJob: 1, setJobStatus: 1, deleteJob: 1, saveSettings: 1, deleteClient: 1, verifyPayment: 1,
-  addManager: 1, deleteManager: 1
+  addManager: 1, deleteManager: 1, selfTest: 1, reconcileJobs: 1
 };
 
 function doPost(e) {
@@ -116,6 +116,11 @@ function dispatch_(action, req) {
     case 'listManagers':   return listManagers();
     case 'addManager':     return addManagerAccount(session, req.manager || req.data);
     case 'deleteManager':  return deleteManager(session, req.email);
+    case 'health':         return health();
+    case 'listErrors':     return listErrors();
+    case 'selfTest':       return selfTest(session);
+    case 'reconcileJobs':  return reconcileJobs(session);
+    case 'snapshot':       return snapshotAll_(session);
     default:               return { ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action };
   }
 }
@@ -145,16 +150,14 @@ function contact(req) {
   var sh = ensureMessagesSheet();
   sh.appendRow([new Date(), source, name, email, phone, company, message + (extra ? ('\n\n' + extra) : '')]);
 
-  try {
-    MailApp.sendEmail({
-      to: 'info@propapropteu.com',
-      replyTo: email,
-      subject: '[Web · ' + source + '] ' + name,
-      body: 'Nom: ' + name + '\nEmail: ' + email + '\nTelèfon: ' + phone +
-            '\nEmpresa: ' + company + '\nOrigen: ' + source +
-            (extra ? ('\n' + extra) : '') + '\n\nMissatge:\n' + message
-    });
-  } catch (e) { /* email optional; the row is the durable record */ }
+  sendMail_({
+    to: 'info@propapropteu.com',
+    replyTo: email,
+    subject: '[Web · ' + source + '] ' + name,
+    body: 'Nom: ' + name + '\nEmail: ' + email + '\nTelèfon: ' + phone +
+          '\nEmpresa: ' + company + '\nOrigen: ' + source +
+          (extra ? ('\n' + extra) : '') + '\n\nMissatge:\n' + message
+  }, 'contact');
 
   return { ok: true, message: 'Missatge enviat. Gràcies, et responem aviat.' };
 }
@@ -592,8 +595,8 @@ function placeOrder(req) {
   // Turn each order line into print jobs (filament is deducted when Albert marks them done).
   var jobs = []; try { jobs = createJobsForOrder_(id, lines, byId) || []; } catch (e) { logErr_('createJobsForOrder ' + id, e); }
   // ONE alert to the shop: the order AND the print jobs it generated.
-  try {
-    MailApp.sendEmail({
+  phase_('order-alert', function () {
+    return sendMail_({
       to: notifyEmail_(), replyTo: email || 'info@propapropteu.com', subject: '[Comanda ' + id + '] ' + name,
       body: 'Nova comanda ' + id + ' (' + String(req.source || 'web') + ')\n' +
             'Client: ' + name + (email ? ' <' + email + '>' : '') + (req.phone ? ' · ' + req.phone : '') + '\n\n' +
@@ -602,19 +605,19 @@ function placeOrder(req) {
             (req.note ? ('\nNota: ' + req.note) : '') +
             (jobs.length ? ('\n\n— Feines d\'impressió generades —\n' + jobLines_(jobs)) : '') +
             '\n\nObre la cua: acceso → Cua d\'impressió.'
-    });
-  } catch (e) { logErr_('order mail ' + id, e); }
+    }, 'order');
+  });
   // Confirmation to the customer (only when we have their email).
-  if (email) try {
-    MailApp.sendEmail({
+  if (email) phase_('order-confirm', function () {
+    return sendMail_({
       to: email, name: 'Prop a Prop Teu', replyTo: 'info@propapropteu.com',
       subject: 'Hemos recibido tu pedido (' + id + ') — Prop a Prop Teu',
       body: 'Hola ' + name + ',\n\nGracias por tu pedido. Lo hemos recibido correctamente y te contactaremos en breve para confirmar el pago y la entrega.\n\n' +
             'Pedido ' + id + ':\n' + lines.map(function (l) { return '· ' + l.qty + 'x ' + l.name + ' — ' + (l.price * l.qty).toFixed(2) + ' €'; }).join('\n') +
             '\n\nTotal: ' + revenue.toFixed(2) + ' € (IVA incl.)' +
             '\n\nSi tienes cualquier duda, responde a este correo o escríbenos a info@propapropteu.com.\n\nUn saludo,\nEl equipo de Prop a Prop Teu'
-    });
-  } catch (e) { /* customer email optional */ }
+    }, 'customer');
+  });
 
   // Card payment: if Stripe is configured, hand back a hosted checkout URL to redirect to.
   if (payment === 'card' && cardEnabled_()) {
@@ -1573,12 +1576,10 @@ function jobLines_(jobs) {
 }
 // Email the shop a summary of new print jobs (materials + rough time).
 function notifyNewJobs_(title, jobs) {
-  try {
-    MailApp.sendEmail({
-      to: notifyEmail_(), subject: '[Impressió] ' + title + ' (' + jobs.length + ')',
-      body: title + '\n\n' + jobLines_(jobs) + '\n\nObre la cua: acceso → Cua d\'impressió.'
-    });
-  } catch (e) { logErr_('notifyNewJobs', e); }
+  sendMail_({
+    to: notifyEmail_(), subject: '[Impressió] ' + title + ' (' + jobs.length + ')',
+    body: title + '\n\n' + jobLines_(jobs) + '\n\nObre la cua: acceso → Cua d\'impressió.'
+  }, 'jobs');
 }
 function fmtMin_(min) { min = Number(min || 0); if (!min) return '?'; var h = Math.floor(min / 60), m = Math.round(min % 60); return (h ? h + 'h ' : '') + (m ? m + 'min' : (h ? '' : '0min')); }
 
@@ -1727,4 +1728,124 @@ function planQueue_(jobs, perc) {
     order.push(job); last = job;
   }
   return { ok: true, order: order, filamentChanges: changes, count: order.length };
+}
+
+/* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
+
+// Bump on every backend deploy so the dashboard can show which engine it's talking to.
+var ENGINE_VERSION = '2026-11-08.1';
+
+// Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
+// Lets a multi-step action keep its critical result when a non-critical step fails.
+function phase_(name, fn) {
+  try { return { ok: true, value: fn() }; }
+  catch (e) { logErr_('phase:' + name, e); return { ok: false, error: String(e) }; }
+}
+
+// Consumer MailApp is ~100 emails/day. Check before sending so we degrade visibly, not silently.
+function canEmail_() { try { return MailApp.getRemainingDailyQuota() > 3; } catch (e) { return true; } }
+
+// One place that sends mail: skips (and logs) when the quota is gone, logs any failure.
+function sendMail_(opts, where) {
+  if (!canEmail_()) { logErr_('mail-quota', 'skipped ' + (where || '') + ' (Gmail quota ~0)'); return false; }
+  try { MailApp.sendEmail(opts); return true; }
+  catch (e) { logErr_('mail:' + (where || ''), e); return false; }
+}
+
+// Recent error rows from Operations!History (type = error), newest first.
+function recentErrors_(limit) {
+  var out = [];
+  try {
+    var sh = tab_('ops', 'History'), v = sh.getDataRange().getValues(), c = indexMap(v[0]);
+    for (var i = v.length - 1; i >= 1 && out.length < (limit || 50); i--) {
+      if (String(v[i][c.type]) !== 'error') continue;
+      out.push({ date: String(v[i][c.date]), where: String(v[i][c.id]), detail: String(v[i][c.detail]) });
+    }
+  } catch (e) {}
+  return out;
+}
+function listErrors() { return { ok: true, data: recentErrors_(100) }; }
+
+// Quick health snapshot (manager): version, sheets, counts, mail quota, recent errors, timings.
+function health() {
+  var t0 = Date.now(), out = { ok: true, version: ENGINE_VERSION, cardEnabled: cardEnabled_(), counts: {}, timings: {} };
+  out.sheets = systemStatus().sheets;
+  var tt = Date.now();
+  try { out.counts.products = readProducts().length; } catch (e) { out.counts.products = 'ERR'; out.ok = false; }
+  try { out.counts.orders = readOrders().length; } catch (e) { out.ok = false; }
+  try { out.counts.jobsPending = readJobs({ status: 'pending' }).length; } catch (e) { out.ok = false; }
+  try { out.counts.jobsDone = readJobsDone_('').length; } catch (e) {}
+  try { out.counts.filaments = readMaterials().length; } catch (e) { out.ok = false; }
+  out.timings.readsMs = Date.now() - tt;
+  try { out.mailQuotaRemaining = MailApp.getRemainingDailyQuota(); } catch (e) {}
+  var errs = recentErrors_(100); out.errorCount = errs.length; out.lastError = errs[0] || null;
+  out.timings.totalMs = Date.now() - t0;
+  return out;
+}
+
+// Live self-test (manager): exercises the real write paths on throwaway data, then cleans up.
+// Mirrors R&R's runPortalSelfTest. Sends ONE alert email (saveJob) -- expected.
+function selfTest(session) {
+  var steps = [], t0 = Date.now(), ok = true;
+  function step(name, fn) { var s = Date.now(); var r = phase_(name, fn); steps.push({ step: name, ok: r.ok, ms: Date.now() - s, error: r.error || '' }); if (!r.ok) ok = false; return r.value; }
+
+  step('open 6 sheets', function () { for (var k in SS_KEYS) ss_(k); return true; });
+  step('read settings', function () { if (!getSettings().ok) throw new Error('settings'); return true; });
+  var mat = 'SELFTEST', col = '__st' + Math.floor(Math.random() * 1e6);
+  step('save filament', function () { if (!saveMaterial({ material: mat, color: col, stock: 20, costPerGram: 0.02, lowAt: 5, active: true }, session).ok) throw new Error('saveMaterial'); return true; });
+  var jobId = step('create job', function () { var r = saveJob({ category: 'research', material: mat, color: col, gramsEst: 30, units: 1, notes: '__selftest__', status: 'pending' }, session); if (!r.ok) throw new Error('saveJob'); return r.id; });
+  step('mark done (deduct+archive)', function () { if (!setJobStatus(session, jobId, 'done').ok) throw new Error('setJobStatus'); return true; });
+  step('verify archived', function () {
+    if (readJobs({}).some(function (j) { return j.id === jobId; })) throw new Error('still in live queue');
+    if (!readJobsDone_('').some(function (j) { return String(j.id) === jobId; })) throw new Error('not in JobsDone');
+    return true;
+  });
+  step('cleanup', function () {
+    try { var sh = tab_('ops', 'JobsDone'), v = sh.getDataRange().getValues(); for (var i = v.length - 1; i >= 1; i--) if (String(v[i][0]) === jobId) { sh.deleteRow(i + 1); break; } } catch (e) {}
+    deleteMaterial(matId(mat, col));
+    return true;
+  });
+  return { ok: ok, version: ENGINE_VERSION, totalMs: Date.now() - t0, steps: steps };
+}
+
+// Self-heal: every active order should have its print jobs. Recreate jobs for any active
+// order that has none (orders are the source of truth; jobs derive from them). No duplicates:
+// an order that already has pending OR archived jobs is left alone.
+function reconcileJobs(session) {
+  var orders = readOrders(), byId = {}; readProducts().forEach(function (p) { byId[p.id] = p; });
+  var covered = {};
+  readJobs({}).forEach(function (j) { if (j.orderRef) covered[j.orderRef] = true; });
+  readJobsDone_('').forEach(function (j) { if (j.orderRef) covered[j.orderRef] = true; });
+  var checked = 0, restored = 0;
+  orders.forEach(function (o) {
+    var st = normStatus_(o.status);
+    if (st === 'cancelled' || st === 'delivered') return;
+    checked++;
+    if (covered[o.id]) return;
+    var lines = (o.items || []).map(function (it) { return { id: it.id, name: it.name, qty: it.qty, price: it.price, cost: it.cost }; });
+    if (!lines.length) return;
+    try { var made = createJobsForOrder_(o.id, lines, byId) || []; restored += made.length; }
+    catch (e) { logErr_('reconcileJobs ' + o.id, e); }
+  });
+  logOps_('reconcile', 'jobs', 'run', session ? session.email : '', 'checked ' + checked + ' restored ' + restored);
+  return { ok: true, ordersChecked: checked, jobsRestored: restored };
+}
+
+// Off-site-ish backup: export every tab to one dated JSON file in the Drive "Backups" folder,
+// so a wiped sheet can be restored (the sheets are the only source of truth otherwise).
+function snapshotAll_(session) {
+  var dump = { version: ENGINE_VERSION, at: new Date().toISOString(), sheets: {} }, schema = systemSchema();
+  for (var key in schema) {
+    dump.sheets[key] = {};
+    for (var name in schema[key].tabs) {
+      try { var sh = ss_(key).getSheetByName(name); if (sh) dump.sheets[key][name] = sh.getDataRange().getValues(); } catch (e) {}
+    }
+  }
+  var blob = Utilities.newBlob(JSON.stringify(dump), 'application/json', 'backup-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyyyMMdd-HHmmss') + '.json');
+  var folderId = prop('DRIVE_FOLDER_ID');
+  var parent = folderId ? DriveApp.getFolderById(folderId) : DriveApp.getRootFolder();
+  var subs = parent.getFoldersByName('Backups'), folder = subs.hasNext() ? subs.next() : parent.createFolder('Backups');
+  var file = folder.createFile(blob);
+  logOps_('backup', 'all', 'snapshot', session ? session.email : '', file.getId());
+  return { ok: true, url: file.getUrl(), name: file.getName() };
 }
