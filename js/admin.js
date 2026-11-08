@@ -416,9 +416,13 @@ function switchView(v) {
   $("view-orders").hidden = v !== "orders";
   $("view-materials").hidden = v !== "materials";
   $("view-messages").hidden = v !== "messages";
+  $("view-jobs").hidden = v !== "jobs";
+  $("view-finance").hidden = v !== "finance";
   if (v === "orders") renderOrders();
   if (v === "materials") renderMaterials();
   if (v === "messages") renderMessages();
+  if (v === "jobs") renderJobs();
+  if (v === "finance") renderFinance();
 }
 
 function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
@@ -568,4 +572,180 @@ function msgCard(m) {
       } }, ["Esborrar"])
     ])
   ]);
+}
+
+/* ============================ PRINT QUEUE (Jobs) ============================ */
+let FILAMENTS = [];
+async function loadFilaments() { const r = await Admin.call("listMaterials"); FILAMENTS = r.ok ? r.data.filter(f => f.active !== false) : []; }
+// The four to-do buckets; personal is split by owner.
+const JOB_CATS = [["product", "Productes"], ["research", "Recerca"], ["personal-yerai", "Personal Yerai"], ["personal-albert", "Personal Albert"]];
+function jobBucket(j) { return j.category === "personal" ? "personal-" + (j.owner || "yerai") : j.category; }
+function filamentOptions(sel) {
+  return FILAMENTS.map(f => {
+    const val = f.material + "|" + f.color;
+    return el("option", { value: val, selected: sel === val }, [f.material + " " + (f.color || "") + " (" + f.stock + " g)"]);
+  });
+}
+
+async function renderJobs() {
+  const v = $("view-jobs");
+  v.innerHTML = '<div class="admin-head"><h1>Cua d\'impressió</h1><button class="btn" id="job-new">+ Nova feina</button></div>' +
+    '<div id="job-form-wrap"></div><div id="batch-wrap" class="adm-batch"></div><div id="job-cols" class="job-cols"></div>';
+  $("job-new").addEventListener("click", () => openJobForm());
+  await loadFilaments();
+  renderBatchPlanner();
+  const r = await Admin.call("listJobs", { filter: {} });
+  const jobs = (r.ok ? r.data : []).filter(j => j.status !== "done");
+  const cols = $("job-cols"); cols.innerHTML = "";
+  JOB_CATS.forEach(([key, label]) => {
+    const list = jobs.filter(j => jobBucket(j) === key);
+    const col = el("div", { class: "job-col" }, [el("h3", {}, [label + " (" + list.length + ")"])]);
+    if (!list.length) col.appendChild(el("p", { class: "admin-empty" }, ["—"]));
+    list.forEach(j => col.appendChild(jobCard(j)));
+    cols.appendChild(col);
+  });
+}
+
+function jobCard(j) {
+  const whatHtml = j.link ? '<a href="' + escapeHtml(j.link) + '" target="_blank" rel="noopener">enllaç</a>' : escapeHtml(j.notes || j.productId || "");
+  return el("div", { class: "adm-card job-card st-" + j.status }, [
+    el("div", { class: "adm-card-main" }, [
+      el("div", { class: "adm-card-name", html: escapeHtml(j.material) + " · " + (j.anyColor ? "qualsevol color" : escapeHtml(j.color)) + " · " + j.gramsEst + " g" }),
+      el("div", { class: "adm-card-meta", html: whatHtml + (j.units > 1 ? " · x" + j.units : "") + (j.orderRef ? ' · <span class="adm-id">' + escapeHtml(j.orderRef) + "</span>" : "") + " · " + escapeHtml(j.status) })
+    ]),
+    el("div", { class: "adm-card-actions" }, [
+      el("button", { class: "btn-outline", onclick: async () => { const s = j.status === "pending" ? "imprimint" : "done"; const r = await Admin.call("setJobStatus", { id: j.id, status: s }); toast(r.ok ? "Actualitzat." : "Error.", r.ok ? "ok" : "err"); renderJobs(); } }, [j.status === "pending" ? "Imprimint" : "Fet"]),
+      el("button", { class: "btn-text danger", onclick: async () => { if (!confirm("Esborrar aquesta feina?")) return; await Admin.call("deleteJob", { id: j.id }); renderJobs(); } }, ["Esborrar"])
+    ])
+  ]);
+}
+
+function openJobForm() {
+  const wrap = $("job-form-wrap");
+  const catSel = el("select", { id: "j-cat" }, [el("option", { value: "product" }, ["Producte"]), el("option", { value: "research" }, ["Recerca"]), el("option", { value: "personal" }, ["Personal"])]);
+  const ownerSel = el("select", { id: "j-owner" }, [el("option", { value: "yerai" }, ["Yerai"]), el("option", { value: "albert" }, ["Albert"])]);
+  const ownerWrap = el("label", { class: "adm-field", id: "j-owner-wrap", hidden: "" }, [el("span", {}, ["Qui"]), ownerSel]);
+  catSel.addEventListener("change", () => { ownerWrap.hidden = catSel.value !== "personal"; });
+  const prodSel = el("select", { id: "j-product" }, [el("option", { value: "" }, ["—"])].concat(State.products.map(p => el("option", { value: p.id }, [pick(p.name) || p.id]))));
+  const linkInp = el("input", { id: "j-link", type: "url", placeholder: "https://makerworld.com/..." });
+  const matSel = el("select", { id: "j-mat" }, [el("option", { value: "" }, ["—"])].concat(filamentOptions()));
+  const anyChk = el("input", { id: "j-any", type: "checkbox" });
+  const grams = el("input", { id: "j-grams", type: "number", min: "0", value: "" });
+  const units = el("input", { id: "j-units", type: "number", min: "1", value: "1" });
+  // Prefill grams from a product's bill-of-materials when one is chosen.
+  prodSel.addEventListener("change", () => {
+    const p = State.products.find(x => x.id === prodSel.value);
+    if (p && p.bom && p.bom[0]) { grams.value = (p.bom[0].grams || 0) * (Number(units.value) || 1); matSel.value = p.bom[0].material + "|" + p.bom[0].color; }
+  });
+  const form = el("form", { class: "adm-editor", onsubmit: async (e) => {
+    e.preventDefault();
+    const mc = (matSel.value || "").split("|");
+    const job = { category: catSel.value, owner: catSel.value === "personal" ? ownerSel.value : "",
+      source: linkInp.value ? "link" : (prodSel.value ? "product" : "direct"),
+      productId: prodSel.value, link: linkInp.value.trim(), material: mc[0] || "", color: mc[1] || "",
+      anyColor: anyChk.checked, units: Number(units.value || 1), gramsEst: Number(grams.value || 0), notes: $("j-notes").value.trim() };
+    if (!job.material) { toast("Tria un material.", "err"); return; }
+    const r = await Admin.call("saveJob", { job });
+    toast(r.ok ? "Feina afegida." : (r.message || "Error."), r.ok ? "ok" : "err");
+    if (r.ok) { wrap.innerHTML = ""; renderJobs(); }
+  } }, [
+    el("div", { class: "adm-grid-4" }, [
+      el("label", { class: "adm-field" }, [el("span", {}, ["Tipus"]), catSel]), ownerWrap,
+      el("label", { class: "adm-field" }, [el("span", {}, ["Producte (de la botiga)"]), prodSel]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["o enllaç"]), linkInp])
+    ]),
+    el("div", { class: "adm-grid-4" }, [
+      el("label", { class: "adm-field" }, [el("span", {}, ["Material i color"]), matSel]),
+      el("label", { class: "adm-check" }, [anyChk, el("span", {}, ["Color no important"])]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Grams (est.)"]), grams]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Unitats"]), units])
+    ]),
+    el("label", { class: "adm-field" }, [el("span", {}, ["Nota"]), el("textarea", { id: "j-notes" })]),
+    el("div", {}, [el("button", { class: "btn", type: "submit" }, ["Afegir a la cua"]), el("button", { class: "btn-text", type: "button", onclick: () => wrap.innerHTML = "" }, ["Cancel·lar"])])
+  ]);
+  wrap.innerHTML = ""; wrap.appendChild(form);
+}
+
+function renderBatchPlanner() {
+  const wrap = $("batch-wrap");
+  wrap.innerHTML = '<div class="batch-ctl"><strong>Planificador d\'impressió</strong>' +
+    ' Productes <input id="bp-p" type="number" value="60" min="0" style="width:56px"> %' +
+    ' Recerca <input id="bp-r" type="number" value="30" min="0" style="width:56px"> %' +
+    ' Personal <input id="bp-x" type="number" value="10" min="0" style="width:56px"> %' +
+    ' <button class="btn-outline" id="bp-go">Planifica</button></div><div id="bp-out"></div>';
+  $("bp-go").addEventListener("click", async () => {
+    const perc = { product: Number($("bp-p").value || 0), research: Number($("bp-r").value || 0), personal: Number($("bp-x").value || 0) };
+    const r = await Admin.call("batchPlan", { perc });
+    const out = $("bp-out");
+    if (!r.ok || !r.order.length) { out.innerHTML = '<p class="admin-empty">Cap feina pendent.</p>'; return; }
+    out.innerHTML = '<p class="muted">Ordre suggerit (' + r.filamentChanges + ' canvis de filament):</p>' +
+      '<ol class="batch-list">' + r.order.map(j => '<li><strong>' + escapeHtml(j.material) + " " + (j.anyColor ? "(qualsevol)" : escapeHtml(j.color)) + '</strong> — ' + escapeHtml(j.category) + " · " + j.gramsEst + "g · " + escapeHtml(j.notes || j.productId || j.link || "") + "</li>").join("") + "</ol>";
+  });
+}
+
+/* ============================ FINANCE ============================ */
+async function renderFinance() {
+  const v = $("view-finance");
+  v.innerHTML = '<div class="admin-head"><h1>Finances</h1></div><div id="pnl" class="adm-summary"></div>' +
+    '<div class="admin-head"><h2>Despeses</h2><button class="btn" id="exp-new">+ Despesa</button></div><div id="exp-form"></div><div id="exp-list" class="admin-list"></div>' +
+    '<div class="admin-head"><h2>Pagaments a gestors</h2><button class="btn" id="pay-new">+ Pagament</button></div><div id="pay-form"></div><div id="pay-list" class="admin-list"></div>';
+  const p = await Admin.call("pnl");
+  if (p.ok) { const d = p.data;
+    $("pnl").innerHTML = tile("Ingressos", d.revenue.toFixed(2) + " €") + tile("Cost producció", d.productionCost.toFixed(2) + " €") +
+      tile("Altres despeses", d.otherExpenses.toFixed(2) + " €") + tile("Benefici brut", d.grossProfit.toFixed(2) + " €") +
+      tile("Pagaments", d.payouts.toFixed(2) + " €") + tile("Net", d.net.toFixed(2) + " €");
+  }
+  $("exp-new").addEventListener("click", () => openExpenseForm());
+  $("pay-new").addEventListener("click", () => openPayoutForm());
+  const ex = await Admin.call("listExpenses");
+  $("exp-list").innerHTML = "";
+  (ex.ok && ex.data.length ? ex.data : []).forEach(e => $("exp-list").appendChild(financeCard(e, "deleteExpense", renderFinance, escapeHtml(e.category) + " · " + escapeHtml(e.description), Number(e.amount || 0).toFixed(2) + " € · " + fmtDate(e.date) + (e.supplier ? " · " + escapeHtml(e.supplier) : ""))));
+  if (!(ex.ok && ex.data.length)) $("exp-list").innerHTML = '<p class="admin-empty">Cap despesa.</p>';
+  const pay = await Admin.call("listPayouts");
+  $("pay-list").innerHTML = "";
+  (pay.ok && pay.data.length ? pay.data : []).forEach(x => $("pay-list").appendChild(financeCard(x, "deletePayout", renderFinance, escapeHtml(x.manager) + " · " + Number(x.amount || 0).toFixed(2) + " €", fmtDate(x.date) + (x.period ? " · " + escapeHtml(x.period) : ""))));
+  if (!(pay.ok && pay.data.length)) $("pay-list").innerHTML = '<p class="admin-empty">Cap pagament.</p>';
+}
+function financeCard(obj, delAction, refresh, title, meta) {
+  return el("div", { class: "adm-card" }, [
+    el("div", { class: "adm-card-main" }, [el("div", { class: "adm-card-name", html: title }), el("div", { class: "adm-card-meta", html: meta })]),
+    el("div", { class: "adm-card-actions" }, [el("button", { class: "btn-text danger", onclick: async () => { if (!confirm("Esborrar?")) return; await Admin.call(delAction, { id: obj.id }); refresh(); } }, ["Esborrar"])])
+  ]);
+}
+function openExpenseForm() {
+  const wrap = $("exp-form");
+  const form = el("form", { class: "adm-editor", onsubmit: async (e) => {
+    e.preventDefault();
+    const exp = { category: $("e-cat").value.trim(), description: $("e-desc").value.trim(), amount: Number($("e-amt").value || 0), supplier: $("e-sup").value.trim(), recurring: $("e-rec").value };
+    const r = await Admin.call("saveExpense", { expense: exp });
+    toast(r.ok ? "Desat." : "Error.", r.ok ? "ok" : "err"); if (r.ok) { wrap.innerHTML = ""; renderFinance(); }
+  } }, [
+    el("div", { class: "adm-grid-4" }, [
+      el("label", { class: "adm-field" }, [el("span", {}, ["Categoria"]), el("input", { id: "e-cat", placeholder: "domini, material, eines…" })]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Descripció"]), el("input", { id: "e-desc" })]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Import (€)"]), el("input", { id: "e-amt", type: "number", step: "0.01" })]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Proveïdor"]), el("input", { id: "e-sup" })])
+    ]),
+    el("label", { class: "adm-field" }, [el("span", {}, ["Recurrència"]), el("select", { id: "e-rec" }, [el("option", { value: "" }, ["Puntual"]), el("option", { value: "mensual" }, ["Mensual"]), el("option", { value: "anual" }, ["Anual"])])]),
+    el("div", {}, [el("button", { class: "btn", type: "submit" }, ["Desar"]), el("button", { class: "btn-text", type: "button", onclick: () => wrap.innerHTML = "" }, ["Cancel·lar"])])
+  ]);
+  wrap.innerHTML = ""; wrap.appendChild(form);
+}
+function openPayoutForm() {
+  const wrap = $("pay-form");
+  const form = el("form", { class: "adm-editor", onsubmit: async (e) => {
+    e.preventDefault();
+    const pay = { manager: $("p-man").value.trim(), amount: Number($("p-amt").value || 0), period: $("p-per").value.trim(), notes: $("p-note").value.trim() };
+    const r = await Admin.call("savePayout", { payout: pay });
+    toast(r.ok ? "Desat." : "Error.", r.ok ? "ok" : "err"); if (r.ok) { wrap.innerHTML = ""; renderFinance(); }
+  } }, [
+    el("div", { class: "adm-grid-4" }, [
+      el("label", { class: "adm-field" }, [el("span", {}, ["Gestor"]), el("input", { id: "p-man", placeholder: "Albert / Yerai" })]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Import (€)"]), el("input", { id: "p-amt", type: "number", step: "0.01" })]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Període"]), el("input", { id: "p-per", placeholder: "2026-11" })]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Nota"]), el("input", { id: "p-note" })])
+    ]),
+    el("div", {}, [el("button", { class: "btn", type: "submit" }, ["Desar"]), el("button", { class: "btn-text", type: "button", onclick: () => wrap.innerHTML = "" }, ["Cancel·lar"])])
+  ]);
+  wrap.innerHTML = ""; wrap.appendChild(form);
 }

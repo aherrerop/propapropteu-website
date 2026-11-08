@@ -1219,3 +1219,15 @@ body.shop .site-header { background: var(--color-hero); }
 .cart-continue { background: none; border: none; color: var(--color-muted); font-size: 0.9rem; cursor: pointer; text-decoration: underline; padding: 4px; }
 .adm-hidden { opacity: 0.6; }
 .adm-hidden .adm-card-img { filter: grayscale(1); }
+
+/* ---- admin: print queue + batch planner ---- */
+.job-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 18px; }
+.job-col { background: #fff; border: 1px solid var(--color-line); border-radius: 10px; padding: 14px; }
+.job-col h3 { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; letter-spacing: .03em; font-size: 1.05rem; margin-bottom: 10px; }
+.job-card { margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+.job-card.st-imprimint, .job-card.st-printing { border-color: #f0d48a; background: #fffbf0; }
+.adm-batch { margin: 20px 0; }
+.batch-ctl { background: #fff; border: 1px solid var(--color-line); border-radius: 10px; padding: 12px 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .92rem; }
+.batch-ctl input { font-family: var(--font-body); padding: 5px 8px; border: 1px solid var(--color-line); border-radius: 6px; }
+.batch-list { margin: 10px 0 0 18px; display: flex; flex-direction: column; gap: 5px; }
+.batch-list li { font-size: .9rem; }
