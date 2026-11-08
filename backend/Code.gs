@@ -34,7 +34,7 @@ var MUTATING = {
   setOrderStatus: 1, deleteOrder: 1, saveMaterial: 1, purchaseMaterial: 1, deleteMaterial: 1,
   saveExpense: 1, deleteExpense: 1, savePayout: 1, deletePayout: 1,
   saveJob: 1, setJobStatus: 1, deleteJob: 1, saveSettings: 1, deleteClient: 1, verifyPayment: 1,
-  addManager: 1, deleteManager: 1, selfTest: 1, reconcileJobs: 1
+  addManager: 1, deleteManager: 1, selfTest: 1, reconcileJobs: 1, purgeDemo: 1
 };
 
 function doPost(e) {
@@ -122,6 +122,7 @@ function dispatch_(action, req) {
     case 'selfTest':       return selfTest(session);
     case 'reconcileJobs':  return reconcileJobs(session);
     case 'snapshot':       return snapshotAll_(session);
+    case 'purgeDemo':      return purgeDemo(session, req.marker);
     default:               return { ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action };
   }
 }
@@ -1767,7 +1768,7 @@ function planQueue_(jobs, perc) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-08.2';
+var ENGINE_VERSION = '2026-11-08.3';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.
@@ -1882,4 +1883,35 @@ function snapshotAll_(session) {
   var file = folder.createFile(blob);
   logOps_('backup', 'all', 'snapshot', session ? session.email : '', file.getId());
   return { ok: true, url: file.getUrl(), name: file.getName() };
+}
+
+// Delete every row across all tabs whose watched columns contain `marker` (substring).
+// A launch-prep tool: clear test/demo data (incl. the append-only logs) in one call.
+// Use a very specific marker (default 'DEMO-RUN') so real data is never touched.
+function purgeDemo(session, marker) {
+  marker = String(marker || 'DEMO-RUN').trim();
+  if (marker.length < 4) return { ok: false, error: 'marker', message: 'Marcador massa curt (mín. 4 caràcters).' };
+  var removed = {};
+  function purgeTab(key, tab, cols) {
+    var n = 0;
+    try {
+      var sh = tab_(key, tab), v = sh.getDataRange().getValues(), c = indexMap(v[0]);
+      for (var i = v.length - 1; i >= 1; i--) {
+        var hit = cols.some(function (col) { return c[col] != null && String(v[i][c[col]]).indexOf(marker) >= 0; });
+        if (hit) { sh.deleteRow(i + 1); n++; }
+      }
+    } catch (e) { logErr_('purge ' + key + '/' + tab, e); }
+    return n;
+  }
+  removed.products   = purgeTab('catalog', 'Products', ['id', 'codename', 'name']);
+  removed.filaments  = purgeTab('inv', 'Filaments', ['material', 'color']);
+  removed.purchases  = purgeTab('inv', 'Purchases', ['material', 'color', 'supplier']);
+  removed.usage      = purgeTab('inv', 'Usage', ['material', 'color', 'ref']);
+  removed.invHistory = purgeTab('inv', 'History', ['material', 'color', 'reason', 'by']);
+  removed.jobs       = purgeTab('ops', 'Jobs', ['material', 'color', 'notes', 'orderRef', 'productId']);
+  removed.jobsDone   = purgeTab('ops', 'JobsDone', ['material', 'color', 'notes', 'orderRef', 'productId']);
+  removed.orders     = purgeTab('ops', 'Orders', ['id', 'customerName', 'notes', 'items']);
+  removed.opsHistory = purgeTab('ops', 'History', ['id', 'detail']);
+  logOps_('purge', marker, 'run', session ? session.email : '', JSON.stringify(removed));
+  return { ok: true, marker: marker, removed: removed };
 }

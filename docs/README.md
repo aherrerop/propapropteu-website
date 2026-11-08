@@ -4,6 +4,7 @@ The current, authoritative docs for the Prop a Prop Teu system.
 
 | Doc | For | When to read it |
 |---|---|---|
+| **[FLOWS.md](FLOWS.md)** | Everyone | The full business lifecycle end to end: buy materials → Yerai's order → Albert's print queue → stock + archive → the money → month-end. Start here. |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | Developers | Understand how the system is built: the 3 parts, the 6 sheets, the engine's function groups, the invariants, deploy mechanics. Read once. |
 | **[RUNBOOK.md](RUNBOOK.md)** | Whoever fixes a bug | The protocol: reproduce → locate → fix → test → deploy. Symptom→cause table, the invariants, extension recipes, emergencies. Keep open while debugging. |
 | **[../GOING-LIVE.md](../GOING-LIVE.md)** | The owner (Albert) | The last-minute inputs to go live, all from the dashboard. |
