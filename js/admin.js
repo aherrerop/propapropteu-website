@@ -546,10 +546,17 @@ function matCard(m) {
     el("div", { class: "adm-mat-name" }, [m.material + " · " + (m.color || "—")]),
     field("Estoc (g)", stock), field("€/g", cpg), field("Mínim (g)", low),
     el("div", { class: "adm-card-actions" }, [
+      el("button", { class: "btn", onclick: async () => {
+        const grams = prompt("Grams comprats de " + m.material + " " + (m.color || "") + ":"); if (!grams) return;
+        const cost = prompt("Cost total pagat (€):") || "0";
+        const supplier = prompt("Proveïdor (opcional):") || "";
+        const r = await Admin.call("purchaseMaterial", { purchase: { material: m.material, color: m.color, grams: +grams, cost: +cost, supplier } });
+        toast(r.ok ? ("Compra registrada. Nou estoc: " + r.stock + " g") : (r.message || "Error."), r.ok ? "ok" : "err"); renderMaterials();
+      } }, ["Comprar"]),
       el("button", { class: "btn-outline", onclick: async () => {
         const r = await Admin.call("saveMaterial", { material: { material: m.material, color: m.color, stock: +stock.value, costPerGram: +cpg.value, lowAt: +low.value } });
-        toast(r.ok ? "Desat." : (r.message || "Error."), r.ok ? "ok" : "err"); renderMaterials();
-      } }, ["Desar"]),
+        toast(r.ok ? "Ajustat." : (r.message || "Error."), r.ok ? "ok" : "err"); renderMaterials();
+      } }, ["Ajustar"]),
       el("button", { class: "btn-text danger", onclick: async () => {
         if (!confirm("Esborrar " + m.material + " " + m.color + "?")) return;
         const r = await Admin.call("deleteMaterial", { id: m.id });
@@ -722,9 +729,11 @@ async function renderFinance() {
     '<div class="admin-head"><h2>Tancament mensual</h2><button class="btn-outline" id="mon-close">Tancar mes anterior</button></div><div id="mon-list" class="admin-list"></div>';
   const p = await Admin.call("pnl");
   if (p.ok) { const d = p.data;
-    $("pnl").innerHTML = tile("Ingressos", d.revenue.toFixed(2) + " €") + tile("Cost producció", d.productionCost.toFixed(2) + " €") +
+    $("pnl").innerHTML = tile("Ingressos", d.revenue.toFixed(2) + " €") + tile("Filament comprat", Number(d.filamentPurchased || 0).toFixed(2) + " €") +
       tile("Altres despeses", d.otherExpenses.toFixed(2) + " €") + tile("Benefici brut", d.grossProfit.toFixed(2) + " €") +
-      tile("Pagaments", d.payouts.toFixed(2) + " €") + tile("Net", d.net.toFixed(2) + " €");
+      tile("Pagaments gestors", d.payouts.toFixed(2) + " €") + tile("Net", d.net.toFixed(2) + " €");
+    $("pnl").insertAdjacentHTML("afterend", '<p class="adm-hint" id="pnl-note">Base de caixa: Net = Ingressos − Filament comprat − Altres despeses − Pagaments. ' +
+      'Info: filament consumit ' + Number(d.filamentUsed || 0).toFixed(2) + ' € · ' + (d.ordersCount || 0) + ' comandes (sense cancel·lades).</p>');
   }
   $("exp-new").addEventListener("click", () => openExpenseForm());
   $("pay-new").addEventListener("click", () => openPayoutForm());
@@ -753,7 +762,7 @@ async function renderMonthly() {
   rows.forEach(r => list.appendChild(el("div", { class: "adm-card" }, [
     el("div", { class: "adm-card-main" }, [
       el("div", { class: "adm-card-name", html: escapeHtml(String(r.period)) + " · net <strong>" + Number(r.net || 0).toFixed(2) + " €</strong>" }),
-      el("div", { class: "adm-card-meta", html: "Ingressos " + Number(r.revenue || 0).toFixed(2) + " € · cost " + Number(r.productionCost || 0).toFixed(2) + " € · despeses " + Number(r.otherExpenses || 0).toFixed(2) + " € · pagaments " + Number(r.payouts || 0).toFixed(2) + " €" }),
+      el("div", { class: "adm-card-meta", html: "Ingressos " + Number(r.revenue || 0).toFixed(2) + " € · filament " + Number(r.filamentCost || 0).toFixed(2) + " € · despeses " + Number(r.otherExpenses || 0).toFixed(2) + " € · pagaments " + Number(r.payouts || 0).toFixed(2) + " €" }),
       el("div", { class: "adm-card-meta", html: (r.ordersCount || 0) + " comandes · " + (r.jobsDone || 0) + " feines impreses" })
     ])
   ])));

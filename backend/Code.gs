@@ -31,7 +31,7 @@ var SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 hours
 var MUTATING = {
   placeOrder: 1, register: 1, reorder: 1, updateProfile: 1, getInvoice: 1,
   saveProduct: 1, deleteProduct: 1, publish: 1, setupSystem: 1, closeMonth: 1,
-  setOrderStatus: 1, deleteOrder: 1, saveMaterial: 1, deleteMaterial: 1,
+  setOrderStatus: 1, deleteOrder: 1, saveMaterial: 1, purchaseMaterial: 1, deleteMaterial: 1,
   saveExpense: 1, deleteExpense: 1, savePayout: 1, deletePayout: 1,
   saveJob: 1, setJobStatus: 1, deleteJob: 1, saveSettings: 1, deleteClient: 1, verifyPayment: 1,
   addManager: 1, deleteManager: 1, selfTest: 1, reconcileJobs: 1
@@ -90,6 +90,7 @@ function dispatch_(action, req) {
     case 'deleteMessage':  return deleteMessage(req.row);
     case 'listMaterials':  return { ok: true, data: readMaterials() };
     case 'saveMaterial':   return saveMaterial(req.material, session);
+    case 'purchaseMaterial': return purchaseMaterial(session, req.purchase || req.material);
     case 'deleteMaterial': return deleteMaterial(req.id);
     case 'summary':        return { ok: true, data: summary() };
     case 'logs':           return readLogs();
@@ -519,6 +520,29 @@ function deleteMaterial(id) {
     if (matId(v[i][col.material], v[i][col.color]) === id) { sh.deleteRow(i + 1); return { ok: true }; }
   return { ok: false, error: 'notfound', message: 'Material no trobat.' };
 }
+// Buy filament: ADD grams to stock (not set), record the purchase (cash + supplier) in
+// Inventory!Purchases, and refresh €/g. Purchases are the filament cost basis in the P&L.
+function purchaseMaterial(session, p) {
+  p = p || {};
+  var material = String(p.material || '').trim(), color = String(p.color || '').trim();
+  var grams = Number(p.grams || 0), cost = Number(p.cost || 0);
+  if (!material || grams <= 0) return { ok: false, error: 'missing', message: 'Falten material i grams (>0).' };
+  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]), gc = gramsCol_(col);
+  var key = matId(material, color), found = -1, newStock = grams;
+  for (var i = 1; i < v.length; i++) if (matId(v[i][col.material], v[i][col.color]) === key) { found = i; newStock = Number(v[i][gc] || 0) + grams; break; }
+  var cpg = (p.costPerGram != null && p.costPerGram !== '') ? Number(p.costPerGram) : (grams > 0 && cost > 0 ? cost / grams : null);
+  if (found >= 0) {
+    sh.getRange(found + 1, gc + 1).setValue(newStock);
+    if (cpg != null && col.costPerGram != null) sh.getRange(found + 1, col.costPerGram + 1).setValue(cpg);
+    if (col.updated != null) sh.getRange(found + 1, col.updated + 1).setValue(new Date());
+  } else {
+    saveMaterial({ material: material, color: color, stock: grams, costPerGram: (cpg || 0), lowAt: Number(p.lowAt || 0), hex: p.hex || '', brand: p.brand || '', active: true }, session);
+  }
+  try { ensureTab_('inv', 'Purchases', systemSchema().inv.tabs.Purchases).appendRow([new Date(), material, color, grams, cost, String(p.supplier || ''), session ? session.email : '']); }
+  catch (e) { logErr_('purchase row', e); }
+  logInvHistory_(material, color, grams, newStock, 'compra' + (p.supplier ? (' ' + p.supplier) : ''), session ? session.email : '');
+  return { ok: true, stock: newStock, costPerGram: cpg };
+}
 // Subtract grams from a material/colour on an order; returns remaining, or null if untracked.
 // Deduct filament. Stock never goes below 0; any shortfall is reported so it can be flagged.
 // Returns { remaining, short } or null if the filament isn't found.
@@ -576,8 +600,9 @@ function placeOrder(req) {
   if (!lines.length) return { ok: false, error: 'noitems', message: 'Cap producte vàlid a la comanda.' };
 
   var profit = revenue - cost;
-  var payment = (String(req.payment || 'transfer') === 'card') ? 'card' : 'transfer';
-  var status = 'awaiting_payment';                       // unpaid until transfer/card confirms
+  var payment = (['card', 'cash', 'transfer'].indexOf(String(req.payment || 'transfer')) >= 0) ? String(req.payment) : 'transfer';
+  // Cash (in-person via Yerai) is collected on the spot → mark it paid; transfer/card are pending.
+  var status = (payment === 'cash') ? 'paid' : 'awaiting_payment';
   // IVA-inclusive prices: split the total into base + tax for the record (rate from Settings).
   var IVA = Number(getSetting_('IVA', '21')) / 100 || 0.21, total = revenue, base = total / (1 + IVA), ivaAmt = total - base;
   // Fill each Orders column by header name, so this works on the new and old layouts.
@@ -1370,23 +1395,34 @@ function savePayout(p, session) { if (!p) return { ok: false, error: 'missing', 
 function deletePayout(id) { return deleteFinance_('Payouts', id); }
 
 // Profit and loss: revenue from orders, minus production cost and other expenses, minus manager payouts.
+// Sum a cost column from an Inventory tab, optionally only for one "YYYY-MM" period.
+function sumInvCost_(tabName, period) {
+  var total = 0;
+  try {
+    var u = tab_('inv', tabName).getDataRange().getValues(), c = indexMap(u[0]);
+    for (var i = 1; i < u.length; i++) { if (period && !inPeriod_(u[i][c.date], period)) continue; total += Number(u[i][c.cost] || 0); }
+  } catch (e) {}
+  return total;
+}
+// Cash-basis P&L: money in (sales) minus money out (filament bought + other expenses + payouts).
 function pnl() {
   try { maybeCloseMonths_(); } catch (e) { logErr_('maybeCloseMonths', e); }
   var orders = readOrders();
-  var revenue = 0, productionCost = 0;
-  orders.forEach(function (o) { revenue += Number(o.revenue || 0); productionCost += Number(o.cost || 0); });
+  var revenue = 0, productCostEstimate = 0, counted = 0;
+  orders.forEach(function (o) { if (normStatus_(o.status) === 'cancelled') return; counted++; revenue += Number(o.revenue || 0); productCostEstimate += Number(o.cost || 0); });
   var expenses = readFinance_('Expenses'), payouts = readFinance_('Payouts');
   var byCat = {}, otherExpenses = 0;
   expenses.forEach(function (e) { var a = Number(e.amount || 0); otherExpenses += a; var c = String(e.category || 'altres'); byCat[c] = (byCat[c] || 0) + a; });
   var payoutTotal = 0, byManager = {};
   payouts.forEach(function (p) { var a = Number(p.amount || 0); payoutTotal += a; var m = String(p.manager || '?'); byManager[m] = (byManager[m] || 0) + a; });
-  // Filament consumption cost (informational; already part of production cost).
-  var filamentUsed = 0; try { var u = tab_('inv', 'Usage').getDataRange().getValues(), cc = indexMap(u[0]).cost; for (var i = 1; i < u.length; i++) filamentUsed += Number(u[i][cc] || 0); } catch (e) {}
-  var grossProfit = revenue - productionCost - otherExpenses;
+  var filamentPurchased = sumInvCost_('Purchases');     // real cash spent on filament (cost basis)
+  var filamentUsed = sumInvCost_('Usage');              // value consumed so far (informational)
+  var grossProfit = revenue - filamentPurchased - otherExpenses;
   return {
     ok: true, data: {
-      ordersCount: orders.length, revenue: revenue, productionCost: productionCost,
-      otherExpenses: otherExpenses, expensesByCategory: byCat, filamentUsed: filamentUsed,
+      ordersCount: counted, revenue: revenue, filamentPurchased: filamentPurchased,
+      otherExpenses: otherExpenses, expensesByCategory: byCat,
+      filamentUsed: filamentUsed, productCostEstimate: productCostEstimate,
       grossProfit: grossProfit, payouts: payoutTotal, payoutsByManager: byManager,
       net: grossProfit - payoutTotal
     }
@@ -1406,29 +1442,27 @@ function inPeriod_(dateVal, period) {
 // Compute + store the P&L for one finished month, and write a detailed per-month sheet
 // (jobs done + expenses) in the Finance file — the packet you hand the accountant.
 function closeMonth_(period) {
-  var orders = readOrders().filter(function (o) { return inPeriod_(o.date, period); });
-  var revenue = 0, productionCost = 0;
-  orders.forEach(function (o) { revenue += Number(o.revenue || 0); productionCost += Number(o.cost || 0); });
+  var orders = readOrders().filter(function (o) { return inPeriod_(o.date, period) && normStatus_(o.status) !== 'cancelled'; });
+  var revenue = 0;
+  orders.forEach(function (o) { revenue += Number(o.revenue || 0); });
 
   var expenses = readFinance_('Expenses').filter(function (e) { return inPeriod_(e.date, period); });
   var otherExpenses = 0; expenses.forEach(function (e) { otherExpenses += Number(e.amount || 0); });
   var payouts = readFinance_('Payouts').filter(function (p) { return String(p.period || '') === period || inPeriod_(p.date, period); });
   var payoutTotal = 0; payouts.forEach(function (p) { payoutTotal += Number(p.amount || 0); });
 
-  var filamentCost = 0; try {
-    var u = tab_('inv', 'Usage').getDataRange().getValues(), cm = indexMap(u[0]);
-    for (var i = 1; i < u.length; i++) if (inPeriod_(u[i][cm.date], period)) filamentCost += Number(u[i][cm.cost] || 0);
-  } catch (e) {}
+  // Filament cost = what we BOUGHT this month (cash basis), same as the live P&L.
+  var filamentCost = sumInvCost_('Purchases', period);
 
   var jobsDone = readJobsDone_(period);
-  var grossProfit = revenue - productionCost - otherExpenses, net = grossProfit - payoutTotal;
+  var grossProfit = revenue - filamentCost - otherExpenses, net = grossProfit - payoutTotal;
 
   // 1) one row per month in Finance!Monthly (keyed by period). Period column is
   // kept as plain text so "YYYY-MM" isn't silently turned into a date by Sheets.
   var mSh = ensureTab_('finance', 'Monthly', systemSchema().finance.tabs.Monthly);
   textCol_(mSh, 1);
   var mv = mSh.getDataRange().getValues(), mHead = mv[0];
-  var row = { period: period, ordersCount: orders.length, revenue: revenue, productionCost: productionCost, filamentCost: filamentCost, otherExpenses: otherExpenses, grossProfit: grossProfit, payouts: payoutTotal, net: net, jobsDone: jobsDone.length, closedAt: new Date() };
+  var row = { period: period, ordersCount: orders.length, revenue: revenue, productionCost: filamentCost, filamentCost: filamentCost, otherExpenses: otherExpenses, grossProfit: grossProfit, payouts: payoutTotal, net: net, jobsDone: jobsDone.length, closedAt: new Date() };
   var rowArr = mHead.map(function (h) { var k = String(h).trim(); return row[k] != null ? row[k] : ''; });
   // Collect every row for this period: overwrite the first, delete any extras
   // (self-heals duplicates), or append if none exists yet.
@@ -1446,7 +1480,7 @@ function closeMonth_(period) {
   var block = [
     ['Tancament mensual', period], ['', ''],
     ['Comandes', orders.length], ['Ingressos (€)', revenue.toFixed(2)],
-    ['Cost de producció (€)', productionCost.toFixed(2)], ['Cost filament consumit (€)', filamentCost.toFixed(2)],
+    ['Filament comprat (€)', filamentCost.toFixed(2)], ['Filament consumit (€, info)', sumInvCost_('Usage', period).toFixed(2)],
     ['Altres despeses (€)', otherExpenses.toFixed(2)], ['Benefici brut (€)', grossProfit.toFixed(2)],
     ['Pagaments a gestors (€)', payoutTotal.toFixed(2)], ['Net (€)', net.toFixed(2)],
     ['Feines impreses', jobsDone.length], ['', '']
@@ -1733,7 +1767,7 @@ function planQueue_(jobs, perc) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-08.1';
+var ENGINE_VERSION = '2026-11-08.2';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.
