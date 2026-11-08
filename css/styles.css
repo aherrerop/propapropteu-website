@@ -1103,6 +1103,26 @@ body.shop .site-header { background: var(--color-hero); }
   .adm-card { flex-wrap: wrap; }
   .adm-card-actions { width: 100%; }
 }
+/* Phone: Yerai often takes orders on a phone — keep the dashboard usable one-handed. */
+@media (max-width: 560px) {
+  .admin-main { padding: 16px; }
+  /* Nav scrolls sideways instead of wrapping into a tall block. */
+  .admin-nav { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 12px; }
+  .admin-nav::-webkit-scrollbar { display: none; }
+  .admin-nav button { padding: 11px 12px; font-size: 0.85rem; white-space: nowrap; }
+  .admin-top { flex-wrap: wrap; gap: 6px; }
+  /* Everything goes single-column so fields are full-width and tappable. */
+  .adm-grid-4, .adm-grid-2, .adm-spec-row, .of-grid { grid-template-columns: 1fr; }
+  .adm-summary { grid-template-columns: 1fr 1fr; }
+  .adm-card { flex-direction: column; align-items: stretch; }
+  .adm-card-actions { width: 100%; flex-wrap: wrap; }
+  .adm-card-actions .btn, .adm-card-actions .btn-outline, .adm-card-actions .btn-text, .adm-card-actions select { flex: 1 1 auto; min-height: 42px; }
+  .adm-bom-row { grid-template-columns: 1fr; gap: 6px; }
+  .admin-head { flex-wrap: wrap; gap: 8px; }
+  .admin-head .btn, .admin-head .btn-outline { flex: 1 1 auto; }
+  .batch-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  input, select, textarea, button { font-size: 16px; } /* stops iOS zoom-on-focus */
+}
 
 /* ---- form status messages (contact + quote) ---- */
 .form-status { font-size: 0.9rem; margin-top: 14px; padding: 11px 14px; border-radius: 8px; line-height: 1.4; }

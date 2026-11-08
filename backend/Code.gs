@@ -26,61 +26,87 @@ var SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 hours
 
 /* ============================ ROUTER ============================ */
 
+// Actions that read-modify-write shared state run one-at-a-time under a script lock,
+// so two managers (or a manager + a web order) can't corrupt counters, stock or ids.
+var MUTATING = {
+  placeOrder: 1, register: 1, reorder: 1, updateProfile: 1, getInvoice: 1,
+  saveProduct: 1, deleteProduct: 1, publish: 1, setupSystem: 1, closeMonth: 1,
+  setOrderStatus: 1, deleteOrder: 1, saveMaterial: 1, deleteMaterial: 1,
+  saveExpense: 1, deleteExpense: 1, savePayout: 1, deletePayout: 1,
+  saveJob: 1, setJobStatus: 1, deleteJob: 1
+};
+
 function doPost(e) {
   try {
     var req = JSON.parse(e.postData.contents || '{}');
     var action = req.action;
-
-    // Public actions: login + contact form + place an order.
-    if (action === 'login') return json(login(req));
-    if (action === 'register') return json(register(req));
-    if (action === 'contact') return json(contact(req));
-    if (action === 'placeOrder') return json(placeOrder(req));
-
-    // Everything else needs a valid session token.
-    var session = verifyToken(req.token);
-    if (!session) return json({ ok: false, error: 'auth', message: 'Sessió no vàlida o caducada.' });
-
-    switch (action) {
-      case 'me':           return json({ ok: true, user: session });
-      case 'setupSystem':  return json(setupSystem(session));
-      case 'systemStatus': return json(systemStatus());
-      case 'myAccount':    return json(myAccount(session));
-      case 'updateProfile':return json(updateProfile(session, req.data || req));
-      case 'reorder':      return json(reorder(session, req.id));
-      case 'getInvoice':   return json(getInvoice(session, req.id));
-      case 'listProducts': return json({ ok: true, data: readProducts() });
-      case 'saveProduct':  return json(saveProduct(req.product));
-      case 'deleteProduct':return json(deleteProduct(req.id));
-      case 'uploadImage':  return json(uploadImage(req));
-      case 'publish':      return json(publish(session));
-      case 'listOrders':   return json({ ok: true, data: readOrders() });
-      case 'setOrderStatus': return json(setOrderStatus(session, req.id, req.status));
-      case 'deleteOrder':  return json(deleteOrder(session, req.id));
-      case 'listMessages':   return json({ ok: true, data: readMessages() });
-      case 'deleteMessage':  return json(deleteMessage(req.row));
-      case 'listMaterials':  return json({ ok: true, data: readMaterials() });
-      case 'saveMaterial':   return json(saveMaterial(req.material, session));
-      case 'deleteMaterial': return json(deleteMaterial(req.id));
-      case 'summary':        return json({ ok: true, data: summary() });
-      case 'logs':           return json(readLogs());
-      case 'listExpenses':   return json(readExpenses());
-      case 'saveExpense':    return json(saveExpense(req.expense, session));
-      case 'deleteExpense':  return json(deleteExpense(req.id));
-      case 'listPayouts':    return json(readPayouts());
-      case 'savePayout':     return json(savePayout(req.payout, session));
-      case 'deletePayout':   return json(deletePayout(req.id));
-      case 'pnl':            return json(pnl());
-      case 'listJobs':       return json({ ok: true, data: readJobs(req.filter) });
-      case 'saveJob':        return json(saveJob(req.job, session));
-      case 'setJobStatus':   return json(setJobStatus(session, req.id, req.status));
-      case 'deleteJob':      return json(deleteJob(session, req.id));
-      case 'listLinks':      return json(readLinks());
-      case 'batchPlan':      return json(batchPlan(req.perc));
-      default:             return json({ ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action });
-    }
+    var run = function () { return dispatch_(action, req); };
+    return json(MUTATING[action] ? withLock_(run) : run());
   } catch (err) {
     return json({ ok: false, error: 'server', message: String(err) });
+  }
+}
+
+// Run fn while holding the script lock; refuse politely if the system is busy.
+function withLock_(fn) {
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(25000); }
+  catch (e) { return { ok: false, error: 'busy', message: 'El sistema està ocupat un moment. Torna-ho a provar.' }; }
+  try { return fn(); } finally { try { lock.releaseLock(); } catch (e) {} }
+}
+
+// Route one request to its handler, returning a plain object (json() wraps it).
+function dispatch_(action, req) {
+  // Public actions: login + registration + contact form + place an order.
+  if (action === 'login')     return login(req);
+  if (action === 'register')  return register(req);
+  if (action === 'contact')   return contact(req);
+  if (action === 'placeOrder')return placeOrder(req);
+
+  // Everything else needs a valid session token.
+  var session = verifyToken(req.token);
+  if (!session) return { ok: false, error: 'auth', message: 'Sessió no vàlida o caducada.' };
+
+  switch (action) {
+    case 'me':             return { ok: true, user: session };
+    case 'setupSystem':    return setupSystem(session);
+    case 'systemStatus':   return systemStatus();
+    case 'myAccount':      return myAccount(session);
+    case 'updateProfile':  return updateProfile(session, req.data || req);
+    case 'reorder':        return reorder(session, req.id);
+    case 'getInvoice':     return getInvoice(session, req.id);
+    case 'listProducts':   return { ok: true, data: readProducts() };
+    case 'saveProduct':    return saveProduct(req.product);
+    case 'deleteProduct':  return deleteProduct(req.id);
+    case 'uploadImage':    return uploadImage(req);
+    case 'publish':        return publish(session);
+    case 'listOrders':     return { ok: true, data: readOrders() };
+    case 'setOrderStatus': return setOrderStatus(session, req.id, req.status);
+    case 'deleteOrder':    return deleteOrder(session, req.id);
+    case 'listMessages':   return { ok: true, data: readMessages() };
+    case 'deleteMessage':  return deleteMessage(req.row);
+    case 'listMaterials':  return { ok: true, data: readMaterials() };
+    case 'saveMaterial':   return saveMaterial(req.material, session);
+    case 'deleteMaterial': return deleteMaterial(req.id);
+    case 'summary':        return { ok: true, data: summary() };
+    case 'logs':           return readLogs();
+    case 'listExpenses':   return readExpenses();
+    case 'saveExpense':    return saveExpense(req.expense, session);
+    case 'deleteExpense':  return deleteExpense(req.id);
+    case 'listPayouts':    return readPayouts();
+    case 'savePayout':     return savePayout(req.payout, session);
+    case 'deletePayout':   return deletePayout(req.id);
+    case 'pnl':            return pnl();
+    case 'listMonthly':    return { ok: true, data: readMonthly_() };
+    case 'closeMonth':     return closeMonthAction_(session, req.period);
+    case 'listJobs':       return { ok: true, data: readJobs(req.filter) };
+    case 'listJobsDone':   return { ok: true, data: readJobsDone_(req.period) };
+    case 'saveJob':        return saveJob(req.job, session);
+    case 'setJobStatus':   return setJobStatus(session, req.id, req.status);
+    case 'deleteJob':      return deleteJob(session, req.id);
+    case 'listLinks':      return readLinks();
+    case 'batchPlan':      return batchPlan(req.perc);
+    default:               return { ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action };
   }
 }
 
@@ -96,6 +122,7 @@ function contact(req) {
   var email = String(req.email || '').trim();
   var message = String(req.message || '').trim();
   if (req.company_hp) return { ok: true };                 // honeypot: silently accept bots
+  if (!floodOk_('contact')) return { ok: false, error: 'rate', message: 'Massa peticions. Espera un moment.' };
   if (!name || !email || !message) return { ok: false, error: 'missing', message: 'Falten camps obligatoris.' };
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
   if (message.length > 5000) message = message.slice(0, 5000);
@@ -244,6 +271,8 @@ function findClient(email) {
 }
 // Public: a customer creates an account.
 function register(req) {
+  if (req.company_hp) return { ok: true };                         // honeypot
+  if (!floodOk_('register')) return { ok: false, error: 'rate', message: 'Massa peticions. Espera un moment.' };
   var email = String(req.email || '').trim().toLowerCase();
   var password = String(req.password || '');
   var name = String(req.name || '').trim();
@@ -478,15 +507,18 @@ function deleteMaterial(id) {
   return { ok: false, error: 'notfound', message: 'Material no trobat.' };
 }
 // Subtract grams from a material/colour on an order; returns remaining, or null if untracked.
+// Deduct filament. Stock never goes below 0; any shortfall is reported so it can be flagged.
+// Returns { remaining, short } or null if the filament isn't found.
 function deductMaterial(material, color, grams) {
   var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]), gc = gramsCol_(col);
   var key = matId(material, color);
   for (var i = 1; i < v.length; i++)
     if (matId(v[i][col.material], v[i][col.color]) === key) {
-      var next = Number(v[i][gc] || 0) - grams;
+      var have = Number(v[i][gc] || 0), next = have - grams, short = 0;
+      if (next < 0) { short = -next; next = 0; }
       sh.getRange(i + 1, gc + 1).setValue(next);
       if (col.updated != null) sh.getRange(i + 1, col.updated + 1).setValue(new Date());
-      return next;
+      return { remaining: next, short: short };
     }
   return null;
 }
@@ -506,8 +538,11 @@ function ensureOrdersSheet() {
   return sh;
 }
 // Public: a customer places an order (no payment). Records it, computes profit,
-// deducts material inventory per each product's bill-of-materials, emails the shop.
+// creates print jobs (filament is deducted later when the job is marked done),
+// and emails one alert to the shop + one confirmation to the customer.
 function placeOrder(req) {
+  if (req.company_hp) return { ok: true, id: '' };                 // honeypot: silently accept bots
+  if (!floodOk_('order')) return { ok: false, error: 'rate', message: 'Massa peticions. Espera un moment i torna-ho a provar.' };
   var items = req.items;
   if (!items || !items.length) return { ok: false, error: 'missing', message: 'Comanda buida.' };
   var name = String(req.name || '').trim(), email = String(req.email || '').trim();
@@ -516,9 +551,9 @@ function placeOrder(req) {
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
 
   // The order id is made first so each filament usage row can reference it.
-  var id = 'ORD-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
+  var id = uid_('ORD-');
   var byId = {}; readProducts().forEach(function (p) { byId[p.id] = p; });
-  var lines = [], units = 0, revenue = 0, cost = 0, lowFlags = [];
+  var lines = [], units = 0, revenue = 0, cost = 0;
   for (var i = 0; i < items.length; i++) {
     var p = byId[items[i].id]; if (!p) continue;
     var qty = Math.max(1, Math.floor(Number(items[i].qty || 1)));
@@ -529,7 +564,7 @@ function placeOrder(req) {
 
   var profit = revenue - cost;
   var payment = (String(req.payment || 'transfer') === 'card') ? 'card' : 'transfer';
-  var status = payment === 'transfer' ? 'pendent pagament' : 'nou';
+  var status = payment === 'transfer' ? 'awaiting_payment' : 'new';
   // IVA-inclusive prices: split the total into base + tax for the record.
   var IVA = 0.21, total = revenue, base = total / (1 + IVA), ivaAmt = total - base;
   // Fill each Orders column by header name, so this works on the new and old layouts.
@@ -545,16 +580,20 @@ function placeOrder(req) {
   ordersSh.appendRow(oHead.map(function (h) { var k = String(h).trim(); return oVals[k] != null ? oVals[k] : ''; }));
   logOps_('order', id, 'created', '', 'source ' + String(req.source || 'web') + ', total ' + total.toFixed(2));
   // Turn each order line into print jobs (filament is deducted when Albert marks them done).
-  try { createJobsForOrder_(id, lines, byId); } catch (e) {}
+  var jobs = []; try { jobs = createJobsForOrder_(id, lines, byId) || []; } catch (e) { logErr_('createJobsForOrder ' + id, e); }
+  // ONE alert to the shop: the order AND the print jobs it generated.
   try {
     MailApp.sendEmail({
-      to: 'info@propapropteu.com', replyTo: email, subject: '[Comanda ' + id + '] ' + name,
-      body: 'Nova comanda ' + id + '\nClient: ' + name + ' <' + email + '> ' + (req.phone || '') + '\n\n' +
-            lines.map(function (l) { return l.qty + 'x ' + l.name + ' (' + l.price + ' €)'; }).join('\n') +
-            '\n\nIngressos: ' + revenue.toFixed(2) + ' €\nCost: ' + cost.toFixed(2) + ' €\nBenefici: ' + profit.toFixed(2) + ' €' +
-            (req.note ? ('\n\nNota: ' + req.note) : '') + (lowFlags.length ? ('\n\nMaterial sota mínim: ' + lowFlags.join(', ')) : '')
+      to: notifyEmail_(), replyTo: email || 'info@propapropteu.com', subject: '[Comanda ' + id + '] ' + name,
+      body: 'Nova comanda ' + id + ' (' + String(req.source || 'web') + ')\n' +
+            'Client: ' + name + (email ? ' <' + email + '>' : '') + (req.phone ? ' · ' + req.phone : '') + '\n\n' +
+            lines.map(function (l) { return '· ' + l.qty + 'x ' + l.name + ' (' + l.price + ' €)'; }).join('\n') +
+            '\n\nIngressos: ' + revenue.toFixed(2) + ' € · Cost: ' + cost.toFixed(2) + ' € · Benefici: ' + profit.toFixed(2) + ' €' +
+            (req.note ? ('\nNota: ' + req.note) : '') +
+            (jobs.length ? ('\n\n— Feines d\'impressió generades —\n' + jobLines_(jobs)) : '') +
+            '\n\nObre la cua: acceso → Cua d\'impressió.'
     });
-  } catch (e) { /* email optional */ }
+  } catch (e) { logErr_('order mail ' + id, e); }
   // Confirmation to the customer (only when we have their email).
   if (email) try {
     MailApp.sendEmail({
@@ -581,7 +620,7 @@ function readOrders() {
     var cost = col.cost != null ? Number(r[col.cost] || 0) : items.reduce(function (s, it) { return s + Number(it.cost || 0) * Number(it.qty || 0); }, 0);
     var units = col.units != null ? Number(r[col.units] || 0) : items.reduce(function (s, it) { return s + Number(it.qty || 0); }, 0);
     out.push({
-      date: g(r, 'date') ? String(g(r, 'date')) : '', id: String(r[col.id]), status: String(g(r, 'status') || 'nou'),
+      date: g(r, 'date') ? String(g(r, 'date')) : '', id: String(r[col.id]), status: normStatus_(g(r, 'status')),
       payment: String(g(r, 'payment') || ''), source: String(g(r, 'source') || ''),
       name: String(g(r, 'customerName', 'name') || ''), email: String(g(r, 'email') || ''), phone: String(g(r, 'phone') || ''),
       units: units, revenue: total, cost: cost, profit: total - cost, items: items,
@@ -595,8 +634,9 @@ function setOrderStatus(session, id, status) {
   var sh = ensureOrdersSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
   for (var i = 1; i < v.length; i++)
     if (String(v[i][col.id] || '').trim() === id) {
-      sh.getRange(i + 1, col.status + 1).setValue(String(status || 'nou'));
-      logOps_('order', id, 'status:' + String(status || 'nou'), session ? session.email : '', '');
+      var st = normStatus_(status);
+      sh.getRange(i + 1, col.status + 1).setValue(st);
+      logOps_('order', id, 'status:' + st, session ? session.email : '', '');
       return { ok: true };
     }
   return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
@@ -682,6 +722,7 @@ function getInvoice(session, orderId) {
 }
 
 function summary() {
+  try { maybeCloseMonths_(); } catch (e) { logErr_('maybeCloseMonths', e); }
   var orders = readOrders(), mats = readMaterials();
   var t = { orders: orders.length, revenue: 0, cost: 0, profit: 0, byStatus: {} };
   orders.forEach(function (o) { t.revenue += o.revenue; t.cost += o.cost; t.profit += o.profit; t.byStatus[o.status] = (t.byStatus[o.status] || 0) + 1; });
@@ -827,6 +868,7 @@ function systemSchema() {
     ops: { name: 'Prop a Prop Teu · Operations', tabs: {
       Orders: ['id', 'date', 'source', 'status', 'payment', 'customerName', 'email', 'phone', 'items', 'subtotal', 'iva', 'total', 'invoiceNo', 'assignedTo', 'notes'],
       Jobs: ['id', 'created', 'category', 'owner', 'source', 'productId', 'link', 'material', 'color', 'anyColor', 'units', 'gramsEst', 'priority', 'status', 'orderRef', 'batchId', 'notes', 'timeEst'],
+      JobsDone: ['id', 'created', 'category', 'owner', 'source', 'productId', 'link', 'material', 'color', 'anyColor', 'units', 'gramsEst', 'timeEst', 'priority', 'status', 'orderRef', 'batchId', 'notes', 'doneDate', 'doneBy', 'period'],
       Links: ['url', 'title', 'category', 'material', 'color', 'timesPrinted', 'notes'],
       History: ['date', 'type', 'id', 'action', 'by', 'detail']
     }},
@@ -848,7 +890,8 @@ function systemSchema() {
     }},
     finance: { name: 'Prop a Prop Teu · Finance', tabs: {
       Expenses: ['id', 'date', 'category', 'description', 'amount', 'vat', 'supplier', 'recurring', 'by', 'notes'],
-      Payouts: ['id', 'date', 'manager', 'amount', 'period', 'notes']
+      Payouts: ['id', 'date', 'manager', 'amount', 'period', 'notes'],
+      Monthly: ['period', 'ordersCount', 'revenue', 'productionCost', 'filamentCost', 'otherExpenses', 'grossProfit', 'payouts', 'net', 'jobsDone', 'closedAt']
     }}
   };
 }
@@ -919,6 +962,69 @@ function ensureColumn_(sh, colName) {
   sh.setFrozenRows(1);
 }
 
+// Create a tab with the given headers if missing; otherwise make sure each header exists.
+// Lets new tabs (JobsDone, Monthly, …) appear without re-running setupSystem.
+function ensureTab_(key, name, cols) {
+  var ss = ss_(key), sh = ss.getSheetByName(name);
+  if (!sh) { sh = ss.insertSheet(name); sh.getRange(1, 1, 1, cols.length).setValues([cols]); sh.setFrozenRows(1); }
+  else { cols.forEach(function (c) { ensureColumn_(sh, c); }); }
+  return sh;
+}
+
+/* ---------- small shared helpers (ids, periods, settings, flood guard) ---------- */
+
+// A short, collision-resistant id: prefix + timestamp + random suffix.
+function uid_(prefix) {
+  return prefix + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss') + '-' + Math.random().toString(36).slice(2, 5);
+}
+// Month key "YYYY-MM" (sorts lexicographically).
+function period_(d) { return Utilities.formatDate(d || new Date(), 'GMT+1', 'yyyy-MM'); }
+function nextPeriod_(p) { var y = Number(p.slice(0, 4)), m = Number(p.slice(5, 7)); m++; if (m > 12) { m = 1; y++; } return y + '-' + ('0' + m).slice(-2); }
+function prevPeriod_() { var d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1); return period_(d); }
+
+// Read a Config/Settings value by key (falls back to a default).
+function getSetting_(key, dflt) {
+  try {
+    var sh = tab_('config', 'Settings'), v = sh.getDataRange().getValues();
+    for (var i = 1; i < v.length; i++) if (String(v[i][0]).trim() === key) return String(v[i][1]);
+  } catch (e) {}
+  return dflt;
+}
+// Upsert a Config/Settings key.
+function setSetting_(key, value) {
+  var sh = tab_('config', 'Settings'), v = sh.getDataRange().getValues();
+  for (var i = 1; i < v.length; i++) if (String(v[i][0]).trim() === key) { sh.getRange(i + 1, 2).setValue(value); return; }
+  sh.appendRow([key, value]);
+}
+// Where to email new-order / new-job alerts (editable in Settings).
+function notifyEmail_() { return getSetting_('NOTIFY_EMAIL', 'propapropteu@gmail.com'); }
+
+// Crude global flood cap for public endpoints (no client IP available in Apps Script).
+function floodOk_(kind) {
+  try {
+    var c = CacheService.getScriptCache(), k = 'flood_' + kind + '_' + Math.floor(Date.now() / 60000);
+    var n = Number(c.get(k) || 0) + 1; c.put(k, String(n), 120);
+    return n <= 20; // max 20 of a kind per minute, across everyone
+  } catch (e) { return true; }
+}
+
+// Record a swallowed error so failures are recoverable instead of silent.
+function logErr_(where, err) { try { logOps_('error', where, 'exception', '', String(err)); } catch (e) {} }
+
+/* ---------- order status: English codes stored, Catalan shown in the UI ---------- */
+var ORDER_STATUS = ['new', 'awaiting_payment', 'paid', 'in_production', 'ready', 'delivered', 'cancelled'];
+// Map legacy Catalan statuses (and anything unknown) onto the English codes.
+function normStatus_(s) {
+  s = String(s || '').trim();
+  var m = {
+    'nou': 'new', 'pendent pagament': 'awaiting_payment', 'pagat': 'paid',
+    'en preparació': 'in_production', 'en preparacio': 'in_production',
+    'a punt': 'ready', 'entregat': 'delivered', 'cancel·lat': 'cancelled', 'cancel.lat': 'cancelled'
+  };
+  if (m[s]) return m[s];
+  return ORDER_STATUS.indexOf(s) >= 0 ? s : (s ? s : 'new');
+}
+
 // Fill Config/Settings with the keys managers will edit, taking current values where we have them.
 function seedSettings_() {
   var sh = tab_('config', 'Settings');
@@ -932,6 +1038,8 @@ function seedSettings_() {
     ['FISCAL_ADDR', P.getProperty('FISCAL_ADDR') || '[DIRECCION FISCAL]'],
     ['IVA', '21'],
     ['INVOICE_SEQ', '0'],
+    ['NOTIFY_EMAIL', 'propapropteu@gmail.com'],
+    ['LAST_CLOSED_MONTH', ''],
     ['SHIPPING_NOTE', 'Entrega personalizada; te confirmamos coste y plazo por email.']
   ];
   sh.getRange(2, 1, rows.length, 2).setValues(rows);
@@ -1012,7 +1120,7 @@ function readLogs() {
 
 /* ================= FINANCE: other costs, manager payouts, profit/loss ================= */
 // Make a short unique id for an expense or payout row.
-function finId_(prefix) { return prefix + '-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss'); }
+function finId_(prefix) { return uid_(prefix + '-'); }
 
 // Read every row of a Finance tab, newest first, as objects keyed by header name.
 function readFinance_(name) {
@@ -1060,6 +1168,7 @@ function deletePayout(id) { return deleteFinance_('Payouts', id); }
 
 // Profit and loss: revenue from orders, minus production cost and other expenses, minus manager payouts.
 function pnl() {
+  try { maybeCloseMonths_(); } catch (e) { logErr_('maybeCloseMonths', e); }
   var orders = readOrders();
   var revenue = 0, productionCost = 0;
   orders.forEach(function (o) { revenue += Number(o.revenue || 0); productionCost += Number(o.cost || 0); });
@@ -1079,6 +1188,110 @@ function pnl() {
       net: grossProfit - payoutTotal
     }
   };
+}
+
+/* ================= MONTH-END: close the books + a per-month tax packet ================= */
+
+// True if a value's date falls in "YYYY-MM".
+function inPeriod_(dateVal, period) {
+  if (!dateVal) return false;
+  var d = (dateVal instanceof Date) ? dateVal : new Date(dateVal);
+  if (isNaN(d.getTime())) return String(dateVal).slice(0, 7) === period; // already "YYYY-MM-..."
+  return period_(d) === period;
+}
+
+// Compute + store the P&L for one finished month, and write a detailed per-month sheet
+// (jobs done + expenses) in the Finance file — the packet you hand the accountant.
+function closeMonth_(period) {
+  var orders = readOrders().filter(function (o) { return inPeriod_(o.date, period); });
+  var revenue = 0, productionCost = 0;
+  orders.forEach(function (o) { revenue += Number(o.revenue || 0); productionCost += Number(o.cost || 0); });
+
+  var expenses = readFinance_('Expenses').filter(function (e) { return inPeriod_(e.date, period); });
+  var otherExpenses = 0; expenses.forEach(function (e) { otherExpenses += Number(e.amount || 0); });
+  var payouts = readFinance_('Payouts').filter(function (p) { return String(p.period || '') === period || inPeriod_(p.date, period); });
+  var payoutTotal = 0; payouts.forEach(function (p) { payoutTotal += Number(p.amount || 0); });
+
+  var filamentCost = 0; try {
+    var u = tab_('inv', 'Usage').getDataRange().getValues(), cm = indexMap(u[0]);
+    for (var i = 1; i < u.length; i++) if (inPeriod_(u[i][cm.date], period)) filamentCost += Number(u[i][cm.cost] || 0);
+  } catch (e) {}
+
+  var jobsDone = readJobsDone_(period);
+  var grossProfit = revenue - productionCost - otherExpenses, net = grossProfit - payoutTotal;
+
+  // 1) one row per month in Finance!Monthly (keyed by period).
+  var mSh = ensureTab_('finance', 'Monthly', systemSchema().finance.tabs.Monthly);
+  var mv = mSh.getDataRange().getValues(), mHead = mv[0];
+  var row = { period: period, ordersCount: orders.length, revenue: revenue, productionCost: productionCost, filamentCost: filamentCost, otherExpenses: otherExpenses, grossProfit: grossProfit, payouts: payoutTotal, net: net, jobsDone: jobsDone.length, closedAt: new Date() };
+  var rowArr = mHead.map(function (h) { var k = String(h).trim(); return row[k] != null ? row[k] : ''; });
+  var found = -1; for (var r = 1; r < mv.length; r++) if (String(mv[r][0]) === period) { found = r; break; }
+  if (found >= 0) mSh.getRange(found + 1, 1, 1, rowArr.length).setValues([rowArr]);
+  else mSh.appendRow(rowArr);
+
+  // 2) a per-month detail sheet (overwritten each run so it's always current).
+  var ss = ss_('finance'), name = 'Mes ' + period, dSh = ss.getSheetByName(name);
+  if (!dSh) dSh = ss.insertSheet(name); else dSh.clear();
+  var block = [
+    ['Tancament mensual', period], [''],
+    ['Comandes', orders.length], ['Ingressos (€)', revenue.toFixed(2)],
+    ['Cost de producció (€)', productionCost.toFixed(2)], ['Cost filament consumit (€)', filamentCost.toFixed(2)],
+    ['Altres despeses (€)', otherExpenses.toFixed(2)], ['Benefici brut (€)', grossProfit.toFixed(2)],
+    ['Pagaments a gestors (€)', payoutTotal.toFixed(2)], ['Net (€)', net.toFixed(2)],
+    ['Feines impreses', jobsDone.length], ['']
+  ];
+  dSh.getRange(1, 1, block.length, 2).setValues(block);
+  var rowN = block.length + 1;
+  // Jobs-done table.
+  dSh.getRange(rowN, 1).setValue('FEINES IMPRESES'); rowN++;
+  var jHead = ['doneDate', 'category', 'owner', 'material', 'color', 'gramsEst', 'timeEst', 'orderRef', 'notes'];
+  dSh.getRange(rowN, 1, 1, jHead.length).setValues([jHead]); rowN++;
+  if (jobsDone.length) {
+    var jRows = jobsDone.map(function (j) { return jHead.map(function (k) { var val = j[k]; return (val instanceof Date) ? Utilities.formatDate(val, 'GMT+1', 'yyyy-MM-dd') : (val != null ? val : ''); }); });
+    dSh.getRange(rowN, 1, jRows.length, jHead.length).setValues(jRows); rowN += jRows.length;
+  }
+  rowN++;
+  // Expenses table.
+  dSh.getRange(rowN, 1).setValue('DESPESES'); rowN++;
+  var eHead = ['date', 'category', 'description', 'amount', 'vat', 'supplier'];
+  dSh.getRange(rowN, 1, 1, eHead.length).setValues([eHead]); rowN++;
+  if (expenses.length) {
+    var eRows = expenses.map(function (e) { return eHead.map(function (k) { var val = e[k]; return (val instanceof Date) ? Utilities.formatDate(val, 'GMT+1', 'yyyy-MM-dd') : (val != null ? val : ''); }); });
+    dSh.getRange(rowN, 1, eRows.length, eHead.length).setValues(eRows);
+  }
+  dSh.setFrozenRows(1);
+  logOps_('month', period, 'closed', '', 'rev ' + revenue.toFixed(2) + ' net ' + net.toFixed(2));
+  return row;
+}
+
+// Lazily close any finished months we haven't closed yet (no time-trigger needed): runs
+// cheaply on every dashboard load and does nothing once the previous month is recorded.
+function maybeCloseMonths_() {
+  var last = getSetting_('LAST_CLOSED_MONTH', ''), target = prevPeriod_();
+  if (last && last >= target) return;
+  var toClose = [];
+  if (!last) toClose = [target];                       // first run: just the previous month
+  else { var p = nextPeriod_(last); while (p <= target) { toClose.push(p); p = nextPeriod_(p); } }
+  if (toClose.length > 12) toClose = toClose.slice(-12);
+  toClose.forEach(function (pp) { try { closeMonth_(pp); } catch (e) { logErr_('closeMonth ' + pp, e); } });
+  setSetting_('LAST_CLOSED_MONTH', target);
+}
+
+// Manager: read the monthly ledger (newest first).
+function readMonthly_() {
+  try {
+    var sh = ensureTab_('finance', 'Monthly', systemSchema().finance.tabs.Monthly), v = sh.getDataRange().getValues(), head = v[0], out = [];
+    for (var i = v.length - 1; i >= 1; i--) { if (!String(v[i][0] || '').trim()) continue; var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; }); out.push(o); }
+    return out;
+  } catch (e) { return []; }
+}
+
+// Manager: force-close a specific month on demand (e.g. re-run after late edits).
+function closeMonthAction_(session, period) {
+  period = String(period || prevPeriod_()).slice(0, 7);
+  if (!/^\d{4}-\d{2}$/.test(period)) return { ok: false, error: 'period', message: 'Període no vàlid (YYYY-MM).' };
+  var row = closeMonth_(period);
+  return { ok: true, data: row };
 }
 
 /* ================= PRINT JOBS: the queue Albert prints from ================= */
@@ -1109,7 +1322,7 @@ function saveJob(job, session) {
   if (!job) return { ok: false, error: 'missing', message: 'Falta la feina.' };
   var sh = tab_('ops', 'Jobs'); ensureColumn_(sh, 'timeEst');
   var v = sh.getDataRange().getValues(), head = v[0];
-  var id = String(job.id || '').trim() || 'JOB-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
+  var id = String(job.id || '').trim() || uid_('JOB-');
   var existed = !!String(job.id || '').trim();
   var vals = {
     id: id, created: job.created || new Date(), category: String(job.category || 'product'),
@@ -1133,49 +1346,86 @@ function saveJob(job, session) {
   return { ok: true, id: id };
 }
 
-// Email propapropteu@gmail.com a summary of new print jobs (materials + rough time).
+// Bullet list + totals for a set of jobs (shared by the order alert and the new-job alert).
+function jobLines_(jobs) {
+  var totG = 0, totMin = 0;
+  var body = jobs.map(function (j) {
+    totG += Number(j.gramsEst || 0); totMin += Number(j.timeEst || 0);
+    var what = j.link ? j.link : (j.notes || j.productId || '');
+    return '• ' + String(j.category || '') + (j.owner ? '/' + j.owner : '') + ' — ' +
+      j.material + ' ' + (j.anyColor ? '(qualsevol color)' : j.color) + ' · ' +
+      Number(j.gramsEst || 0) + ' g · ~' + fmtMin_(j.timeEst) + (j.units > 1 ? ' · x' + j.units : '') + (what ? ' · ' + what : '');
+  }).join('\n');
+  return body + '\n\nTotal: ' + totG + ' g · ~' + fmtMin_(totMin) + ' de temps estimat.';
+}
+// Email the shop a summary of new print jobs (materials + rough time).
 function notifyNewJobs_(title, jobs) {
   try {
-    var totG = 0, totMin = 0;
-    var lines = jobs.map(function (j) {
-      totG += Number(j.gramsEst || 0); totMin += Number(j.timeEst || 0);
-      var what = j.link ? j.link : (j.notes || j.productId || '');
-      return '• ' + String(j.category || '') + (j.owner ? '/' + j.owner : '') + ' — ' +
-        j.material + ' ' + (j.anyColor ? '(qualsevol color)' : j.color) + ' · ' +
-        Number(j.gramsEst || 0) + ' g · ~' + fmtMin_(j.timeEst) + (j.units > 1 ? ' · x' + j.units : '') + (what ? ' · ' + what : '');
-    }).join('\n');
     MailApp.sendEmail({
-      to: 'propapropteu@gmail.com', subject: '[Impressió] ' + title + ' (' + jobs.length + ')',
-      body: title + '\n\n' + lines + '\n\nTotal: ' + totG + ' g · ~' + fmtMin_(totMin) + ' de temps estimat.\n\nObre la cua: acceso → Cua d\'impressió.'
+      to: notifyEmail_(), subject: '[Impressió] ' + title + ' (' + jobs.length + ')',
+      body: title + '\n\n' + jobLines_(jobs) + '\n\nObre la cua: acceso → Cua d\'impressió.'
     });
-  } catch (e) {}
+  } catch (e) { logErr_('notifyNewJobs', e); }
 }
 function fmtMin_(min) { min = Number(min || 0); if (!min) return '?'; var h = Math.floor(min / 60), m = Math.round(min % 60); return (h ? h + 'h ' : '') + (m ? m + 'min' : (h ? '' : '0min')); }
 
-// Move a job through pending -> printing -> done. On "done" the filament is deducted and logged.
+// Columns of the completed-jobs archive (Jobs columns + when/who/which month).
+var JOBSDONE_COLS = ['id', 'created', 'category', 'owner', 'source', 'productId', 'link', 'material', 'color', 'anyColor', 'units', 'gramsEst', 'timeEst', 'priority', 'status', 'orderRef', 'batchId', 'notes', 'doneDate', 'doneBy', 'period'];
+
+// Move a job through pending -> printing -> done. On the first "done": deduct filament,
+// log it, archive the job to Operations!JobsDone (for monthly/tax tracking) and remove it
+// from the live queue so the to-do list only ever shows outstanding work.
 function setJobStatus(session, id, status) {
   id = String(id || '').trim(); status = String(status || 'pending');
+  var by = session ? session.email : '';
   var sh = tab_('ops', 'Jobs'), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
   for (var i = 1; i < v.length; i++) {
     if (String(v[i][col.id] || '').trim() !== id) continue;
-    var wasDone = String(v[i][col.status] || '') === 'done';
-    sh.getRange(i + 1, col.status + 1).setValue(status);
-    // Deduct filament only on the first transition into "done".
-    if (status === 'done' && !wasDone) {
-      var material = String(v[i][col.material] || ''), color = String(v[i][col.color] || '');
-      var grams = Number(v[i][col.gramsEst] || 0), category = String(v[i][col.category] || 'product');
-      if (grams > 0 && material) {
-        var fil = {}; readMaterials().forEach(function (f) { fil[matId(f.material, f.color)] = f; });
-        var f = fil[matId(material, color)];
-        var rem = deductMaterial(material, color, grams);
-        logUsage_(id, material, color, grams, category, grams * (f ? f.costPerGram : 0));
-        logInvHistory_(material, color, -grams, rem, 'job ' + id, session ? session.email : '');
-      }
+
+    if (status !== 'done') {                       // ordinary status change, stays in the queue
+      sh.getRange(i + 1, col.status + 1).setValue(status);
+      logOps_('job', id, 'status:' + status, by, '');
+      return { ok: true };
     }
-    logOps_('job', id, 'status:' + status, session ? session.email : '', '');
-    return { ok: true };
+
+    // --- marking done ---
+    var material = String(v[i][col.material] || ''), color = String(v[i][col.color] || '');
+    var grams = Number(v[i][col.gramsEst] || 0), category = String(v[i][col.category] || 'product');
+    var warning = '';
+    if (grams > 0 && material) {
+      var fil = {}; readMaterials().forEach(function (f) { fil[matId(f.material, f.color)] = f; });
+      var f = fil[matId(material, color)];
+      var d = deductMaterial(material, color, grams);
+      logUsage_(id, material, color, grams, category, grams * (f ? f.costPerGram : 0));
+      var note = 'job ' + id + (d && d.short > 0 ? ' · FALTA ' + d.short + 'g' : '');
+      logInvHistory_(material, color, -grams, d ? d.remaining : '', note, by);
+      if (d && d.short > 0) warning = 'Atenció: ' + material + ' ' + color + ' sense estoc suficient (falten ' + d.short + ' g). Marcat igualment.';
+    }
+    // Archive a full snapshot, then delete the live row.
+    var snap = {}; v[0].forEach(function (h, j) { snap[String(h).trim()] = v[i][j]; });
+    snap.status = 'done'; snap.doneDate = new Date(); snap.doneBy = by; snap.period = period_(new Date());
+    var doneSh = ensureTab_('ops', 'JobsDone', JOBSDONE_COLS);
+    var dh = doneSh.getRange(1, 1, 1, doneSh.getLastColumn()).getValues()[0];
+    doneSh.appendRow(dh.map(function (h) { var k = String(h).trim(); return snap[k] != null ? snap[k] : ''; }));
+    sh.deleteRow(i + 1);
+    logOps_('job', id, 'done', by, 'archived');
+    return { ok: true, warning: warning };
   }
   return { ok: false, error: 'notfound', message: 'Feina no trobada.' };
+}
+
+// Read archived (completed) jobs, optionally for one "YYYY-MM" period, newest first.
+function readJobsDone_(period) {
+  try {
+    var sh = ensureTab_('ops', 'JobsDone', JOBSDONE_COLS), v = sh.getDataRange().getValues(), head = v[0], out = [];
+    for (var i = v.length - 1; i >= 1; i--) {
+      if (!String(v[i][0] || '').trim()) continue;
+      var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; });
+      if (period && String(o.period) !== period) continue;
+      out.push(o);
+    }
+    return out;
+  } catch (e) { return []; }
 }
 
 function deleteJob(session, id) {
@@ -1211,9 +1461,8 @@ function createJobsForOrder_(orderId, lines, productsById) {
     // Rough print time comes from the product's internal estimate (minutes per unit).
     var timeEst = Number(p && p.printTimeMin ? p.printTimeMin : 0) * qty;
     bom.forEach(function (b) {
-      var id = 'JOB-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss') + '-' + Math.floor(Math.random() * 1000);
       var vals = {
-        id: id, created: new Date(), category: 'product', owner: '', source: 'order',
+        id: uid_('JOB-'), created: new Date(), category: 'product', owner: '', source: 'order',
         productId: line.id, link: '', material: String(b.material || ''), color: String(b.color || ''),
         anyColor: false, units: qty, gramsEst: Number(b.grams || 0) * qty, timeEst: timeEst,
         priority: 0, status: 'pending', orderRef: orderId, batchId: '', notes: line.name
@@ -1222,12 +1471,18 @@ function createJobsForOrder_(orderId, lines, productsById) {
       made.push(vals);
     });
   });
-  if (made.length) notifyNewJobs_('Comanda ' + orderId + ' — feines noves', made);
+  // The caller (placeOrder) folds these into the single order alert — no separate email here.
+  return made;
 }
 
 // Order the pending queue: mix categories by percentage, and keep same material/colour together to cut filament changes.
 function batchPlan(perc) {
-  var jobs = readJobs({ status: 'pending' });
+  return planQueue_(readJobs({ status: 'pending' }), perc);
+}
+
+// Pure ordering algorithm (no sheets) so it can be unit-tested directly.
+// Weighted round-robin by category %, with same-material/colour lookahead to cut filament swaps.
+function planQueue_(jobs, perc) {
   var cats = { product: [], research: [], personal: [] };
   jobs.forEach(function (j) { var c = (j.category === 'research' || j.category === 'personal') ? j.category : 'product'; cats[c].push(j); });
   var sortMC = function (a, b) {

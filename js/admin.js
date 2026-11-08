@@ -481,17 +481,23 @@ async function renderOrders() {
   list.innerHTML = "";
   r.data.forEach(o => list.appendChild(orderCard(o)));
 }
-const ORDER_STATES = ["nou", "pendent pagament", "pagat", "en preparació", "a punt", "entregat", "cancel·lat"];
+// Status codes are stored in English; managers see Catalan labels.
+const ORDER_STATES = ["new", "awaiting_payment", "paid", "in_production", "ready", "delivered", "cancelled"];
+const ORDER_STATE_LABELS = {
+  new: "nova", awaiting_payment: "pendent pagament", paid: "pagada",
+  in_production: "en preparació", ready: "a punt", delivered: "entregada", cancelled: "cancel·lada"
+};
+function statusLabel(code) { return ORDER_STATE_LABELS[code] || code; }
 function orderCard(o) {
   const items = o.items.map(i => i.qty + "× " + escapeHtml(i.name)).join(", ");
   const payLabel = o.payment === "transfer" ? "transferència" : (o.payment === "card" ? "targeta" : o.payment);
   const sel = el("select", { class: "ord-status" },
-    ORDER_STATES.map(st => el("option", { value: st, selected: o.status === st }, [st])));
+    ORDER_STATES.map(st => el("option", { value: st, selected: o.status === st }, [statusLabel(st)])));
   sel.addEventListener("change", async () => {
     const r = await Admin.call("setOrderStatus", { id: o.id, status: sel.value });
     toast(r.ok ? "Estat actualitzat." : (r.message || "Error."), r.ok ? "ok" : "err");
   });
-  return el("div", { class: "adm-card adm-order status-" + o.status.replace(/\s|·/g, "-") }, [
+  return el("div", { class: "adm-card adm-order status-" + String(o.status).replace(/\s|·/g, "-") }, [
     el("div", { class: "adm-card-main" }, [
       el("div", { class: "adm-card-name", html: escapeHtml(o.id) + " · " + escapeHtml(o.name) }),
       el("div", { class: "adm-card-meta", html: fmtDate(o.date) + " · " + escapeHtml(o.email) + (o.phone ? " · " + escapeHtml(o.phone) : "") }),
@@ -623,7 +629,13 @@ function jobCard(j) {
       el("div", { class: "adm-card-meta", html: whatHtml + (j.units > 1 ? " · x" + j.units : "") + (j.orderRef ? ' · <span class="adm-id">' + escapeHtml(j.orderRef) + "</span>" : "") + " · " + escapeHtml(j.status) })
     ]),
     el("div", { class: "adm-card-actions" }, [
-      el("button", { class: "btn-outline", onclick: async () => { const s = j.status === "pending" ? "imprimint" : "done"; const r = await Admin.call("setJobStatus", { id: j.id, status: s }); toast(r.ok ? "Actualitzat." : "Error.", r.ok ? "ok" : "err"); renderJobs(); } }, [j.status === "pending" ? "Imprimint" : "Fet"]),
+      el("button", { class: "btn-outline", onclick: async () => {
+        const s = j.status === "pending" ? "imprimint" : "done";
+        if (s === "done" && !confirm("Marcar com a feta? Es descompta el filament i surt de la cua.")) return;
+        const r = await Admin.call("setJobStatus", { id: j.id, status: s });
+        toast(!r.ok ? (r.message || "Error.") : (r.warning || "Actualitzat."), !r.ok ? "err" : (r.warning ? "err" : "ok"));
+        renderJobs();
+      } }, [j.status === "pending" ? "Imprimint" : "Fet"]),
       el("button", { class: "btn-text danger", onclick: async () => { if (!confirm("Esborrar aquesta feina?")) return; await Admin.call("deleteJob", { id: j.id }); renderJobs(); } }, ["Esborrar"])
     ])
   ]);
@@ -700,7 +712,8 @@ async function renderFinance() {
   const v = $("view-finance");
   v.innerHTML = '<div class="admin-head"><h1>Finances</h1></div><div id="pnl" class="adm-summary"></div>' +
     '<div class="admin-head"><h2>Despeses</h2><button class="btn" id="exp-new">+ Despesa</button></div><div id="exp-form"></div><div id="exp-list" class="admin-list"></div>' +
-    '<div class="admin-head"><h2>Pagaments a gestors</h2><button class="btn" id="pay-new">+ Pagament</button></div><div id="pay-form"></div><div id="pay-list" class="admin-list"></div>';
+    '<div class="admin-head"><h2>Pagaments a gestors</h2><button class="btn" id="pay-new">+ Pagament</button></div><div id="pay-form"></div><div id="pay-list" class="admin-list"></div>' +
+    '<div class="admin-head"><h2>Tancament mensual</h2><button class="btn-outline" id="mon-close">Tancar mes anterior</button></div><div id="mon-list" class="admin-list"></div>';
   const p = await Admin.call("pnl");
   if (p.ok) { const d = p.data;
     $("pnl").innerHTML = tile("Ingressos", d.revenue.toFixed(2) + " €") + tile("Cost producció", d.productionCost.toFixed(2) + " €") +
@@ -717,6 +730,27 @@ async function renderFinance() {
   $("pay-list").innerHTML = "";
   (pay.ok && pay.data.length ? pay.data : []).forEach(x => $("pay-list").appendChild(financeCard(x, "deletePayout", renderFinance, escapeHtml(x.manager) + " · " + Number(x.amount || 0).toFixed(2) + " €", fmtDate(x.date) + (x.period ? " · " + escapeHtml(x.period) : ""))));
   if (!(pay.ok && pay.data.length)) $("pay-list").innerHTML = '<p class="admin-empty">Cap pagament.</p>';
+
+  $("mon-close").addEventListener("click", async () => {
+    if (!confirm("Tancar el mes anterior? Genera el full de resum del mes (es pot repetir).")) return;
+    const r = await Admin.call("closeMonth", {});
+    toast(r.ok ? "Mes tancat." : (r.message || "Error."), r.ok ? "ok" : "err");
+    renderMonthly();
+  });
+  renderMonthly();
+}
+async function renderMonthly() {
+  const m = await Admin.call("listMonthly");
+  const list = $("mon-list"); if (!list) return; list.innerHTML = "";
+  const rows = (m.ok && m.data && m.data.length) ? m.data : [];
+  if (!rows.length) { list.innerHTML = '<p class="admin-empty">Encara no hi ha tancaments mensuals.</p>'; return; }
+  rows.forEach(r => list.appendChild(el("div", { class: "adm-card" }, [
+    el("div", { class: "adm-card-main" }, [
+      el("div", { class: "adm-card-name", html: escapeHtml(String(r.period)) + " · net <strong>" + Number(r.net || 0).toFixed(2) + " €</strong>" }),
+      el("div", { class: "adm-card-meta", html: "Ingressos " + Number(r.revenue || 0).toFixed(2) + " € · cost " + Number(r.productionCost || 0).toFixed(2) + " € · despeses " + Number(r.otherExpenses || 0).toFixed(2) + " € · pagaments " + Number(r.payouts || 0).toFixed(2) + " €" }),
+      el("div", { class: "adm-card-meta", html: (r.ordersCount || 0) + " comandes · " + (r.jobsDone || 0) + " feines impreses" })
+    ])
+  ])));
 }
 function financeCard(obj, delAction, refresh, title, meta) {
   return el("div", { class: "adm-card" }, [
