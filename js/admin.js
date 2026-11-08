@@ -421,11 +421,15 @@ function switchView(v) {
   $("view-messages").hidden = v !== "messages";
   $("view-jobs").hidden = v !== "jobs";
   $("view-finance").hidden = v !== "finance";
+  $("view-clients").hidden = v !== "clients";
+  $("view-config").hidden = v !== "config";
   if (v === "orders") renderOrders();
   if (v === "materials") renderMaterials();
   if (v === "messages") renderMessages();
   if (v === "jobs") renderJobs();
   if (v === "finance") renderFinance();
+  if (v === "clients") renderClients();
+  if (v === "config") renderConfig();
 }
 
 function escapeHtml(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
@@ -838,4 +842,71 @@ function openOrderForm() {
     el("div", {}, [el("button", { class: "btn", type: "submit" }, ["Crear comanda"]), el("button", { class: "btn-text", type: "button", onclick: () => wrap.innerHTML = "" }, ["Cancel\u00B7lar"])])
   ]);
   wrap.innerHTML = ""; wrap.appendChild(form);
+}
+
+/* ============================ CLIENTS ============================ */
+async function renderClients() {
+  const v = $("view-clients");
+  v.innerHTML = '<div class="admin-head"><h1>Clients</h1></div>' +
+    '<h2 class="adm-subhead">Comptes</h2><div id="cli-accounts" class="admin-list"></div>' +
+    '<h2 class="adm-subhead">Contactes</h2><div id="cli-contacts" class="admin-list"></div>';
+  const r = await Admin.call("listClients");
+  const acc = $("cli-accounts"), con = $("cli-contacts");
+  if (!r.ok) { acc.innerHTML = '<p class="admin-empty">Error en carregar.</p>'; return; }
+  acc.innerHTML = ""; con.innerHTML = "";
+  if (!r.accounts.length) acc.innerHTML = '<p class="admin-empty">Cap compte.</p>';
+  r.accounts.forEach(a => acc.appendChild(el("div", { class: "adm-card" }, [
+    el("div", { class: "adm-card-main" }, [
+      el("div", { class: "adm-card-name", html: escapeHtml(a.name || a.email) }),
+      el("div", { class: "adm-card-meta", html: escapeHtml(a.email) + (a.phone ? " · " + escapeHtml(a.phone) : "") + (a.address ? " · " + escapeHtml(a.address) : "") })
+    ]),
+    el("div", { class: "adm-card-actions" }, [el("button", { class: "btn-text danger", onclick: async () => {
+      if (!confirm("Esborrar el compte " + a.email + "? (no afecta les seves comandes passades)")) return;
+      const d = await Admin.call("deleteClient", { email: a.email });
+      toast(d.ok ? "Compte esborrat." : (d.message || "Error."), d.ok ? "ok" : "err"); renderClients();
+    } }, ["Esborrar"])])
+  ])));
+  if (!r.contacts.length) con.innerHTML = '<p class="admin-empty">Cap contacte.</p>';
+  r.contacts.forEach(c => con.appendChild(el("div", { class: "adm-card" }, [
+    el("div", { class: "adm-card-main" }, [
+      el("div", { class: "adm-card-name", html: escapeHtml(c.name || c.email) }),
+      el("div", { class: "adm-card-meta", html: escapeHtml(c.email || "") + (c.phone ? " · " + escapeHtml(c.phone) : "") + (c.notes ? " · " + escapeHtml(c.notes) : "") })
+    ])
+  ])));
+}
+
+/* ============================ CONFIG ============================ */
+async function renderConfig() {
+  const v = $("view-config");
+  v.innerHTML = '<div class="admin-head"><h1>Configuració</h1></div>' +
+    '<p class="adm-hint">Aquests valors els pots canviar en qualsevol moment; afecten factures, transferències, avisos i el pagament amb targeta.</p>' +
+    '<form id="cfg-form" class="adm-editor"></form>';
+  const r = await Admin.call("getSettings");
+  const form = $("cfg-form");
+  if (!r.ok) { form.innerHTML = '<p class="admin-empty">Error en carregar.</p>'; return; }
+  r.data.forEach(d => {
+    const common = { id: "cfg-" + d.key };
+    let input;
+    if (d.type === "secret") {
+      input = el("input", Object.assign(common, { type: "password", placeholder: d.set ? "•••••• (configurada — deixa-ho buit per no canviar)" : "sk_live_… o sk_test_…", autocomplete: "off" }));
+    } else {
+      input = el("input", Object.assign(common, { type: d.type === "number" ? "number" : "text", value: d.value == null ? "" : d.value, step: d.type === "number" ? "any" : undefined }));
+    }
+    form.appendChild(el("div", { class: "adm-field" }, [el("label", { for: "cfg-" + d.key }, [d.label]), input]));
+  });
+  const cardLine = el("p", { class: "adm-hint", html: r.cardEnabled ? "✅ Pagament amb targeta ACTIU (Stripe configurat)." : "⚪ Pagament amb targeta inactiu — enganxa la clau Stripe per activar-lo." });
+  form.appendChild(cardLine);
+  form.appendChild(el("div", {}, [el("button", { class: "btn", type: "submit" }, ["Desar canvis"])]));
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const settings = {};
+    r.data.forEach(d => {
+      const val = $("cfg-" + d.key).value;
+      if (d.type === "secret" && !val.trim()) return;  // blank secret = keep existing
+      settings[d.key] = val;
+    });
+    const res = await Admin.call("saveSettings", { settings });
+    toast(res.ok ? "Configuració desada." : (res.message || "Error."), res.ok ? "ok" : "err");
+    if (res.ok) renderConfig();
+  });
 }

@@ -33,7 +33,7 @@ var MUTATING = {
   saveProduct: 1, deleteProduct: 1, publish: 1, setupSystem: 1, closeMonth: 1,
   setOrderStatus: 1, deleteOrder: 1, saveMaterial: 1, deleteMaterial: 1,
   saveExpense: 1, deleteExpense: 1, savePayout: 1, deletePayout: 1,
-  saveJob: 1, setJobStatus: 1, deleteJob: 1
+  saveJob: 1, setJobStatus: 1, deleteJob: 1, saveSettings: 1, deleteClient: 1, verifyPayment: 1
 };
 
 function doPost(e) {
@@ -62,6 +62,8 @@ function dispatch_(action, req) {
   if (action === 'register')  return register(req);
   if (action === 'contact')   return contact(req);
   if (action === 'placeOrder')return placeOrder(req);
+  if (action === 'pubinfo')   return pubinfo();
+  if (action === 'verifyPayment') return verifyPayment(req);
 
   // Everything else needs a valid session token.
   var session = verifyToken(req.token);
@@ -106,6 +108,10 @@ function dispatch_(action, req) {
     case 'deleteJob':      return deleteJob(session, req.id);
     case 'listLinks':      return readLinks();
     case 'batchPlan':      return batchPlan(req.perc);
+    case 'getSettings':    return getSettings();
+    case 'saveSettings':   return saveSettings(session, req.settings || req.data);
+    case 'listClients':    return listClients();
+    case 'deleteClient':   return deleteClient(session, req.email);
     default:               return { ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action };
   }
 }
@@ -564,9 +570,9 @@ function placeOrder(req) {
 
   var profit = revenue - cost;
   var payment = (String(req.payment || 'transfer') === 'card') ? 'card' : 'transfer';
-  var status = payment === 'transfer' ? 'awaiting_payment' : 'new';
-  // IVA-inclusive prices: split the total into base + tax for the record.
-  var IVA = 0.21, total = revenue, base = total / (1 + IVA), ivaAmt = total - base;
+  var status = 'awaiting_payment';                       // unpaid until transfer/card confirms
+  // IVA-inclusive prices: split the total into base + tax for the record (rate from Settings).
+  var IVA = Number(getSetting_('IVA', '21')) / 100 || 0.21, total = revenue, base = total / (1 + IVA), ivaAmt = total - base;
   // Fill each Orders column by header name, so this works on the new and old layouts.
   var ordersSh = ensureOrdersSheet();
   var oHead = ordersSh.getRange(1, 1, 1, ordersSh.getLastColumn()).getValues()[0];
@@ -605,7 +611,19 @@ function placeOrder(req) {
             '\n\nSi tienes cualquier duda, responde a este correo o escríbenos a info@propapropteu.com.\n\nUn saludo,\nEl equipo de Prop a Prop Teu'
     });
   } catch (e) { /* customer email optional */ }
-  return { ok: true, id: id, message: 'Comanda rebuda. Et contactem per confirmar.' };
+
+  // Card payment: if Stripe is configured, hand back a hosted checkout URL to redirect to.
+  if (payment === 'card' && cardEnabled_()) {
+    try {
+      var url = stripeCheckout_(id, lines, total, req.returnUrl);
+      return { ok: true, id: id, payment: 'card', checkoutUrl: url };
+    } catch (e) {
+      logErr_('stripeCheckout ' + id, e);
+      return { ok: true, id: id, payment: 'card', checkoutUrl: '', message: 'Comanda registrada; el pagament amb targeta no està disponible ara mateix. Et contactem.' };
+    }
+  }
+  // Transfer (or card while Stripe is off): return the live bank details for the instructions.
+  return { ok: true, id: id, payment: payment, bankHolder: getSetting_('BANK_HOLDER', 'Prop a Prop Teu'), bankIban: getSetting_('BANK_IBAN', ''), message: 'Comanda rebuda. Et contactem per confirmar.' };
 }
 function readOrders() {
   var sh = ensureOrdersSheet();
@@ -655,23 +673,25 @@ function deleteOrder(session, id) {
   return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
 }
 /* ---------- Invoices (VAT PDF) ---------- */
+// Fiscal identity for invoices — editable in the Settings screen (Script Property / placeholder fallback).
 function fiscalData() {
+  var or = function (key, dflt) { var v = getSetting_(key, ''); return v !== '' ? v : dflt; };
   return {
-    name: prop('FISCAL_NAME') || '[NOMBRE FISCAL / AUTÓNOMO]',
-    nif: prop('FISCAL_NIF') || '[NIF]',
-    addr: prop('FISCAL_ADDR') || '[DIRECCIÓN FISCAL COMPLETA]',
-    email: 'info@propapropteu.com'
+    name: or('FISCAL_NAME', prop('FISCAL_NAME') || '[NOMBRE FISCAL / AUTÓNOMO]'),
+    nif: or('FISCAL_NIF', prop('FISCAL_NIF') || '[NIF]'),
+    addr: or('FISCAL_ADDR', prop('FISCAL_ADDR') || '[DIRECCIÓN FISCAL COMPLETA]'),
+    email: or('FISCAL_EMAIL', 'info@propapropteu.com')
   };
 }
+// Invoice numbering lives in Settings (editable, resettable); callers are under the script lock.
 function assignInvoiceNo(orderId) {
   var sh = ensureOrdersSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
   for (var i = 1; i < v.length; i++) {
     if (String(v[i][col.id] || '').trim() === orderId) {
       var cur = String(v[i][col.invoiceNo] || '').trim();
       if (cur) return cur;
-      var props = PropertiesService.getScriptProperties();
-      var seq = Number(props.getProperty('INVOICE_SEQ') || '0') + 1;
-      props.setProperty('INVOICE_SEQ', String(seq));
+      var seq = Number(getSetting_('INVOICE_SEQ', '0')) + 1;
+      setSetting_('INVOICE_SEQ', String(seq));
       var no = 'F' + new Date().getFullYear() + '-' + ('0000' + seq).slice(-4);
       sh.getRange(i + 1, col.invoiceNo + 1).setValue(no);
       return no;
@@ -1002,6 +1022,136 @@ function setSetting_(key, value) {
 }
 // Where to email new-order / new-job alerts (editable in Settings).
 function notifyEmail_() { return getSetting_('NOTIFY_EMAIL', 'propapropteu@gmail.com'); }
+function stripeKey_() { return getSetting_('STRIPE_SECRET_KEY', '').trim(); }
+function cardEnabled_() { return stripeKey_() !== ''; }
+
+/* ---------- editable settings (the dashboard "Configuració" screen) ---------- */
+// The last-minute inputs: bank, fiscal identity, IVA, invoice counter, alert email,
+// shipping note and the Stripe key. `secret` fields are never sent to public callers.
+var SETTINGS_DEFS = [
+  { key: 'BANK_HOLDER', label: 'Titular del compte (transferència)', type: 'text', dflt: 'Prop a Prop Teu' },
+  { key: 'BANK_IBAN', label: 'IBAN (transferència)', type: 'text', dflt: '' },
+  { key: 'FISCAL_NAME', label: 'Nom fiscal / autònom (factures)', type: 'text', dflt: '' },
+  { key: 'FISCAL_NIF', label: 'NIF (factures)', type: 'text', dflt: '' },
+  { key: 'FISCAL_ADDR', label: 'Adreça fiscal (factures)', type: 'text', dflt: '' },
+  { key: 'FISCAL_EMAIL', label: 'Email a les factures', type: 'text', dflt: 'info@propapropteu.com' },
+  { key: 'IVA', label: 'IVA (%)', type: 'number', dflt: '21' },
+  { key: 'INVOICE_SEQ', label: 'Últim número de factura emès (0 = comença a 1)', type: 'number', dflt: '0' },
+  { key: 'NOTIFY_EMAIL', label: 'Email per avisos de comandes/feines', type: 'text', dflt: 'propapropteu@gmail.com' },
+  { key: 'SHIPPING_NOTE', label: 'Nota d\'enviament (checkout)', type: 'text', dflt: '' },
+  { key: 'STRIPE_SECRET_KEY', label: 'Clau secreta Stripe (activa el pagament amb targeta)', type: 'secret', dflt: '' }
+];
+function getSettings() {
+  var data = SETTINGS_DEFS.map(function (d) {
+    var v = getSetting_(d.key, d.dflt);
+    // Don't return the raw secret; say whether it's set so the UI can show a placeholder.
+    if (d.type === 'secret') return { key: d.key, label: d.label, type: d.type, value: '', set: String(v || '') !== '' };
+    return { key: d.key, label: d.label, type: d.type, value: v };
+  });
+  return { ok: true, data: data, cardEnabled: cardEnabled_() };
+}
+function saveSettings(session, map) {
+  if (!map || typeof map !== 'object') return { ok: false, error: 'missing', message: 'Res a desar.' };
+  var allowed = {}; SETTINGS_DEFS.forEach(function (d) { allowed[d.key] = d; });
+  var changed = 0;
+  Object.keys(map).forEach(function (k) {
+    var d = allowed[k]; if (!d) return;                 // ignore unknown keys
+    var val = map[k];
+    // A blank secret means "leave the existing key untouched".
+    if (d.type === 'secret' && String(val || '').trim() === '') return;
+    setSetting_(k, d.type === 'number' ? String(Number(val) || 0) : String(val == null ? '' : val));
+    changed++;
+  });
+  logOps_('settings', 'config', 'saved', session ? session.email : '', changed + ' keys');
+  return { ok: true, changed: changed };
+}
+// Public, non-secret config the storefront needs (bank details, IVA, card availability).
+function pubinfo() {
+  return {
+    ok: true,
+    bankHolder: getSetting_('BANK_HOLDER', 'Prop a Prop Teu'),
+    bankIban: getSetting_('BANK_IBAN', ''),
+    iva: Number(getSetting_('IVA', '21')),
+    shippingNote: getSetting_('SHIPPING_NOTE', ''),
+    cardEnabled: cardEnabled_()
+  };
+}
+
+/* ---------- clients (accounts + contacts) screen ---------- */
+function listClients() {
+  var accounts = [], contacts = [];
+  try {
+    var sh = tab_('clients', 'Accounts'), v = sh.getDataRange().getValues(), c = indexMap(v[0]);
+    for (var i = 1; i < v.length; i++) {
+      var em = String(v[i][c.email] || '').trim(); if (!em) continue;
+      accounts.push({ email: em, name: String(v[i][c.name] || ''), phone: String(v[i][c.phone] || ''), address: String(v[i][c.address] || ''), active: v[i][c.active] !== false, created: v[i][c.created] ? String(v[i][c.created]) : '' });
+    }
+  } catch (e) {}
+  try {
+    var ct = tab_('clients', 'Contacts'), cv = ct.getDataRange().getValues(), cc = indexMap(cv[0]);
+    for (var j = 1; j < cv.length; j++) {
+      var nm = String(cv[j][cc.name] || '').trim(), ce = String(cv[j][cc.email] || '').trim();
+      if (!nm && !ce) continue;
+      contacts.push({ name: nm, email: ce, phone: String(cv[j][cc.phone] || ''), notes: String(cv[j][cc.notes] || '') });
+    }
+  } catch (e) {}
+  return { ok: true, accounts: accounts, contacts: contacts };
+}
+// Delete a client account (archived to History first). Does not touch their past orders.
+function deleteClient(session, email) {
+  email = String(email || '').trim().toLowerCase();
+  if (!email) return { ok: false, error: 'missing', message: 'Falta l\'email.' };
+  var sh = tab_('clients', 'Accounts'), v = sh.getDataRange().getValues(), c = indexMap(v[0]);
+  for (var i = v.length - 1; i >= 1; i--)
+    if (String(v[i][c.email] || '').trim().toLowerCase() === email) {
+      var snap = {}; v[0].forEach(function (h, j) { if (String(h).trim() !== 'salt' && String(h).trim() !== 'hash') snap[String(h).trim()] = v[i][j]; });
+      logOps_('client', email, 'deleted', session ? session.email : '', JSON.stringify(snap));
+      sh.deleteRow(i + 1);
+      return { ok: true };
+    }
+  return { ok: false, error: 'notfound', message: 'Compte no trobat.' };
+}
+
+/* ---------- Stripe card checkout (dormant until STRIPE_SECRET_KEY is set) ---------- */
+// Call the Stripe REST API, form-encoded, with the secret key from Settings.
+function stripeApi_(method, path, params) {
+  var key = stripeKey_(); if (!key) throw new Error('Stripe not configured');
+  var opts = { method: method, headers: { Authorization: 'Bearer ' + key }, muteHttpExceptions: true };
+  if (params) opts.payload = params;                    // UrlFetchApp form-encodes a plain object
+  var res = UrlFetchApp.fetch('https://api.stripe.com/v1/' + path, opts);
+  var body = JSON.parse(res.getContentText() || '{}');
+  if (res.getResponseCode() >= 300) throw new Error((body.error && body.error.message) || ('Stripe ' + res.getResponseCode()));
+  return body;
+}
+// Create a Checkout Session for an order; returns the hosted payment URL.
+function stripeCheckout_(orderId, lines, total, returnUrl) {
+  var base = String(returnUrl || '').replace(/\/$/, '') || 'https://propapropteu.com';
+  var p = {
+    mode: 'payment',
+    success_url: base + '/?paid=' + encodeURIComponent(orderId) + '&cs={CHECKOUT_SESSION_ID}',
+    cancel_url: base + '/?cancel=' + encodeURIComponent(orderId),
+    'metadata[order]': orderId,
+    'line_items[0][quantity]': 1,
+    'line_items[0][price_data][currency]': 'eur',
+    'line_items[0][price_data][unit_amount]': Math.round(Number(total) * 100),
+    'line_items[0][price_data][product_data][name]': 'Comanda ' + orderId
+  };
+  var s = stripeApi_('post', 'checkout/sessions', p);
+  return s.url;
+}
+// Public: after the Stripe redirect, confirm the session was paid and mark the order paid.
+function verifyPayment(req) {
+  if (!floodOk_('verify')) return { ok: false, error: 'rate', message: 'Espera un moment.' };
+  var orderId = String(req.order || '').trim(), cs = String(req.cs || '').trim();
+  if (!orderId || !cs) return { ok: false, error: 'missing' };
+  if (!cardEnabled_()) return { ok: false, error: 'disabled' };
+  try {
+    var s = stripeApi_('get', 'checkout/sessions/' + encodeURIComponent(cs), null);
+    var paid = s && s.payment_status === 'paid' && s.metadata && String(s.metadata.order) === orderId;
+    if (paid) { setOrderStatus(null, orderId, 'paid'); return { ok: true, paid: true }; }
+    return { ok: true, paid: false, status: s && s.payment_status };
+  } catch (e) { logErr_('verifyPayment ' + orderId, e); return { ok: false, error: 'stripe', message: String(e) }; }
+}
 
 // Crude global flood cap for public endpoints (no client IP available in Apps Script).
 function floodOk_(kind) {

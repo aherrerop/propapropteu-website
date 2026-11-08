@@ -225,6 +225,7 @@ const Layout = {
     this.loadSnipcart();
     I18N.apply();
     Cart.updateCount();
+    Cart.handlePaymentReturn();
   }
 };
 
@@ -309,6 +310,30 @@ const Cart = {
     else { const e = items.find(x => x.id === id); if (e) e.qty = qty; }
     this.write(items); this.render();
   },
+  // After a Stripe redirect: confirm payment (?paid=ORDER&cs=SESSION) or note a cancel.
+  async handlePaymentReturn() {
+    const q = new URLSearchParams(location.search);
+    const paid = q.get("paid"), cs = q.get("cs"), cancel = q.get("cancel");
+    if (!paid && !cancel) return;
+    const strip = () => history.replaceState({}, "", location.pathname);
+    const banner = (text, ok) => {
+      const d = document.createElement("div");
+      d.className = "pay-banner " + (ok ? "ok" : "err");
+      d.setAttribute("role", "status");
+      d.textContent = text;
+      document.body.appendChild(d);
+      setTimeout(() => d.classList.add("show"), 30);
+      setTimeout(() => { d.classList.remove("show"); setTimeout(() => d.remove(), 400); }, 9000);
+    };
+    if (cancel) { strip(); banner("Pagament cancel·lat. La teva cistella segueix disponible.", false); return; }
+    try {
+      const r = await (await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
+        body: JSON.stringify({ action: "verifyPayment", order: paid, cs: cs }) })).json();
+      if (r && r.ok && r.paid) { this.write([]); banner("¡Pago recibido! Gracias por tu pedido (" + paid + ").", true); }
+      else banner("Hemos recibido tu pedido (" + paid + "); si el pago no aparece, contáctanos.", true);
+    } catch (e) { banner("Pedido " + paid + " registrado. Si tienes dudas, escríbenos.", true); }
+    strip();
+  },
   total() { return this.items.reduce((s, i) => { const p = this.byId[i.id]; return s + (p ? p.price * i.qty : 0); }, 0); },
   ensureDrawer() {
     if (document.getElementById("cart-drawer")) return;
@@ -375,12 +400,16 @@ const Cart = {
       let r;
       try {
         r = await (await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
-          body: JSON.stringify({ action: "placeOrder", name: g("c-name"), email: g("c-email"), phone: g("c-phone"), note: g("c-note"), payment: pay, company_hp: g("c-hp"), items: self.items }) })).json();
+          body: JSON.stringify({ action: "placeOrder", name: g("c-name"), email: g("c-email"), phone: g("c-phone"), note: g("c-note"), payment: pay, company_hp: g("c-hp"), returnUrl: location.origin, items: self.items }) })).json();
       } catch (err) { r = { ok: false }; }
       if (r && r.ok) {
-        const msg = pay === "transfer"
-          ? I18N.t("order.transferMsg").replace("{total}", total.toFixed(2)).replace("{iban}", SITE_CONFIG.bankIban || "").replace("{holder}", SITE_CONFIG.bankHolder || "").replace("{ref}", r.id || "")
-          : I18N.t("order.cardSoon");
+        // Card with Stripe configured: hand off to the hosted checkout page.
+        if (r.checkoutUrl) { self.write([]); location.href = r.checkoutUrl; return; }
+        // Transfer (or card while Stripe is off): show instructions with the live bank details.
+        const iban = r.bankIban || SITE_CONFIG.bankIban || "", holder = r.bankHolder || SITE_CONFIG.bankHolder || "";
+        const msg = (pay === "card")
+          ? I18N.t("order.cardSoon")
+          : I18N.t("order.transferMsg").replace("{total}", total.toFixed(2)).replace("{iban}", iban).replace("{holder}", holder).replace("{ref}", r.id || "");
         self.write([]);
         document.getElementById("cart-body").innerHTML = "";
         status.textContent = msg; status.className = "form-status ok"; status.hidden = false;

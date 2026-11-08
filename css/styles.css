@@ -1128,6 +1128,18 @@ body.shop .site-header { background: var(--color-hero); }
    some bots skip). Humans never see or tab to it; a filled value flags a bot. */
 .hp-field { position: absolute !important; left: -9999px !important; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 
+/* ---- payment return banner (Stripe success/cancel) ---- */
+.pay-banner { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 24px); z-index: 9999;
+  max-width: min(92vw, 520px); padding: 14px 20px; border-radius: 10px; font-size: 0.95rem; line-height: 1.4;
+  box-shadow: 0 6px 24px rgba(0,0,0,.18); opacity: 0; transition: opacity .35s ease, transform .35s ease; }
+.pay-banner.show { opacity: 1; transform: translate(-50%, 0); }
+.pay-banner.ok { background: #eaf6ee; color: #1f7a3d; border: 1px solid #bfe3cb; }
+.pay-banner.err { background: #fdecec; color: #b3261e; border: 1px solid #f5c2c0; }
+
+/* ---- admin: config + clients ---- */
+.adm-subhead { font-family: var(--font-display); font-weight: 400; text-transform: uppercase; letter-spacing: .03em; font-size: 1.1rem; margin: 22px 0 10px; }
+.adm-hint { color: var(--color-muted); font-size: 0.9rem; margin: 0 0 14px; }
+
 /* ---- form status messages (contact + quote) ---- */
 .form-status { font-size: 0.9rem; margin-top: 14px; padding: 11px 14px; border-radius: 8px; line-height: 1.4; }
 .form-status.ok { color: #1f7a3d; background: #eaf6ee; border: 1px solid #bfe3cb; }
