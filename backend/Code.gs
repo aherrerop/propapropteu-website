@@ -316,7 +316,7 @@ function verifyToken(token) {
  *          description(json) | heroTagline(json) | heroDesc(json) | specs(json)
  */
 var PRODUCT_COLS = ['id','type','price','cost','stock','featured','cutout','codename','heroImage',
-  'labels','images','name','short','description','heroTagline','heroDesc','specs','bom','active'];
+  'labels','images','name','short','description','heroTagline','heroDesc','specs','bom','active','printTimeMin','prodNotes'];
 var PRODUCT_JSON_COLS = ['labels','images','name','short','description','heroTagline','heroDesc','specs','bom'];
 
 /* Guarantee the Products header row is exactly PRODUCT_COLS, in order.
@@ -354,6 +354,8 @@ function rowToProduct(r, col) {
   if (String(r[col.featured]).toLowerCase() === 'true' || r[col.featured] === true) p.featured = true;
   if (col.cutout != null && (String(r[col.cutout]).toLowerCase() === 'true' || r[col.cutout] === true)) p.cutout = true;
   if (col.active != null && (String(r[col.active]).toLowerCase() === 'false' || r[col.active] === false)) p.active = false;
+  if (col.printTimeMin != null && String(r[col.printTimeMin]) !== '') p.printTimeMin = Number(r[col.printTimeMin]);
+  if (col.prodNotes != null && String(r[col.prodNotes] || '').trim()) p.prodNotes = String(r[col.prodNotes]).trim();
   if (String(r[col.codename] || '').trim()) p.codename = String(r[col.codename]).trim();
   if (col.heroImage != null && String(r[col.heroImage] || '').trim()) p.heroImage = String(r[col.heroImage]).trim();
   PRODUCT_JSON_COLS.forEach(function (k) {
@@ -382,6 +384,7 @@ function saveProduct(product) {
     if (k === 'stock') return (product.stock === '' || product.stock == null) ? '' : Number(product.stock);
     if (k === 'price') return Number(product.price || 0);
     if (k === 'cost') return (product.cost === '' || product.cost == null) ? '' : Number(product.cost);
+    if (k === 'printTimeMin') return (product.printTimeMin === '' || product.printTimeMin == null) ? '' : Number(product.printTimeMin);
     if (PRODUCT_JSON_COLS.indexOf(k) >= 0) return product[k] != null ? JSON.stringify(product[k]) : '';
     return product[k] != null ? product[k] : '';
   });
@@ -508,8 +511,9 @@ function placeOrder(req) {
   var items = req.items;
   if (!items || !items.length) return { ok: false, error: 'missing', message: 'Comanda buida.' };
   var name = String(req.name || '').trim(), email = String(req.email || '').trim();
-  if (!name || !email) return { ok: false, error: 'missing', message: 'Falten nom o email.' };
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
+  // Name is required; email is optional (phone/in-person orders often have none).
+  if (!name) return { ok: false, error: 'missing', message: 'Falta el nom.' };
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
 
   // The order id is made first so each filament usage row can reference it.
   var id = 'ORD-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
@@ -551,8 +555,8 @@ function placeOrder(req) {
             (req.note ? ('\n\nNota: ' + req.note) : '') + (lowFlags.length ? ('\n\nMaterial sota mínim: ' + lowFlags.join(', ')) : '')
     });
   } catch (e) { /* email optional */ }
-  // Confirmation to the customer
-  try {
+  // Confirmation to the customer (only when we have their email).
+  if (email) try {
     MailApp.sendEmail({
       to: email, name: 'Prop a Prop Teu', replyTo: 'info@propapropteu.com',
       subject: 'Hemos recibido tu pedido (' + id + ') — Prop a Prop Teu',
@@ -726,7 +730,7 @@ function publish(session) {
   var existing = sha ? JSON.parse(Utilities.newBlob(Utilities.base64Decode(JSON.parse(get.getContentText()).content)).getDataAsString()) : {};
   // Publish only visible products; strip internal-only fields (cost, bom, active).
   var publicProducts = readProducts().filter(function (p) { return p.active !== false; }).map(function (p) {
-    var c = {}; for (var k in p) { if (k !== 'cost' && k !== 'bom' && k !== 'active') c[k] = p[k]; } return c;
+    var c = {}; for (var k in p) { if (k !== 'cost' && k !== 'bom' && k !== 'active' && k !== 'printTimeMin' && k !== 'prodNotes') c[k] = p[k]; } return c;
   });
   var payload = {
     _readme: existing._readme || 'Managed from the admin dashboard. Edit via acceso.html.',
@@ -822,7 +826,7 @@ function systemSchema() {
     }},
     ops: { name: 'Prop a Prop Teu · Operations', tabs: {
       Orders: ['id', 'date', 'source', 'status', 'payment', 'customerName', 'email', 'phone', 'items', 'subtotal', 'iva', 'total', 'invoiceNo', 'assignedTo', 'notes'],
-      Jobs: ['id', 'created', 'category', 'owner', 'source', 'productId', 'link', 'material', 'color', 'anyColor', 'units', 'gramsEst', 'priority', 'status', 'orderRef', 'batchId', 'notes'],
+      Jobs: ['id', 'created', 'category', 'owner', 'source', 'productId', 'link', 'material', 'color', 'anyColor', 'units', 'gramsEst', 'priority', 'status', 'orderRef', 'batchId', 'notes', 'timeEst'],
       Links: ['url', 'title', 'category', 'material', 'color', 'timesPrinted', 'notes'],
       History: ['date', 'type', 'id', 'action', 'by', 'detail']
     }},
@@ -903,6 +907,16 @@ function tab_(key, name) {
   var sh = ss_(key).getSheetByName(name);
   if (!sh) throw new Error('Missing tab ' + name + ' in ' + key);
   return sh;
+}
+
+// Append a column (by header name) to the end of a sheet if it is not already there.
+// Lets new fields appear on sheets created before the field existed, without re-running setup.
+function ensureColumn_(sh, colName) {
+  var last = sh.getLastColumn();
+  var head = last ? sh.getRange(1, 1, 1, last).getValues()[0] : [];
+  for (var i = 0; i < head.length; i++) if (String(head[i]).trim() === colName) return;
+  sh.getRange(1, last + 1, 1, 1).setValue(colName);
+  sh.setFrozenRows(1);
 }
 
 // Fill Config/Settings with the keys managers will edit, taking current values where we have them.
@@ -1076,7 +1090,7 @@ function readJobs(filter) {
     for (var i = v.length - 1; i >= 1; i--) {
       if (!String(v[i][0] || '').trim()) continue;
       var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; });
-      o.gramsEst = Number(o.gramsEst || 0); o.units = Number(o.units || 0);
+      o.gramsEst = Number(o.gramsEst || 0); o.units = Number(o.units || 0); o.timeEst = Number(o.timeEst || 0);
       o.anyColor = String(o.anyColor).toLowerCase() === 'true' || o.anyColor === true;
       if (o.created) o.created = String(o.created);
       out.push(o);
@@ -1093,7 +1107,8 @@ function readJobs(filter) {
 // Insert or update one job (manager-created, or auto-made from an order). Keyed by id.
 function saveJob(job, session) {
   if (!job) return { ok: false, error: 'missing', message: 'Falta la feina.' };
-  var sh = tab_('ops', 'Jobs'), v = sh.getDataRange().getValues(), head = v[0];
+  var sh = tab_('ops', 'Jobs'); ensureColumn_(sh, 'timeEst');
+  var v = sh.getDataRange().getValues(), head = v[0];
   var id = String(job.id || '').trim() || 'JOB-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss');
   var existed = !!String(job.id || '').trim();
   var vals = {
@@ -1102,7 +1117,7 @@ function saveJob(job, session) {
     productId: String(job.productId || ''), link: String(job.link || ''),
     material: String(job.material || ''), color: String(job.color || ''),
     anyColor: job.anyColor ? true : false, units: Number(job.units || 1),
-    gramsEst: Number(job.gramsEst || 0), priority: Number(job.priority || 0),
+    gramsEst: Number(job.gramsEst || 0), timeEst: Number(job.timeEst || 0), priority: Number(job.priority || 0),
     status: String(job.status || 'pending'), orderRef: String(job.orderRef || ''),
     batchId: String(job.batchId || ''), notes: String(job.notes || '')
   };
@@ -1113,8 +1128,29 @@ function saveJob(job, session) {
     if (String(v[i][0] || '').trim() === id) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); logOps_('job', id, 'edited', session ? session.email : '', vals.category); return { ok: true, id: id }; }
   sh.appendRow(row);
   logOps_('job', id, 'created', session ? session.email : '', vals.category);
+  // Alert the workshop that there is a new print job.
+  notifyNewJobs_('Nova feina d\'impressió', [vals]);
   return { ok: true, id: id };
 }
+
+// Email propapropteu@gmail.com a summary of new print jobs (materials + rough time).
+function notifyNewJobs_(title, jobs) {
+  try {
+    var totG = 0, totMin = 0;
+    var lines = jobs.map(function (j) {
+      totG += Number(j.gramsEst || 0); totMin += Number(j.timeEst || 0);
+      var what = j.link ? j.link : (j.notes || j.productId || '');
+      return '• ' + String(j.category || '') + (j.owner ? '/' + j.owner : '') + ' — ' +
+        j.material + ' ' + (j.anyColor ? '(qualsevol color)' : j.color) + ' · ' +
+        Number(j.gramsEst || 0) + ' g · ~' + fmtMin_(j.timeEst) + (j.units > 1 ? ' · x' + j.units : '') + (what ? ' · ' + what : '');
+    }).join('\n');
+    MailApp.sendEmail({
+      to: 'propapropteu@gmail.com', subject: '[Impressió] ' + title + ' (' + jobs.length + ')',
+      body: title + '\n\n' + lines + '\n\nTotal: ' + totG + ' g · ~' + fmtMin_(totMin) + ' de temps estimat.\n\nObre la cua: acceso → Cua d\'impressió.'
+    });
+  } catch (e) {}
+}
+function fmtMin_(min) { min = Number(min || 0); if (!min) return '?'; var h = Math.floor(min / 60), m = Math.round(min % 60); return (h ? h + 'h ' : '') + (m ? m + 'min' : (h ? '' : '0min')); }
 
 // Move a job through pending -> printing -> done. On "done" the filament is deducted and logged.
 function setJobStatus(session, id, status) {
@@ -1165,21 +1201,28 @@ function readLinks() { try { var sh = tab_('ops', 'Links'), v = sh.getDataRange(
 
 // One order line can use several materials; make a print job for each, deferring deduction to print time.
 function createJobsForOrder_(orderId, lines, productsById) {
-  var sh = tab_('ops', 'Jobs'), head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  var sh = tab_('ops', 'Jobs'); ensureColumn_(sh, 'timeEst');
+  var head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  var made = [];
   lines.forEach(function (line) {
     var p = productsById[line.id];
     var bom = (p && p.bom && p.bom.length) ? p.bom : [{ material: '', color: '', grams: 0 }];
+    var qty = Number(line.qty || 1);
+    // Rough print time comes from the product's internal estimate (minutes per unit).
+    var timeEst = Number(p && p.printTimeMin ? p.printTimeMin : 0) * qty;
     bom.forEach(function (b) {
       var id = 'JOB-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyMMdd-HHmmss') + '-' + Math.floor(Math.random() * 1000);
       var vals = {
         id: id, created: new Date(), category: 'product', owner: '', source: 'order',
         productId: line.id, link: '', material: String(b.material || ''), color: String(b.color || ''),
-        anyColor: false, units: Number(line.qty || 1), gramsEst: Number(b.grams || 0) * Number(line.qty || 1),
+        anyColor: false, units: qty, gramsEst: Number(b.grams || 0) * qty, timeEst: timeEst,
         priority: 0, status: 'pending', orderRef: orderId, batchId: '', notes: line.name
       };
       sh.appendRow(head.map(function (h) { var k = String(h).trim(); return vals[k] != null ? vals[k] : ''; }));
+      made.push(vals);
     });
   });
+  if (made.length) notifyNewJobs_('Comanda ' + orderId + ' — feines noves', made);
 }
 
 // Order the pending queue: mix categories by percentage, and keep same material/colour together to cut filament changes.

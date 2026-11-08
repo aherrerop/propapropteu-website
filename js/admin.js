@@ -338,6 +338,9 @@ function collect() {
   p.active = $("f-active").checked;
   const cst = $("f-cost").value.trim();
   p.cost = cst === "" ? "" : Number(cst);
+  const ptm = $("f-printtime").value.trim();
+  p.printTimeMin = ptm === "" ? "" : Number(ptm);
+  p.prodNotes = $("f-prodnotes").value.trim();
   p.bom = Array.from(document.querySelectorAll(".adm-bom-row")).map(r => ({
     material: r.querySelector(".bom-mat").value.trim(),
     color: r.querySelector(".bom-col").value.trim(),
@@ -432,6 +435,8 @@ function tile(label, val) { return '<div class="adm-tile"><span class="t-label">
 /* ---------- cost + bill of materials (product editor) ---------- */
 function buildCostBom(p) {
   const cost = el("input", { id: "f-cost", type: "number", step: "0.01", min: "0", value: (p.cost ?? "") });
+  const ptime = el("input", { id: "f-printtime", type: "number", step: "1", min: "0", value: (p.printTimeMin ?? ""), placeholder: "min / unitat" });
+  const pnotes = el("textarea", { id: "f-prodnotes", rows: "2", placeholder: "Perfil, orientació, suports, post-procés…" }, [p.prodNotes || ""]);
   const rows = el("div", { class: "adm-specs", id: "bom-rows" });
   (p.bom || []).forEach(b => rows.appendChild(bomRow(b)));
   const add = el("button", { type: "button", class: "btn-outline",
@@ -439,6 +444,8 @@ function buildCostBom(p) {
   return el("div", { class: "adm-costbom" }, [
     el("h3", {}, ["Cost i materials (intern — no surt al web)"]),
     el("div", { class: "adm-field" }, [el("label", {}, ["Cost de producció (€) — per calcular el benefici"]), cost]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["Temps d'impressió estimat (minuts per unitat) — aproximat, modificable"]), ptime]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["Notes de producció (intern)"]), pnotes]),
     el("div", { class: "adm-field" }, [el("label", {}, ["Materials per unitat (es descompten de l'estoc a cada comanda)"]), rows, add])
   ]);
 }
@@ -454,7 +461,9 @@ function bomRow(b) {
 /* ============================ ORDERS ============================ */
 async function renderOrders() {
   const v = $("view-orders");
-  v.innerHTML = '<div class="admin-head"><h1>Comandes</h1></div><div id="orders-summary" class="adm-summary"></div><div id="orders-list" class="admin-list"></div>';
+  v.innerHTML = '<div class="admin-head"><h1>Comandes</h1><button class="btn" id="ord-new">+ Nova comanda</button></div>' +
+    '<div id="ord-form"></div><div id="orders-summary" class="adm-summary"></div><div id="orders-list" class="admin-list"></div>';
+  $("ord-new").addEventListener("click", openOrderForm);
   const s = await Admin.call("summary");
   if (s.ok) {
     const t = s.data.totals;
@@ -632,10 +641,12 @@ function openJobForm() {
   const anyChk = el("input", { id: "j-any", type: "checkbox" });
   const grams = el("input", { id: "j-grams", type: "number", min: "0", value: "" });
   const units = el("input", { id: "j-units", type: "number", min: "1", value: "1" });
-  // Prefill grams from a product's bill-of-materials when one is chosen.
+  const tmin = el("input", { id: "j-time", type: "number", min: "0", value: "", placeholder: "min" });
+  // Prefill grams and print time from a product's internal info when one is chosen.
   prodSel.addEventListener("change", () => {
     const p = State.products.find(x => x.id === prodSel.value);
     if (p && p.bom && p.bom[0]) { grams.value = (p.bom[0].grams || 0) * (Number(units.value) || 1); matSel.value = p.bom[0].material + "|" + p.bom[0].color; }
+    if (p && p.printTimeMin) tmin.value = Number(p.printTimeMin) * (Number(units.value) || 1);
   });
   const form = el("form", { class: "adm-editor", onsubmit: async (e) => {
     e.preventDefault();
@@ -643,7 +654,7 @@ function openJobForm() {
     const job = { category: catSel.value, owner: catSel.value === "personal" ? ownerSel.value : "",
       source: linkInp.value ? "link" : (prodSel.value ? "product" : "direct"),
       productId: prodSel.value, link: linkInp.value.trim(), material: mc[0] || "", color: mc[1] || "",
-      anyColor: anyChk.checked, units: Number(units.value || 1), gramsEst: Number(grams.value || 0), notes: $("j-notes").value.trim() };
+      anyColor: anyChk.checked, units: Number(units.value || 1), gramsEst: Number(grams.value || 0), timeEst: Number(tmin.value || 0), notes: $("j-notes").value.trim() };
     if (!job.material) { toast("Tria un material.", "err"); return; }
     const r = await Admin.call("saveJob", { job });
     toast(r.ok ? "Feina afegida." : (r.message || "Error."), r.ok ? "ok" : "err");
@@ -658,7 +669,8 @@ function openJobForm() {
       el("label", { class: "adm-field" }, [el("span", {}, ["Material i color"]), matSel]),
       el("label", { class: "adm-check" }, [anyChk, el("span", {}, ["Color no important"])]),
       el("label", { class: "adm-field" }, [el("span", {}, ["Grams (est.)"]), grams]),
-      el("label", { class: "adm-field" }, [el("span", {}, ["Unitats"]), units])
+      el("label", { class: "adm-field" }, [el("span", {}, ["Unitats"]), units]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Temps (min, est.)"]), tmin])
     ]),
     el("label", { class: "adm-field" }, [el("span", {}, ["Nota"]), el("textarea", { id: "j-notes" })]),
     el("div", {}, [el("button", { class: "btn", type: "submit" }, ["Afegir a la cua"]), el("button", { class: "btn-text", type: "button", onclick: () => wrap.innerHTML = "" }, ["Cancel·lar"])])
@@ -746,6 +758,50 @@ function openPayoutForm() {
       el("label", { class: "adm-field" }, [el("span", {}, ["Nota"]), el("input", { id: "p-note" })])
     ]),
     el("div", {}, [el("button", { class: "btn", type: "submit" }, ["Desar"]), el("button", { class: "btn-text", type: "button", onclick: () => wrap.innerHTML = "" }, ["Cancel·lar"])])
+  ]);
+  wrap.innerHTML = ""; wrap.appendChild(form);
+}
+
+/* ---------- create an order by hand (phone / in-person) ---------- */
+function orderLineRow() {
+  const prodSel = el("select", { class: "ol-prod" }, [el("option", { value: "" }, ["\u2014"])]
+    .concat(State.products.map(p => el("option", { value: p.id }, [pick(p.name) || p.id]))));
+  return el("div", { class: "adm-bom-row" }, [
+    prodSel,
+    el("input", { type: "number", class: "ol-qty", min: "1", value: "1", placeholder: "u." }),
+    el("button", { type: "button", class: "adm-img-x", title: "Treure", onclick: e => e.target.closest(".adm-bom-row").remove() }, ["\u00D7"])
+  ]);
+}
+function openOrderForm() {
+  const wrap = $("ord-form");
+  const rows = el("div", { id: "ol-rows" }, [orderLineRow()]);
+  const form = el("form", { class: "adm-editor", onsubmit: async (e) => {
+    e.preventDefault();
+    const items = Array.from(rows.querySelectorAll(".adm-bom-row")).map(r => ({
+      id: r.querySelector(".ol-prod").value, qty: Number(r.querySelector(".ol-qty").value || 1)
+    })).filter(i => i.id);
+    if (!items.length) { toast("Afegeix almenys un producte.", "err"); return; }
+    const body = {
+      name: $("o-name").value.trim(), email: $("o-email").value.trim(), phone: $("o-phone").value.trim(),
+      source: $("o-source").value, payment: $("o-pay").value, note: $("o-note").value.trim(), items
+    };
+    if (!body.name) { toast("Posa el nom del client.", "err"); return; }
+    const r = await Admin.call("placeOrder", body);
+    toast(r.ok ? "Comanda creada (" + r.id + "). Feines a la cua." : (r.message || "Error."), r.ok ? "ok" : "err");
+    if (r.ok) { wrap.innerHTML = ""; renderOrders(); }
+  } }, [
+    el("div", { class: "adm-grid-4" }, [
+      el("label", { class: "adm-field" }, [el("span", {}, ["Client *"]), el("input", { id: "o-name" })]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Email (opcional)"]), el("input", { id: "o-email", type: "email" })]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Telèfon"]), el("input", { id: "o-phone", type: "tel" })]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Origen"]), el("select", { id: "o-source" }, [el("option", { value: "presencial" }, ["Presencial"]), el("option", { value: "telefon" }, ["Telèfon"]), el("option", { value: "web" }, ["Web"])])])
+    ]),
+    el("div", { class: "adm-field" }, [el("label", {}, ["Productes"]), rows, el("button", { type: "button", class: "btn-outline", onclick: () => rows.appendChild(orderLineRow()) }, ["+ Producte"])]),
+    el("div", { class: "adm-grid-2" }, [
+      el("label", { class: "adm-field" }, [el("span", {}, ["Pagament"]), el("select", { id: "o-pay" }, [el("option", { value: "transfer" }, ["Transferència"]), el("option", { value: "card" }, ["Targeta"]), el("option", { value: "cash" }, ["Efectiu"])])]),
+      el("label", { class: "adm-field" }, [el("span", {}, ["Nota"]), el("input", { id: "o-note" })])
+    ]),
+    el("div", {}, [el("button", { class: "btn", type: "submit" }, ["Crear comanda"]), el("button", { class: "btn-text", type: "button", onclick: () => wrap.innerHTML = "" }, ["Cancel\u00B7lar"])])
   ]);
   wrap.innerHTML = ""; wrap.appendChild(form);
 }
