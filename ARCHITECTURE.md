@@ -1,5 +1,12 @@
 # Prop a Prop Teu — how the site works
 
+> ⚠️ **Superseded for the current system.** This is an early high-level overview
+> from the single-sheet era. The authoritative, up-to-date architecture (the
+> 6-sheet system, engine function groups, invariants) is in
+> **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**, and the maintenance/debugging
+> protocol is in **[docs/RUNBOOK.md](docs/RUNBOOK.md)**. This file is kept for its
+> design history only.
+
 A static site (HTML/CSS/JS) on GitHub Pages, trilingual (ca/es/en), with a
 Google Sheets + Apps Script backend for manager login and product management.
 No build step: edit a file, push to `main`, and GitHub Pages redeploys.

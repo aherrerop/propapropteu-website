@@ -3,6 +3,17 @@
 Static website (plain HTML/CSS/JS, no build step) ready for GitHub Pages.
 Everything is editable with a text editor. This README covers every routine task.
 
+## Documentation
+
+| Doc | For |
+|---|---|
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | How the whole system is built (site + engine + 6 sheets), the invariants, deploy mechanics |
+| **[docs/RUNBOOK.md](docs/RUNBOOK.md)** | **What to check when something breaks** — the debugging protocol, symptom→cause table, extension recipes |
+| **[GOING-LIVE.md](GOING-LIVE.md)** | The owner's last-minute, dashboard-only setup checklist |
+| **[MANAGER-GUIDE.md](MANAGER-GUIDE.md)** | Day-to-day dashboard usage for managers |
+
+This README below is for routine site content edits (products, text, colours).
+
 ## Structure
 
 ```
