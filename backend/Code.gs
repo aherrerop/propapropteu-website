@@ -1768,7 +1768,7 @@ function planQueue_(jobs, perc) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-08.3';
+var ENGINE_VERSION = '2026-11-08.4';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.
@@ -1779,6 +1779,18 @@ function phase_(name, fn) {
 
 // Consumer MailApp is ~100 emails/day. Check before sending so we degrade visibly, not silently.
 function canEmail_() { try { return MailApp.getRemainingDailyQuota() > 3; } catch (e) { return true; } }
+
+// RUN THIS ONCE from the Apps Script editor, as propapropteu@gmail.com, and click "Allow".
+// It directly calls MailApp.sendEmail, so it forces the Gmail "Send email as you" consent
+// the alert emails need. After allowing, order/job alerts start working.
+function authorizeGmail() {
+  MailApp.sendEmail({
+    to: 'propapropteu@gmail.com',
+    subject: 'Prop a Prop Teu — Gmail autoritzat ✅',
+    body: 'Si reps aquest correu, els avisos de noves comandes i feines ja funcionen correctament.'
+  });
+  return 'Correu enviat — autorització concedida.';
+}
 
 // One place that sends mail: skips (and logs) when the quota is gone, logs any failure.
 function sendMail_(opts, where) {
