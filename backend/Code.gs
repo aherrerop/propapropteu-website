@@ -33,7 +33,8 @@ var MUTATING = {
   saveProduct: 1, deleteProduct: 1, publish: 1, setupSystem: 1, closeMonth: 1,
   setOrderStatus: 1, deleteOrder: 1, saveMaterial: 1, deleteMaterial: 1,
   saveExpense: 1, deleteExpense: 1, savePayout: 1, deletePayout: 1,
-  saveJob: 1, setJobStatus: 1, deleteJob: 1, saveSettings: 1, deleteClient: 1, verifyPayment: 1
+  saveJob: 1, setJobStatus: 1, deleteJob: 1, saveSettings: 1, deleteClient: 1, verifyPayment: 1,
+  addManager: 1, deleteManager: 1
 };
 
 function doPost(e) {
@@ -112,6 +113,9 @@ function dispatch_(action, req) {
     case 'saveSettings':   return saveSettings(session, req.settings || req.data);
     case 'listClients':    return listClients();
     case 'deleteClient':   return deleteClient(session, req.email);
+    case 'listManagers':   return listManagers();
+    case 'addManager':     return addManagerAccount(session, req.manager || req.data);
+    case 'deleteManager':  return deleteManager(session, req.email);
     default:               return { ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action };
   }
 }
@@ -1075,6 +1079,48 @@ function pubinfo() {
     shippingNote: getSetting_('SHIPPING_NOTE', ''),
     cardEnabled: cardEnabled_()
   };
+}
+
+/* ---------- managers (Yerai + Albert) screen ---------- */
+function listManagers() {
+  var out = [];
+  try {
+    var sh = sheet(SHEET_MANAGERS), v = sh.getDataRange().getValues(), c = indexMap(v[0]);
+    for (var i = 1; i < v.length; i++) {
+      var em = String(v[i][c.email] || '').trim(); if (!em) continue;
+      out.push({ email: em, name: String(v[i][c.name] || ''), role: String(v[i][c.role] || 'manager'), active: String(v[i][c.active]).toLowerCase() !== 'false' && v[i][c.active] !== false });
+    }
+  } catch (e) {}
+  return { ok: true, data: out };
+}
+// Create a manager login (full access). Any manager can add another.
+function addManagerAccount(session, m) {
+  m = m || {};
+  var email = String(m.email || '').trim().toLowerCase(), name = String(m.name || '').trim(), password = String(m.password || '');
+  if (!email || !name || !password) return { ok: false, error: 'missing', message: 'Falten nom, email o contrasenya.' };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
+  if (password.length < 6) return { ok: false, error: 'weak', message: 'La contrasenya ha de tenir 6 caràcters o més.' };
+  if (findManager(email)) return { ok: false, error: 'exists', message: 'Ja existeix un gestor amb aquest email.' };
+  var sh = sheet(SHEET_MANAGERS), head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  var salt = Utilities.getUuid(), hash = sha256Hex(salt + password);
+  var vals = { email: email, salt: salt, hash: hash, name: name, role: 'manager', active: true };
+  sh.appendRow(head.map(function (h) { var k = String(h).trim(); return vals[k] != null ? vals[k] : ''; }));
+  logOps_('manager', email, 'created', session ? session.email : '', name);
+  return { ok: true };
+}
+// Delete a manager — but never the one making the request (don't lock yourself out).
+function deleteManager(session, email) {
+  email = String(email || '').trim().toLowerCase();
+  if (!email) return { ok: false, error: 'missing', message: 'Falta l\'email.' };
+  if (session && String(session.email).trim().toLowerCase() === email) return { ok: false, error: 'self', message: 'No pots esborrar el teu propi compte.' };
+  var sh = sheet(SHEET_MANAGERS), v = sh.getDataRange().getValues(), c = indexMap(v[0]);
+  for (var i = v.length - 1; i >= 1; i--)
+    if (String(v[i][c.email] || '').trim().toLowerCase() === email) {
+      logOps_('manager', email, 'deleted', session ? session.email : '', '');
+      sh.deleteRow(i + 1);
+      return { ok: true };
+    }
+  return { ok: false, error: 'notfound', message: 'Gestor no trobat.' };
 }
 
 /* ---------- clients (accounts + contacts) screen ---------- */

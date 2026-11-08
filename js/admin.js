@@ -880,7 +880,10 @@ async function renderConfig() {
   const v = $("view-config");
   v.innerHTML = '<div class="admin-head"><h1>Configuració</h1></div>' +
     '<p class="adm-hint">Aquests valors els pots canviar en qualsevol moment; afecten factures, transferències, avisos i el pagament amb targeta.</p>' +
-    '<form id="cfg-form" class="adm-editor"></form>';
+    '<form id="cfg-form" class="adm-editor"></form>' +
+    '<h2 class="adm-subhead">Gestors</h2><p class="adm-hint">Comptes amb accés complet (Yerai, Albert…).</p>' +
+    '<div id="mgr-list" class="admin-list"></div><form id="mgr-form" class="adm-editor"></form>';
+  renderManagers();
   const r = await Admin.call("getSettings");
   const form = $("cfg-form");
   if (!r.ok) { form.innerHTML = '<p class="admin-empty">Error en carregar.</p>'; return; }
@@ -909,4 +912,42 @@ async function renderConfig() {
     toast(res.ok ? "Configuració desada." : (res.message || "Error."), res.ok ? "ok" : "err");
     if (res.ok) renderConfig();
   });
+}
+
+async function renderManagers() {
+  const list = $("mgr-list"), form = $("mgr-form");
+  if (!list || !form) return;
+  const me = (Admin.user && Admin.user.email ? Admin.user.email : "").toLowerCase();
+  const r = await Admin.call("listManagers");
+  list.innerHTML = "";
+  (r.ok ? r.data : []).forEach(m => list.appendChild(el("div", { class: "adm-card" }, [
+    el("div", { class: "adm-card-main" }, [
+      el("div", { class: "adm-card-name", html: escapeHtml(m.name || m.email) + (m.email.toLowerCase() === me ? " · <em>(tu)</em>" : "") }),
+      el("div", { class: "adm-card-meta", html: escapeHtml(m.email) + " · " + escapeHtml(m.role) + (m.active ? "" : " · inactiu") })
+    ]),
+    el("div", { class: "adm-card-actions" }, m.email.toLowerCase() === me ? [] : [
+      el("button", { class: "btn-text danger", onclick: async () => {
+        if (!confirm("Esborrar el gestor " + m.email + "?")) return;
+        const d = await Admin.call("deleteManager", { email: m.email });
+        toast(d.ok ? "Gestor esborrat." : (d.message || "Error."), d.ok ? "ok" : "err"); renderManagers();
+      } }, ["Esborrar"])
+    ])
+  ])));
+  // Add-manager form.
+  form.innerHTML = "";
+  const name = el("input", { id: "mgr-name", type: "text", placeholder: "Nom", required: "" });
+  const email = el("input", { id: "mgr-email", type: "email", placeholder: "Email", required: "" });
+  const pass = el("input", { id: "mgr-pass", type: "password", placeholder: "Contrasenya (mín. 6)", minlength: "6", required: "", autocomplete: "new-password" });
+  form.appendChild(el("div", { class: "adm-grid-4" }, [
+    el("label", { class: "adm-field" }, [el("span", {}, ["Nom"]), name]),
+    el("label", { class: "adm-field" }, [el("span", {}, ["Email"]), email]),
+    el("label", { class: "adm-field" }, [el("span", {}, ["Contrasenya"]), pass]),
+    el("div", { class: "adm-field" }, [el("span", {}, [""]), el("button", { class: "btn", type: "submit" }, ["+ Afegir gestor"])])
+  ]));
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const r2 = await Admin.call("addManager", { manager: { name: name.value.trim(), email: email.value.trim(), password: pass.value } });
+    toast(r2.ok ? "Gestor afegit." : (r2.message || "Error."), r2.ok ? "ok" : "err");
+    if (r2.ok) renderManagers();
+  };
 }
