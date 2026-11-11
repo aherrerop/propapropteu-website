@@ -21,7 +21,7 @@ try {
   run('clasp -u propapat push -f', { cwd: BACKEND });
   console.log('\n== Redeploy ==');
   run(`clasp -u propapat redeploy ${DEPLOY_ID} -d "${msg.replace(/"/g, "'")}"`, { cwd: BACKEND });
-  console.log('\n✓ Deployed. Remember to bump ENGINE_VERSION and run the Estat self-test.');
+  console.log('\n✓ Deployed. Bump ENGINE_VERSION in Code.gs on the next change.');
 } catch (e) {
   console.error('\n✗ Deploy aborted (tests failed or clasp error). Nothing was deployed if the gate failed.');
   process.exit(1);

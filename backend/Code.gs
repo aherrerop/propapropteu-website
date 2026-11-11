@@ -20,7 +20,6 @@
 var SHEET_MANAGERS = 'Managers';
 var SHEET_CLIENTS = 'Clients';
 var SHEET_PRODUCTS = 'Products';
-var SHEET_MATERIALS = 'Materials';
 var SHEET_ORDERS = 'Orders';
 var SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 hours
 
@@ -29,12 +28,10 @@ var SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 hours
 // Actions that read-modify-write shared state run one-at-a-time under a script lock,
 // so two managers (or a manager + a web order) can't corrupt counters, stock or ids.
 var MUTATING = {
-  placeOrder: 1, register: 1, reorder: 1, updateProfile: 1, getInvoice: 1,
-  saveProduct: 1, deleteProduct: 1, publish: 1, setupSystem: 1, closeMonth: 1,
-  setOrderStatus: 1, deleteOrder: 1, saveMaterial: 1, purchaseMaterial: 1, deleteMaterial: 1,
-  saveExpense: 1, deleteExpense: 1, savePayout: 1, deletePayout: 1,
-  saveJob: 1, setJobStatus: 1, deleteJob: 1, saveSettings: 1, deleteClient: 1, verifyPayment: 1,
-  addManager: 1, deleteManager: 1, selfTest: 1, reconcileJobs: 1, purgeDemo: 1, ackErrors: 1
+  placeOrder: 1, register: 1, reorder: 1, updateProfile: 1, getInvoice: 1, verifyPayment: 1,
+  saveProduct: 1, deleteProduct: 1, saveMaterial: 1, deleteMaterial: 1, repurchase: 1, resetMaterials: 1,
+  saveOrder: 1, deleteOrder: 1, setPrepared: 1, setGrams: 1, deletePiece: 1, printPiece: 1,
+  setupSystem: 1, saveSettings: 1, deleteClient: 1, addManager: 1, deleteManager: 1, purgeTest: 1
 };
 
 function doPost(e) {
@@ -52,13 +49,13 @@ function doPost(e) {
 function withLock_(fn) {
   var lock = LockService.getScriptLock();
   try { lock.waitLock(25000); }
-  catch (e) { return { ok: false, error: 'busy', message: 'El sistema està ocupat un moment. Torna-ho a provar.' }; }
+  catch (e) { return { ok: false, error: 'busy', message: 'The system is busy for a moment. Please try again.' }; }
   try { return fn(); } finally { try { lock.releaseLock(); } catch (e) {} }
 }
 
 // Route one request to its handler, returning a plain object (json() wraps it).
 function dispatch_(action, req) {
-  // Public actions: login + registration + contact form + place an order.
+  // Public actions: login + registration + contact form + website checkout.
   if (action === 'login')     return login(req);
   if (action === 'register')  return register(req);
   if (action === 'contact')   return contact(req);
@@ -68,48 +65,44 @@ function dispatch_(action, req) {
 
   // Everything else needs a valid session token.
   var session = verifyToken(req.token);
-  if (!session) return { ok: false, error: 'auth', message: 'Sessió no vàlida o caducada.' };
+  if (!session) return { ok: false, error: 'auth', message: 'Session expired. Please log in again.' };
 
+  // Customer-account actions (the public client portal).
   switch (action) {
     case 'me':             return { ok: true, user: session };
-    case 'setupSystem':    return setupSystem(session);
-    case 'systemStatus':   return systemStatus();
     case 'myAccount':      return myAccount(session);
     case 'updateProfile':  return updateProfile(session, req.data || req);
     case 'reorder':        return reorder(session, req.id);
     case 'getInvoice':     return getInvoice(session, req.id);
-    case 'listProducts':   return { ok: true, data: readProducts() };
-    case 'saveProduct':    return saveProduct(req.product);
-    case 'deleteProduct':  return deleteProduct(req.id);
+  }
+
+  // From here on: managers only (Albert and Yerai, identical permissions).
+  if (session.role !== 'manager') return { ok: false, error: 'auth', message: 'Managers only.' };
+  switch (action) {
+    // Products
+    case 'listProducts':   return listProductsSimple();
+    case 'saveProduct':    return saveProductSimple(session, req.product);
+    case 'deleteProduct':  return deleteProductSimple(session, req.id);
     case 'uploadImage':    return uploadImage(req);
-    case 'publish':        return publish(session);
-    case 'listOrders':     return { ok: true, data: readOrders() };
-    case 'setOrderStatus': return setOrderStatus(session, req.id, req.status);
-    case 'deleteOrder':    return deleteOrder(session, req.id);
-    case 'listMessages':   return { ok: true, data: readMessages() };
-    case 'deleteMessage':  return deleteMessage(req.row);
+    // Orders
+    case 'listOrders':     return listOrders();
+    case 'saveOrder':      return saveOrder(session, req.order);
+    case 'deleteOrder':    return deleteOrder(session, req.key);
+    // To-do
+    case 'todo':           return todo();
+    case 'setPrepared':    return setPrepared(session, req.id, req.on);
+    case 'setGrams':       return setGrams(session, req.id, req.grams);
+    case 'deletePiece':    return deletePiece(session, req.id);
+    case 'printPiece':     return printPiece(session, req.id, req.roll);
+    // Materials
     case 'listMaterials':  return { ok: true, data: readMaterials() };
-    case 'saveMaterial':   return saveMaterial(req.material, session);
-    case 'purchaseMaterial': return purchaseMaterial(session, req.purchase || req.material);
+    case 'saveMaterial':   return saveMaterial(session, req.material);
     case 'deleteMaterial': return deleteMaterial(req.id);
-    case 'summary':        return { ok: true, data: summary() };
-    case 'logs':           return readLogs();
-    case 'listExpenses':   return readExpenses();
-    case 'saveExpense':    return saveExpense(req.expense, session);
-    case 'deleteExpense':  return deleteExpense(req.id);
-    case 'listPayouts':    return readPayouts();
-    case 'savePayout':     return savePayout(req.payout, session);
-    case 'deletePayout':   return deletePayout(req.id);
-    case 'pnl':            return pnl();
-    case 'listMonthly':    return { ok: true, data: readMonthly_() };
-    case 'closeMonth':     return closeMonthAction_(session, req.period);
-    case 'listJobs':       return { ok: true, data: readJobs(req.filter) };
-    case 'listJobsDone':   return { ok: true, data: readJobsDone_(req.period) };
-    case 'saveJob':        return saveJob(req.job, session);
-    case 'setJobStatus':   return setJobStatus(session, req.id, req.status);
-    case 'deleteJob':      return deleteJob(session, req.id);
-    case 'listLinks':      return readLinks();
-    case 'batchPlan':      return batchPlan(req.perc);
+    case 'repurchase':     return repurchase(session, req.id);
+    case 'resetMaterials': return resetMaterials(session, req.list);
+    // Setup + configuration (no screen; kept for maintenance)
+    case 'setupSystem':    return setupSystem(session);
+    case 'systemStatus':   return systemStatus();
     case 'getSettings':    return getSettings();
     case 'saveSettings':   return saveSettings(session, req.settings || req.data);
     case 'listClients':    return listClients();
@@ -117,14 +110,9 @@ function dispatch_(action, req) {
     case 'listManagers':   return listManagers();
     case 'addManager':     return addManagerAccount(session, req.manager || req.data);
     case 'deleteManager':  return deleteManager(session, req.email);
-    case 'health':         return health();
-    case 'listErrors':     return listErrors();
-    case 'ackErrors':      return ackErrors(session);
-    case 'selfTest':       return selfTest(session);
-    case 'reconcileJobs':  return reconcileJobs(session);
     case 'snapshot':       return snapshotAll_(session);
-    case 'purgeDemo':      return purgeDemo(session, req.marker);
-    default:               return { ok: false, error: 'unknown_action', message: 'Acció desconeguda: ' + action };
+    case 'purgeTest':      return purgeTest(session, req.marker);
+    default:               return { ok: false, error: 'unknown_action', message: 'Unknown action: ' + action };
   }
 }
 
@@ -175,23 +163,6 @@ function ensureMessagesSheet() {
     sh.appendRow(['date', 'source', 'name', 'email', 'phone', 'company', 'message']);
   }
   return sh;
-}
-// Manager: list contact/quote messages (newest first), with their sheet row number.
-function readMessages() {
-  var sh = ensureMessagesSheet();
-  var v = sh.getDataRange().getValues(), col = indexMap(v[0]), out = [];
-  for (var i = v.length - 1; i >= 1; i--) {
-    var r = v[i]; if (!String(r[col.email] || r[col.name] || '').trim()) continue;
-    out.push({ row: i + 1, date: r[col.date] ? String(r[col.date]) : '', source: String(r[col.source] || ''),
-      name: String(r[col.name] || ''), email: String(r[col.email] || ''), phone: String(r[col.phone] || ''),
-      company: String(r[col.company] || ''), message: String(r[col.message] || '') });
-  }
-  return out;
-}
-function deleteMessage(row) {
-  row = Number(row); if (!row || row < 2) return { ok: false, error: 'bad', message: 'Fila no vàlida.' };
-  ensureMessagesSheet().deleteRow(row);
-  return { ok: true };
 }
 
 /* Sheet menu: adds "Prop a Prop Teu > Publicar al web" so managers can publish
@@ -462,105 +433,11 @@ function deleteProduct(id) {
 /* ======================= MATERIALS (inventory) ======================= */
 /* Materials tab: filament/materials stock in grams, by material + colour.
    Columns: material | color | stock(g) | costPerGram(€) | lowAt(g) | updated */
-var MATERIAL_COLS = ['material', 'color', 'stock', 'costPerGram', 'lowAt', 'updated'];
 
-function ensureMaterialsSheet() {
-  // New system: filament inventory is the Inventory spreadsheet's Filaments tab.
-  try { return tab_('inv', 'Filaments'); } catch (e) {}
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(SHEET_MATERIALS);
-  if (!sh) { sh = ss.insertSheet(SHEET_MATERIALS); sh.appendRow(MATERIAL_COLS); return sh; }
-  var n = MATERIAL_COLS.length;
-  var head = sh.getLastColumn() >= n ? sh.getRange(1, 1, 1, n).getValues()[0] : [];
-  if (!MATERIAL_COLS.every(function (k, i) { return String(head[i] || '').trim() === k; }))
-    sh.getRange(1, 1, 1, n).setValues([MATERIAL_COLS]);
-  return sh;
-}
 function matId(material, color) {
   return (String(material || '').trim() + '|' + String(color || '').trim()).toLowerCase();
 }
-// The grams column is called "grams" in the new sheet and "stock" in the old draft.
-function gramsCol_(col) { return col.grams != null ? col.grams : col.stock; }
 
-function readMaterials() {
-  var sh = ensureMaterialsSheet();
-  var v = sh.getDataRange().getValues(), col = indexMap(v[0]), gc = gramsCol_(col), out = [];
-  for (var i = 1; i < v.length; i++) {
-    var r = v[i]; if (!String(r[col.material] || '').trim()) continue;
-    out.push({
-      id: matId(r[col.material], r[col.color]),
-      material: String(r[col.material]).trim(), color: String(r[col.color] || '').trim(),
-      stock: Number(r[gc] || 0), costPerGram: Number(r[col.costPerGram] || 0), lowAt: Number(r[col.lowAt] || 0),
-      hex: col.hex != null ? String(r[col.hex] || '') : '', brand: col.brand != null ? String(r[col.brand] || '') : '',
-      active: col.active == null ? true : (String(r[col.active]).toLowerCase() !== 'false' && r[col.active] !== false)
-    });
-  }
-  return out;
-}
-function saveMaterial(m, session) {
-  if (!m || !String(m.material || '').trim()) return { ok: false, error: 'missing', message: 'Falta el material.' };
-  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
-  var head = v[0], key = matId(m.material, m.color);
-  var g = (m.stock != null ? m.stock : m.grams);
-  // Fill each column by its header name, so the same code works for the new and old layouts.
-  var byName = {
-    material: String(m.material).trim(), color: String(m.color || '').trim(),
-    hex: String(m.hex || ''), brand: String(m.brand || ''),
-    grams: Number(g || 0), stock: Number(g || 0),
-    costPerGram: Number(m.costPerGram || 0), lowAt: Number(m.lowAt || 0),
-    active: m.active === false ? false : true, updated: new Date()
-  };
-  var row = head.map(function (h) { var k = String(h).trim(); return byName[k] != null ? byName[k] : ''; });
-  logInvHistory_(byName.material, byName.color, '', byName.grams, 'manual edit', session ? session.email : '');
-  for (var i = 1; i < v.length; i++)
-    if (matId(v[i][col.material], v[i][col.color]) === key) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); return { ok: true, id: key }; }
-  sh.appendRow(row); return { ok: true, id: key };
-}
-function deleteMaterial(id) {
-  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
-  for (var i = v.length - 1; i >= 1; i--)
-    if (matId(v[i][col.material], v[i][col.color]) === id) { sh.deleteRow(i + 1); return { ok: true }; }
-  return { ok: false, error: 'notfound', message: 'Material no trobat.' };
-}
-// Buy filament: ADD grams to stock (not set), record the purchase (cash + supplier) in
-// Inventory!Purchases, and refresh €/g. Purchases are the filament cost basis in the P&L.
-function purchaseMaterial(session, p) {
-  p = p || {};
-  var material = String(p.material || '').trim(), color = String(p.color || '').trim();
-  var grams = Number(p.grams || 0), cost = Number(p.cost || 0);
-  if (!material || grams <= 0) return { ok: false, error: 'missing', message: 'Falten material i grams (>0).' };
-  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]), gc = gramsCol_(col);
-  var key = matId(material, color), found = -1, newStock = grams;
-  for (var i = 1; i < v.length; i++) if (matId(v[i][col.material], v[i][col.color]) === key) { found = i; newStock = Number(v[i][gc] || 0) + grams; break; }
-  var cpg = (p.costPerGram != null && p.costPerGram !== '') ? Number(p.costPerGram) : (grams > 0 && cost > 0 ? cost / grams : null);
-  if (found >= 0) {
-    sh.getRange(found + 1, gc + 1).setValue(newStock);
-    if (cpg != null && col.costPerGram != null) sh.getRange(found + 1, col.costPerGram + 1).setValue(cpg);
-    if (col.updated != null) sh.getRange(found + 1, col.updated + 1).setValue(new Date());
-  } else {
-    saveMaterial({ material: material, color: color, stock: grams, costPerGram: (cpg || 0), lowAt: Number(p.lowAt || 0), hex: p.hex || '', brand: p.brand || '', active: true }, session);
-  }
-  try { ensureTab_('inv', 'Purchases', systemSchema().inv.tabs.Purchases).appendRow([new Date(), material, color, grams, cost, String(p.supplier || ''), session ? session.email : '']); }
-  catch (e) { logErr_('purchase row', e); }
-  logInvHistory_(material, color, grams, newStock, 'compra' + (p.supplier ? (' ' + p.supplier) : ''), session ? session.email : '');
-  return { ok: true, stock: newStock, costPerGram: cpg };
-}
-// Subtract grams from a material/colour on an order; returns remaining, or null if untracked.
-// Deduct filament. Stock never goes below 0; any shortfall is reported so it can be flagged.
-// Returns { remaining, short } or null if the filament isn't found.
-function deductMaterial(material, color, grams) {
-  var sh = ensureMaterialsSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]), gc = gramsCol_(col);
-  var key = matId(material, color);
-  for (var i = 1; i < v.length; i++)
-    if (matId(v[i][col.material], v[i][col.color]) === key) {
-      var have = Number(v[i][gc] || 0), next = have - grams, short = 0;
-      if (next < 0) { short = -next; next = 0; }
-      sh.getRange(i + 1, gc + 1).setValue(next);
-      if (col.updated != null) sh.getRange(i + 1, col.updated + 1).setValue(new Date());
-      return { remaining: next, short: short };
-    }
-  return null;
-}
 
 /* ======================= ORDERS ======================= */
 var ORDER_COLS = ['date', 'id', 'status', 'payment', 'name', 'email', 'phone', 'units', 'revenue', 'cost', 'profit', 'items', 'note', 'invoiceNo'];
@@ -619,21 +496,8 @@ function placeOrder(req) {
   };
   ordersSh.appendRow(oHead.map(function (h) { var k = String(h).trim(); return oVals[k] != null ? oVals[k] : ''; }));
   logOps_('order', id, 'created', '', 'source ' + String(req.source || 'web') + ', total ' + total.toFixed(2));
-  // Turn each order line into print jobs (filament is deducted when Albert marks them done).
-  var jobs = []; try { jobs = createJobsForOrder_(id, lines, byId) || []; } catch (e) { logErr_('createJobsForOrder ' + id, e); }
-  // ONE alert to the shop: the order AND the print jobs it generated.
-  phase_('order-alert', function () {
-    return sendMail_({
-      to: notifyEmail_(), replyTo: email || 'info@propapropteu.com', subject: '[Comanda ' + id + '] ' + name,
-      body: 'Nova comanda ' + id + ' (' + String(req.source || 'web') + ')\n' +
-            'Client: ' + name + (email ? ' <' + email + '>' : '') + (req.phone ? ' · ' + req.phone : '') + '\n\n' +
-            lines.map(function (l) { return '· ' + l.qty + 'x ' + l.name + ' (' + l.price + ' €)'; }).join('\n') +
-            '\n\nIngressos: ' + revenue.toFixed(2) + ' € · Cost: ' + cost.toFixed(2) + ' € · Benefici: ' + profit.toFixed(2) + ' €' +
-            (req.note ? ('\nNota: ' + req.note) : '') +
-            (jobs.length ? ('\n\n— Feines d\'impressió generades —\n' + jobLines_(jobs)) : '') +
-            '\n\nObre la cua: acceso → Cua d\'impressió.'
-    }, 'order');
-  });
+  // A website order also lands in the to-do list (one alert email, material chosen later).
+  try { addWebOrderToTodo_(id, lines, total, String(req.note || '')); } catch (e) { logErr_('addWebOrderToTodo ' + id, e); }
   // Confirmation to the customer (only when we have their email).
   if (email) phase_('order-confirm', function () {
     return sendMail_({
@@ -689,19 +553,6 @@ function setOrderStatus(session, id, status) {
       var st = normStatus_(status);
       sh.getRange(i + 1, col.status + 1).setValue(st);
       logOps_('order', id, 'status:' + st, session ? session.email : '', '');
-      return { ok: true };
-    }
-  return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
-}
-// Archive the order to History, then remove the row. Does NOT restock materials.
-function deleteOrder(session, id) {
-  id = String(id || '').trim();
-  var sh = ensureOrdersSheet(), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
-  for (var i = v.length - 1; i >= 1; i--)
-    if (String(v[i][col.id] || '').trim() === id) {
-      var snapshot = {}; v[0].forEach(function (h, j) { snapshot[String(h).trim()] = v[i][j]; });
-      logOps_('order', id, 'deleted', session ? session.email : '', JSON.stringify(snapshot));
-      sh.deleteRow(i + 1);
       return { ok: true };
     }
   return { ok: false, error: 'notfound', message: 'Comanda no trobada.' };
@@ -775,15 +626,6 @@ function getInvoice(session, orderId) {
   return { ok: true, invoiceNo: no, url: file.getUrl() };
 }
 
-function summary() {
-  try { maybeCloseMonths_(); } catch (e) { logErr_('maybeCloseMonths', e); }
-  var orders = readOrders(), mats = readMaterials();
-  var t = { orders: orders.length, revenue: 0, cost: 0, profit: 0, byStatus: {} };
-  orders.forEach(function (o) { t.revenue += o.revenue; t.cost += o.cost; t.profit += o.profit; t.byStatus[o.status] = (t.byStatus[o.status] || 0) + 1; });
-  var low = mats.filter(function (m) { return m.stock <= m.lowAt; })
-    .map(function (m) { return { material: m.material, color: m.color, stock: m.stock, lowAt: m.lowAt }; });
-  return { totals: t, lowMaterials: low, materialsCount: mats.length };
-}
 
 /* ======================= IMAGE UPLOAD (Drive) ======================= */
 
@@ -1324,452 +1166,39 @@ function copyRows_(src, dst) {
 function logOps_(type, id, action, by, detail) {
   try { tab_('ops', 'History').appendRow([new Date(), type, id, action, by || '', detail || '']); } catch (e) {}
 }
-// Record a filament consumption line so we can run the numbers by category later.
-function logUsage_(ref, material, color, grams, category, cost) {
-  try { tab_('inv', 'Usage').appendRow([new Date(), ref, material, color, grams, category, cost]); } catch (e) {}
-}
-// Record a filament stock movement (deduction, manual edit, restock) with the resulting grams.
-function logInvHistory_(material, color, change, newGrams, reason, by) {
-  try { tab_('inv', 'History').appendRow([new Date(), material, color, change, newGrams, reason, by || '']); } catch (e) {}
-}
 
-// Manager: read the tail of the append-only logs (for verification + future analytics views).
-function readLogs() {
-  function tail(key, name, n) {
-    var out = [];
-    try {
-      var sh = tab_(key, name), v = sh.getDataRange().getValues(), head = v[0];
-      for (var i = v.length - 1; i >= 1 && out.length < n; i--) {
-        var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; }); out.push(o);
-      }
-    } catch (e) {}
-    return out;
-  }
-  return { ok: true, usage: tail('inv', 'Usage', 20), opsHistory: tail('ops', 'History', 20), invHistory: tail('inv', 'History', 20) };
-}
 
 /* ================= FINANCE: other costs, manager payouts, profit/loss ================= */
-// Make a short unique id for an expense or payout row.
-function finId_(prefix) { return uid_(prefix + '-'); }
 
-// Read every row of a Finance tab, newest first, as objects keyed by header name.
-function readFinance_(name) {
-  var out = [];
-  try {
-    var sh = tab_('finance', name), v = sh.getDataRange().getValues(), head = v[0];
-    for (var i = v.length - 1; i >= 1; i--) {
-      if (!String(v[i][0] || '').trim()) continue;
-      var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; });
-      if (o.date) o.date = String(o.date);
-      out.push(o);
-    }
-  } catch (e) {}
-  return out;
-}
 
-// Insert or update one Finance row, matched by its id; fills each column by header name.
-function saveFinance_(name, prefix, obj, session) {
-  var sh = tab_('finance', name), v = sh.getDataRange().getValues(), head = v[0];
-  var id = String(obj.id || '').trim() || finId_(prefix);
-  obj.id = id;
-  if (obj.by == null && session) obj.by = session.email;
-  if (!obj.date) obj.date = new Date();
-  obj.amount = Number(obj.amount || 0);
-  var row = head.map(function (h) { var k = String(h).trim(); return obj[k] != null ? obj[k] : ''; });
-  for (var i = 1; i < v.length; i++)
-    if (String(v[i][0] || '').trim() === id) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); return { ok: true, id: id }; }
-  sh.appendRow(row); return { ok: true, id: id };
-}
 
-function deleteFinance_(name, id) {
-  id = String(id || '').trim();
-  var sh = tab_('finance', name), v = sh.getDataRange().getValues();
-  for (var i = v.length - 1; i >= 1; i--)
-    if (String(v[i][0] || '').trim() === id) { sh.deleteRow(i + 1); return { ok: true }; }
-  return { ok: false, error: 'notfound', message: 'No trobat.' };
-}
 
-function readExpenses() { return { ok: true, data: readFinance_('Expenses') }; }
-function saveExpense(e, session) { if (!e) return { ok: false, error: 'missing', message: 'Falta la despesa.' }; return saveFinance_('Expenses', 'EXP', e, session); }
-function deleteExpense(id) { return deleteFinance_('Expenses', id); }
-function readPayouts() { return { ok: true, data: readFinance_('Payouts') }; }
-function savePayout(p, session) { if (!p) return { ok: false, error: 'missing', message: 'Falta el pagament.' }; return saveFinance_('Payouts', 'PAY', p, session); }
-function deletePayout(id) { return deleteFinance_('Payouts', id); }
 
-// Profit and loss: revenue from orders, minus production cost and other expenses, minus manager payouts.
-// Sum a cost column from an Inventory tab, optionally only for one "YYYY-MM" period.
-function sumInvCost_(tabName, period) {
-  var total = 0;
-  try {
-    var u = tab_('inv', tabName).getDataRange().getValues(), c = indexMap(u[0]);
-    for (var i = 1; i < u.length; i++) { if (period && !inPeriod_(u[i][c.date], period)) continue; total += Number(u[i][c.cost] || 0); }
-  } catch (e) {}
-  return total;
-}
-// Cash-basis P&L: money in (sales) minus money out (filament bought + other expenses + payouts).
-function pnl() {
-  try { maybeCloseMonths_(); } catch (e) { logErr_('maybeCloseMonths', e); }
-  var orders = readOrders();
-  var revenue = 0, productCostEstimate = 0, counted = 0;
-  orders.forEach(function (o) { if (normStatus_(o.status) === 'cancelled') return; counted++; revenue += Number(o.revenue || 0); productCostEstimate += Number(o.cost || 0); });
-  var expenses = readFinance_('Expenses'), payouts = readFinance_('Payouts');
-  var byCat = {}, otherExpenses = 0;
-  expenses.forEach(function (e) { var a = Number(e.amount || 0); otherExpenses += a; var c = String(e.category || 'altres'); byCat[c] = (byCat[c] || 0) + a; });
-  var payoutTotal = 0, byManager = {};
-  payouts.forEach(function (p) { var a = Number(p.amount || 0); payoutTotal += a; var m = String(p.manager || '?'); byManager[m] = (byManager[m] || 0) + a; });
-  var filamentPurchased = sumInvCost_('Purchases');     // real cash spent on filament (cost basis)
-  var filamentUsed = sumInvCost_('Usage');              // value consumed so far (informational)
-  var grossProfit = revenue - filamentPurchased - otherExpenses;
-  return {
-    ok: true, data: {
-      ordersCount: counted, revenue: revenue, filamentPurchased: filamentPurchased,
-      otherExpenses: otherExpenses, expensesByCategory: byCat,
-      filamentUsed: filamentUsed, productCostEstimate: productCostEstimate,
-      grossProfit: grossProfit, payouts: payoutTotal, payoutsByManager: byManager,
-      net: grossProfit - payoutTotal
-    }
-  };
-}
 
 /* ================= MONTH-END: close the books + a per-month tax packet ================= */
 
-// True if a value's date falls in "YYYY-MM".
-function inPeriod_(dateVal, period) {
-  if (!dateVal) return false;
-  var d = (dateVal instanceof Date) ? dateVal : new Date(dateVal);
-  if (isNaN(d.getTime())) return String(dateVal).slice(0, 7) === period; // already "YYYY-MM-..."
-  return period_(d) === period;
-}
 
-// Compute + store the P&L for one finished month, and write a detailed per-month sheet
-// (jobs done + expenses) in the Finance file — the packet you hand the accountant.
-function closeMonth_(period) {
-  var orders = readOrders().filter(function (o) { return inPeriod_(o.date, period) && normStatus_(o.status) !== 'cancelled'; });
-  var revenue = 0;
-  orders.forEach(function (o) { revenue += Number(o.revenue || 0); });
 
-  var expenses = readFinance_('Expenses').filter(function (e) { return inPeriod_(e.date, period); });
-  var otherExpenses = 0; expenses.forEach(function (e) { otherExpenses += Number(e.amount || 0); });
-  var payouts = readFinance_('Payouts').filter(function (p) { return String(p.period || '') === period || inPeriod_(p.date, period); });
-  var payoutTotal = 0; payouts.forEach(function (p) { payoutTotal += Number(p.amount || 0); });
 
-  // Filament cost = what we BOUGHT this month (cash basis), same as the live P&L.
-  var filamentCost = sumInvCost_('Purchases', period);
 
-  var jobsDone = readJobsDone_(period);
-  var grossProfit = revenue - filamentCost - otherExpenses, net = grossProfit - payoutTotal;
-
-  // 1) one row per month in Finance!Monthly (keyed by period). Period column is
-  // kept as plain text so "YYYY-MM" isn't silently turned into a date by Sheets.
-  var mSh = ensureTab_('finance', 'Monthly', systemSchema().finance.tabs.Monthly);
-  textCol_(mSh, 1);
-  var mv = mSh.getDataRange().getValues(), mHead = mv[0];
-  var row = { period: period, ordersCount: orders.length, revenue: revenue, productionCost: filamentCost, filamentCost: filamentCost, otherExpenses: otherExpenses, grossProfit: grossProfit, payouts: payoutTotal, net: net, jobsDone: jobsDone.length, closedAt: new Date() };
-  var rowArr = mHead.map(function (h) { var k = String(h).trim(); return row[k] != null ? row[k] : ''; });
-  // Collect every row for this period: overwrite the first, delete any extras
-  // (self-heals duplicates), or append if none exists yet.
-  var matches = []; for (var r = 1; r < mv.length; r++) if (pstr_(mv[r][0]) === period) matches.push(r);
-  if (matches.length) {
-    mSh.getRange(matches[0] + 1, 1, 1, rowArr.length).setValues([rowArr]);
-    for (var d = matches.length - 1; d >= 1; d--) mSh.deleteRow(matches[d] + 1);
-  } else {
-    mSh.appendRow(rowArr);
-  }
-
-  // 2) a per-month detail sheet (overwritten each run so it's always current).
-  var ss = ss_('finance'), name = 'Mes ' + period, dSh = ss.getSheetByName(name);
-  if (!dSh) dSh = ss.insertSheet(name); else dSh.clear();
-  var block = [
-    ['Tancament mensual', period], ['', ''],
-    ['Comandes', orders.length], ['Ingressos (€)', revenue.toFixed(2)],
-    ['Filament comprat (€)', filamentCost.toFixed(2)], ['Filament consumit (€, info)', sumInvCost_('Usage', period).toFixed(2)],
-    ['Altres despeses (€)', otherExpenses.toFixed(2)], ['Benefici brut (€)', grossProfit.toFixed(2)],
-    ['Pagaments a gestors (€)', payoutTotal.toFixed(2)], ['Net (€)', net.toFixed(2)],
-    ['Feines impreses', jobsDone.length], ['', '']
-  ];
-  dSh.getRange(1, 1, block.length, 2).setValues(block);
-  var rowN = block.length + 1;
-  // Jobs-done table.
-  dSh.getRange(rowN, 1).setValue('FEINES IMPRESES'); rowN++;
-  var jHead = ['doneDate', 'category', 'owner', 'material', 'color', 'gramsEst', 'timeEst', 'orderRef', 'notes'];
-  dSh.getRange(rowN, 1, 1, jHead.length).setValues([jHead]); rowN++;
-  if (jobsDone.length) {
-    var jRows = jobsDone.map(function (j) { return jHead.map(function (k) { var val = j[k]; return (val instanceof Date) ? Utilities.formatDate(val, 'GMT+1', 'yyyy-MM-dd') : (val != null ? val : ''); }); });
-    dSh.getRange(rowN, 1, jRows.length, jHead.length).setValues(jRows); rowN += jRows.length;
-  }
-  rowN++;
-  // Expenses table.
-  dSh.getRange(rowN, 1).setValue('DESPESES'); rowN++;
-  var eHead = ['date', 'category', 'description', 'amount', 'vat', 'supplier'];
-  dSh.getRange(rowN, 1, 1, eHead.length).setValues([eHead]); rowN++;
-  if (expenses.length) {
-    var eRows = expenses.map(function (e) { return eHead.map(function (k) { var val = e[k]; return (val instanceof Date) ? Utilities.formatDate(val, 'GMT+1', 'yyyy-MM-dd') : (val != null ? val : ''); }); });
-    dSh.getRange(rowN, 1, eRows.length, eHead.length).setValues(eRows);
-  }
-  dSh.setFrozenRows(1);
-  logOps_('month', period, 'closed', '', 'rev ' + revenue.toFixed(2) + ' net ' + net.toFixed(2));
-  return row;
-}
-
-// Lazily close any finished months we haven't closed yet (no time-trigger needed): runs
-// cheaply on every dashboard load and does nothing once the previous month is recorded.
-function maybeCloseMonths_() {
-  // Cheap pre-check (no lock): nothing to do once the previous month is recorded.
-  if (getSetting_('LAST_CLOSED_MONTH', '') >= prevPeriod_()) return;
-  withLock_(function () {
-    // Re-check inside the lock so two concurrent loads don't both close.
-    var last = getSetting_('LAST_CLOSED_MONTH', ''), target = prevPeriod_();
-    if (last && last >= target) return;
-    var toClose = [];
-    if (!last) toClose = [target];                     // first run: just the previous month
-    else { var p = nextPeriod_(last); while (p <= target) { toClose.push(p); p = nextPeriod_(p); } }
-    if (toClose.length > 12) toClose = toClose.slice(-12);
-    toClose.forEach(function (pp) { try { closeMonth_(pp); } catch (e) { logErr_('closeMonth ' + pp, e); } });
-    setSetting_('LAST_CLOSED_MONTH', target);
-  });
-}
-
-// Manager: read the monthly ledger (newest first).
-function readMonthly_() {
-  try {
-    var sh = ensureTab_('finance', 'Monthly', systemSchema().finance.tabs.Monthly), v = sh.getDataRange().getValues(), head = v[0], out = [];
-    for (var i = v.length - 1; i >= 1; i--) { if (!String(v[i][0] || '').trim()) continue; var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; }); o.period = pstr_(o.period); out.push(o); }
-    return out;
-  } catch (e) { return []; }
-}
-
-// Manager: force-close a specific month on demand (e.g. re-run after late edits).
-function closeMonthAction_(session, period) {
-  period = String(period || prevPeriod_()).slice(0, 7);
-  if (!/^\d{4}-\d{2}$/.test(period)) return { ok: false, error: 'period', message: 'Període no vàlid (YYYY-MM).' };
-  var row = closeMonth_(period);
-  return { ok: true, data: row };
-}
 
 /* ================= PRINT JOBS: the queue Albert prints from ================= */
-// Read jobs (newest first) as objects, optionally filtered by status/category/owner.
-function readJobs(filter) {
-  var out = [];
-  try {
-    var sh = tab_('ops', 'Jobs'), v = sh.getDataRange().getValues(), head = v[0];
-    for (var i = v.length - 1; i >= 1; i--) {
-      if (!String(v[i][0] || '').trim()) continue;
-      var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; });
-      o.gramsEst = Number(o.gramsEst || 0); o.units = Number(o.units || 0); o.timeEst = Number(o.timeEst || 0);
-      o.anyColor = String(o.anyColor).toLowerCase() === 'true' || o.anyColor === true;
-      if (o.created) o.created = String(o.created);
-      out.push(o);
-    }
-  } catch (e) {}
-  if (filter) out = out.filter(function (j) {
-    return (!filter.status || j.status === filter.status) &&
-           (!filter.category || j.category === filter.category) &&
-           (!filter.owner || j.owner === filter.owner);
-  });
-  return out;
-}
 
-// Insert or update one job (manager-created, or auto-made from an order). Keyed by id.
-function saveJob(job, session) {
-  if (!job) return { ok: false, error: 'missing', message: 'Falta la feina.' };
-  var sh = tab_('ops', 'Jobs'); ensureColumn_(sh, 'timeEst');
-  var v = sh.getDataRange().getValues(), head = v[0];
-  var id = String(job.id || '').trim() || uid_('JOB-');
-  var existed = !!String(job.id || '').trim();
-  var vals = {
-    id: id, created: job.created || new Date(), category: String(job.category || 'product'),
-    owner: String(job.owner || ''), source: String(job.source || 'direct'),
-    productId: String(job.productId || ''), link: String(job.link || ''),
-    material: String(job.material || ''), color: String(job.color || ''),
-    anyColor: job.anyColor ? true : false, units: Number(job.units || 1),
-    gramsEst: Number(job.gramsEst || 0), timeEst: Number(job.timeEst || 0), priority: Number(job.priority || 0),
-    status: String(job.status || 'pending'), orderRef: String(job.orderRef || ''),
-    batchId: String(job.batchId || ''), notes: String(job.notes || '')
-  };
-  var row = head.map(function (h) { var k = String(h).trim(); return vals[k] != null ? vals[k] : ''; });
-  // Remember a saved link in the reusable library.
-  if (vals.link) { try { logLink_(vals.link, vals.category, vals.material, vals.color); } catch (e) {} }
-  for (var i = 1; i < v.length; i++)
-    if (String(v[i][0] || '').trim() === id) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); logOps_('job', id, 'edited', session ? session.email : '', vals.category); return { ok: true, id: id }; }
-  sh.appendRow(row);
-  logOps_('job', id, 'created', session ? session.email : '', vals.category);
-  // Alert the workshop that there is a new print job.
-  notifyNewJobs_('Nova feina d\'impressió', [vals]);
-  return { ok: true, id: id };
-}
 
-// Bullet list + totals for a set of jobs (shared by the order alert and the new-job alert).
-function jobLines_(jobs) {
-  var totG = 0, totMin = 0;
-  var body = jobs.map(function (j) {
-    totG += Number(j.gramsEst || 0); totMin += Number(j.timeEst || 0);
-    var what = j.link ? j.link : (j.notes || j.productId || '');
-    return '• ' + String(j.category || '') + (j.owner ? '/' + j.owner : '') + ' — ' +
-      j.material + ' ' + (j.anyColor ? '(qualsevol color)' : j.color) + ' · ' +
-      Number(j.gramsEst || 0) + ' g · ~' + fmtMin_(j.timeEst) + (j.units > 1 ? ' · x' + j.units : '') + (what ? ' · ' + what : '');
-  }).join('\n');
-  return body + '\n\nTotal: ' + totG + ' g · ~' + fmtMin_(totMin) + ' de temps estimat.';
-}
-// Email the shop a summary of new print jobs (materials + rough time).
-function notifyNewJobs_(title, jobs) {
-  sendMail_({
-    to: notifyEmail_(), subject: '[Impressió] ' + title + ' (' + jobs.length + ')',
-    body: title + '\n\n' + jobLines_(jobs) + '\n\nObre la cua: acceso → Cua d\'impressió.'
-  }, 'jobs');
-}
-function fmtMin_(min) { min = Number(min || 0); if (!min) return '?'; var h = Math.floor(min / 60), m = Math.round(min % 60); return (h ? h + 'h ' : '') + (m ? m + 'min' : (h ? '' : '0min')); }
 
 // Columns of the completed-jobs archive (Jobs columns + when/who/which month).
-var JOBSDONE_COLS = ['id', 'created', 'category', 'owner', 'source', 'productId', 'link', 'material', 'color', 'anyColor', 'units', 'gramsEst', 'timeEst', 'priority', 'status', 'orderRef', 'batchId', 'notes', 'doneDate', 'doneBy', 'period'];
 
-// Move a job through pending -> printing -> done. On the first "done": deduct filament,
-// log it, archive the job to Operations!JobsDone (for monthly/tax tracking) and remove it
-// from the live queue so the to-do list only ever shows outstanding work.
-function setJobStatus(session, id, status) {
-  id = String(id || '').trim(); status = String(status || 'pending');
-  var by = session ? session.email : '';
-  var sh = tab_('ops', 'Jobs'), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
-  for (var i = 1; i < v.length; i++) {
-    if (String(v[i][col.id] || '').trim() !== id) continue;
 
-    if (status !== 'done') {                       // ordinary status change, stays in the queue
-      sh.getRange(i + 1, col.status + 1).setValue(status);
-      logOps_('job', id, 'status:' + status, by, '');
-      return { ok: true };
-    }
 
-    // --- marking done ---
-    var material = String(v[i][col.material] || ''), color = String(v[i][col.color] || '');
-    var grams = Number(v[i][col.gramsEst] || 0), category = String(v[i][col.category] || 'product');
-    var warning = '';
-    if (grams > 0 && material) {
-      var fil = {}; readMaterials().forEach(function (f) { fil[matId(f.material, f.color)] = f; });
-      var f = fil[matId(material, color)];
-      var d = deductMaterial(material, color, grams);
-      logUsage_(id, material, color, grams, category, grams * (f ? f.costPerGram : 0));
-      var note = 'job ' + id + (d && d.short > 0 ? ' · FALTA ' + d.short + 'g' : '');
-      logInvHistory_(material, color, -grams, d ? d.remaining : '', note, by);
-      if (d && d.short > 0) warning = 'Atenció: ' + material + ' ' + color + ' sense estoc suficient (falten ' + d.short + ' g). Marcat igualment.';
-    }
-    // Archive a full snapshot, then delete the live row.
-    var snap = {}; v[0].forEach(function (h, j) { snap[String(h).trim()] = v[i][j]; });
-    snap.status = 'done'; snap.doneDate = new Date(); snap.doneBy = by; snap.period = period_(new Date());
-    var doneSh = ensureTab_('ops', 'JobsDone', JOBSDONE_COLS);
-    var dh = doneSh.getRange(1, 1, 1, doneSh.getLastColumn()).getValues()[0];
-    var periodCol = dh.map(function (h) { return String(h).trim(); }).indexOf('period');
-    if (periodCol >= 0) textCol_(doneSh, periodCol + 1);     // keep "YYYY-MM" as text
-    doneSh.appendRow(dh.map(function (h) { var k = String(h).trim(); return snap[k] != null ? snap[k] : ''; }));
-    sh.deleteRow(i + 1);
-    logOps_('job', id, 'done', by, 'archived');
-    return { ok: true, warning: warning };
-  }
-  return { ok: false, error: 'notfound', message: 'Feina no trobada.' };
-}
 
-// Read archived (completed) jobs, optionally for one "YYYY-MM" period, newest first.
-function readJobsDone_(period) {
-  try {
-    var sh = ensureTab_('ops', 'JobsDone', JOBSDONE_COLS), v = sh.getDataRange().getValues(), head = v[0], out = [];
-    for (var i = v.length - 1; i >= 1; i--) {
-      if (!String(v[i][0] || '').trim()) continue;
-      var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; });
-      o.period = pstr_(o.period);
-      if (period && o.period !== period) continue;
-      out.push(o);
-    }
-    return out;
-  } catch (e) { return []; }
-}
 
-function deleteJob(session, id) {
-  id = String(id || '').trim();
-  var sh = tab_('ops', 'Jobs'), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
-  for (var i = v.length - 1; i >= 1; i--)
-    if (String(v[i][col.id] || '').trim() === id) {
-      var snap = {}; v[0].forEach(function (h, j) { snap[String(h).trim()] = v[i][j]; });
-      logOps_('job', id, 'deleted', session ? session.email : '', JSON.stringify(snap));
-      sh.deleteRow(i + 1); return { ok: true };
-    }
-  return { ok: false, error: 'notfound', message: 'Feina no trobada.' };
-}
 
-// Save/refresh a MakerWorld/Thingiverse link in the reusable Links library.
-function logLink_(url, category, material, color) {
-  var sh = tab_('ops', 'Links'), v = sh.getDataRange().getValues(), col = indexMap(v[0]);
-  for (var i = 1; i < v.length; i++)
-    if (String(v[i][col.url] || '').trim() === url) { sh.getRange(i + 1, col.timesPrinted + 1).setValue(Number(v[i][col.timesPrinted] || 0) + 1); return; }
-  sh.appendRow([url, '', category || '', material || '', color || '', 1, '']);
-}
-function readLinks() { try { var sh = tab_('ops', 'Links'), v = sh.getDataRange().getValues(), head = v[0], out = []; for (var i = 1; i < v.length; i++) { if (!String(v[i][0] || '').trim()) continue; var o = {}; head.forEach(function (h, j) { o[String(h).trim()] = v[i][j]; }); out.push(o); } return { ok: true, data: out }; } catch (e) { return { ok: true, data: [] }; } }
 
-// One order line can use several materials; make a print job for each, deferring deduction to print time.
-function createJobsForOrder_(orderId, lines, productsById) {
-  var sh = tab_('ops', 'Jobs'); ensureColumn_(sh, 'timeEst');
-  var head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
-  var made = [];
-  lines.forEach(function (line) {
-    var p = productsById[line.id];
-    var bom = (p && p.bom && p.bom.length) ? p.bom : [{ material: '', color: '', grams: 0 }];
-    var qty = Number(line.qty || 1);
-    // Rough print time comes from the product's internal estimate (minutes per unit).
-    var timeEst = Number(p && p.printTimeMin ? p.printTimeMin : 0) * qty;
-    bom.forEach(function (b) {
-      var vals = {
-        id: uid_('JOB-'), created: new Date(), category: 'product', owner: '', source: 'order',
-        productId: line.id, link: '', material: String(b.material || ''), color: String(b.color || ''),
-        anyColor: false, units: qty, gramsEst: Number(b.grams || 0) * qty, timeEst: timeEst,
-        priority: 0, status: 'pending', orderRef: orderId, batchId: '', notes: line.name
-      };
-      sh.appendRow(head.map(function (h) { var k = String(h).trim(); return vals[k] != null ? vals[k] : ''; }));
-      made.push(vals);
-    });
-  });
-  // The caller (placeOrder) folds these into the single order alert — no separate email here.
-  return made;
-}
-
-// Order the pending queue: mix categories by percentage, and keep same material/colour together to cut filament changes.
-function batchPlan(perc) {
-  return planQueue_(readJobs({ status: 'pending' }), perc);
-}
-
-// Pure ordering algorithm (no sheets) so it can be unit-tested directly.
-// Weighted round-robin by category %, with same-material/colour lookahead to cut filament swaps.
-function planQueue_(jobs, perc) {
-  var cats = { product: [], research: [], personal: [] };
-  jobs.forEach(function (j) { var c = (j.category === 'research' || j.category === 'personal') ? j.category : 'product'; cats[c].push(j); });
-  var sortMC = function (a, b) {
-    return String(a.material).localeCompare(String(b.material)) ||
-           ((a.anyColor ? 1 : 0) - (b.anyColor ? 1 : 0)) ||
-           String(a.color).localeCompare(String(b.color));
-  };
-  ['product', 'research', 'personal'].forEach(function (k) { cats[k].sort(sortMC); });
-
-  var p = perc || { product: 60, research: 30, personal: 10 };
-  var totalW = (Number(p.product) || 0) + (Number(p.research) || 0) + (Number(p.personal) || 0) || 100;
-  var credit = { product: 0, research: 0, personal: 0 }, order = [], last = null, changes = 0;
-
-  while (cats.product.length || cats.research.length || cats.personal.length) {
-    credit.product += Number(p.product) || 0; credit.research += Number(p.research) || 0; credit.personal += Number(p.personal) || 0;
-    // Pick the category most "owed" a turn that still has jobs.
-    var pick = null, best = -Infinity;
-    ['product', 'research', 'personal'].forEach(function (c) { if (cats[c].length && credit[c] > best) { best = credit[c]; pick = c; } });
-    if (!pick) break;
-    credit[pick] -= totalW;
-    // Within that category, prefer a job on the same material/colour as the last one printed.
-    var bucket = cats[pick], idx = 0;
-    if (last) { for (var k = 0; k < bucket.length; k++) { if (bucket[k].material === last.material && (bucket[k].anyColor || bucket[k].color === last.color)) { idx = k; break; } } }
-    var job = bucket.splice(idx, 1)[0];
-    if (last && (last.material !== job.material || (!job.anyColor && last.color !== job.color))) changes++;
-    order.push(job); last = job;
-  }
-  return { ok: true, order: order, filamentChanges: changes, count: order.length };
-}
 
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-08.5';
+var ENGINE_VERSION = '2026-11-11.1';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.
@@ -1800,96 +1229,9 @@ function sendMail_(opts, where) {
   catch (e) { logErr_('mail:' + (where || ''), e); return false; }
 }
 
-// Recent error rows from Operations!History (type = error), newest first.
-// Recent UNACKNOWLEDGED error rows. Acknowledging (ackErrors) sets a timestamp and
-// hides everything up to it — the audit log is untouched, the dashboard just reads clean.
-function recentErrors_(limit) {
-  var out = [], ackMs = 0;
-  var ack = getSetting_('ERRORS_ACK_AT', ''); if (ack) { var t = new Date(ack).getTime(); if (!isNaN(t)) ackMs = t; }
-  try {
-    var sh = tab_('ops', 'History'), v = sh.getDataRange().getValues(), c = indexMap(v[0]);
-    for (var i = v.length - 1; i >= 1 && out.length < (limit || 50); i--) {
-      if (String(v[i][c.type]) !== 'error') continue;
-      var d = v[i][c.date], dm = (d instanceof Date) ? d.getTime() : new Date(d).getTime();
-      if (ackMs && !isNaN(dm) && dm <= ackMs) continue;   // acknowledged → hidden
-      out.push({ date: String(v[i][c.date]), where: String(v[i][c.id]), detail: String(v[i][c.detail]) });
-    }
-  } catch (e) {}
-  return out;
-}
-function listErrors() { return { ok: true, data: recentErrors_(100) }; }
-// Mark all current errors as reviewed — they drop off the dashboard; the log stays.
-function ackErrors(session) {
-  var n = recentErrors_(1000).length;
-  setSetting_('ERRORS_ACK_AT', new Date().toISOString());
-  logOps_('errors', 'ack', 'reviewed', session ? session.email : '', n + ' errors acknowledged');
-  return { ok: true, acknowledged: n };
-}
 
-// Quick health snapshot (manager): version, sheets, counts, mail quota, recent errors, timings.
-function health() {
-  var t0 = Date.now(), out = { ok: true, version: ENGINE_VERSION, cardEnabled: cardEnabled_(), counts: {}, timings: {} };
-  out.sheets = systemStatus().sheets;
-  var tt = Date.now();
-  try { out.counts.products = readProducts().length; } catch (e) { out.counts.products = 'ERR'; out.ok = false; }
-  try { out.counts.orders = readOrders().length; } catch (e) { out.ok = false; }
-  try { out.counts.jobsPending = readJobs({ status: 'pending' }).length; } catch (e) { out.ok = false; }
-  try { out.counts.jobsDone = readJobsDone_('').length; } catch (e) {}
-  try { out.counts.filaments = readMaterials().length; } catch (e) { out.ok = false; }
-  out.timings.readsMs = Date.now() - tt;
-  try { out.mailQuotaRemaining = MailApp.getRemainingDailyQuota(); } catch (e) {}
-  var errs = recentErrors_(100); out.errorCount = errs.length; out.lastError = errs[0] || null;
-  out.timings.totalMs = Date.now() - t0;
-  return out;
-}
 
-// Live self-test (manager): exercises the real write paths on throwaway data, then cleans up.
-// Mirrors R&R's runPortalSelfTest. Sends ONE alert email (saveJob) -- expected.
-function selfTest(session) {
-  var steps = [], t0 = Date.now(), ok = true;
-  function step(name, fn) { var s = Date.now(); var r = phase_(name, fn); steps.push({ step: name, ok: r.ok, ms: Date.now() - s, error: r.error || '' }); if (!r.ok) ok = false; return r.value; }
 
-  step('open 6 sheets', function () { for (var k in SS_KEYS) ss_(k); return true; });
-  step('read settings', function () { if (!getSettings().ok) throw new Error('settings'); return true; });
-  var mat = 'SELFTEST', col = '__st' + Math.floor(Math.random() * 1e6);
-  step('save filament', function () { if (!saveMaterial({ material: mat, color: col, stock: 20, costPerGram: 0.02, lowAt: 5, active: true }, session).ok) throw new Error('saveMaterial'); return true; });
-  var jobId = step('create job', function () { var r = saveJob({ category: 'research', material: mat, color: col, gramsEst: 30, units: 1, notes: '__selftest__', status: 'pending' }, session); if (!r.ok) throw new Error('saveJob'); return r.id; });
-  step('mark done (deduct+archive)', function () { if (!setJobStatus(session, jobId, 'done').ok) throw new Error('setJobStatus'); return true; });
-  step('verify archived', function () {
-    if (readJobs({}).some(function (j) { return j.id === jobId; })) throw new Error('still in live queue');
-    if (!readJobsDone_('').some(function (j) { return String(j.id) === jobId; })) throw new Error('not in JobsDone');
-    return true;
-  });
-  step('cleanup', function () {
-    try { var sh = tab_('ops', 'JobsDone'), v = sh.getDataRange().getValues(); for (var i = v.length - 1; i >= 1; i--) if (String(v[i][0]) === jobId) { sh.deleteRow(i + 1); break; } } catch (e) {}
-    deleteMaterial(matId(mat, col));
-    return true;
-  });
-  return { ok: ok, version: ENGINE_VERSION, totalMs: Date.now() - t0, steps: steps };
-}
-
-// Self-heal: every active order should have its print jobs. Recreate jobs for any active
-// order that has none (orders are the source of truth; jobs derive from them). No duplicates:
-// an order that already has pending OR archived jobs is left alone.
-function reconcileJobs(session) {
-  var orders = readOrders(), byId = {}; readProducts().forEach(function (p) { byId[p.id] = p; });
-  var covered = {};
-  readJobs({}).forEach(function (j) { if (j.orderRef) covered[j.orderRef] = true; });
-  readJobsDone_('').forEach(function (j) { if (j.orderRef) covered[j.orderRef] = true; });
-  var checked = 0, restored = 0;
-  orders.forEach(function (o) {
-    var st = normStatus_(o.status);
-    if (st === 'cancelled' || st === 'delivered') return;
-    checked++;
-    if (covered[o.id]) return;
-    var lines = (o.items || []).map(function (it) { return { id: it.id, name: it.name, qty: it.qty, price: it.price, cost: it.cost }; });
-    if (!lines.length) return;
-    try { var made = createJobsForOrder_(o.id, lines, byId) || []; restored += made.length; }
-    catch (e) { logErr_('reconcileJobs ' + o.id, e); }
-  });
-  logOps_('reconcile', 'jobs', 'run', session ? session.email : '', 'checked ' + checked + ' restored ' + restored);
-  return { ok: true, ordersChecked: checked, jobsRestored: restored };
-}
 
 // Off-site-ish backup: export every tab to one dated JSON file in the Drive "Backups" folder,
 // so a wiped sheet can be restored (the sheets are the only source of truth otherwise).
@@ -1910,33 +1252,3 @@ function snapshotAll_(session) {
   return { ok: true, url: file.getUrl(), name: file.getName() };
 }
 
-// Delete every row across all tabs whose watched columns contain `marker` (substring).
-// A launch-prep tool: clear test/demo data (incl. the append-only logs) in one call.
-// Use a very specific marker (default 'DEMO-RUN') so real data is never touched.
-function purgeDemo(session, marker) {
-  marker = String(marker || 'DEMO-RUN').trim();
-  if (marker.length < 4) return { ok: false, error: 'marker', message: 'Marcador massa curt (mín. 4 caràcters).' };
-  var removed = {};
-  function purgeTab(key, tab, cols) {
-    var n = 0;
-    try {
-      var sh = tab_(key, tab), v = sh.getDataRange().getValues(), c = indexMap(v[0]);
-      for (var i = v.length - 1; i >= 1; i--) {
-        var hit = cols.some(function (col) { return c[col] != null && String(v[i][c[col]]).indexOf(marker) >= 0; });
-        if (hit) { sh.deleteRow(i + 1); n++; }
-      }
-    } catch (e) { logErr_('purge ' + key + '/' + tab, e); }
-    return n;
-  }
-  removed.products   = purgeTab('catalog', 'Products', ['id', 'codename', 'name']);
-  removed.filaments  = purgeTab('inv', 'Filaments', ['material', 'color']);
-  removed.purchases  = purgeTab('inv', 'Purchases', ['material', 'color', 'supplier']);
-  removed.usage      = purgeTab('inv', 'Usage', ['material', 'color', 'ref']);
-  removed.invHistory = purgeTab('inv', 'History', ['material', 'color', 'reason', 'by']);
-  removed.jobs       = purgeTab('ops', 'Jobs', ['material', 'color', 'notes', 'orderRef', 'productId']);
-  removed.jobsDone   = purgeTab('ops', 'JobsDone', ['material', 'color', 'notes', 'orderRef', 'productId']);
-  removed.orders     = purgeTab('ops', 'Orders', ['id', 'customerName', 'notes', 'items']);
-  removed.opsHistory = purgeTab('ops', 'History', ['id', 'detail']);
-  logOps_('purge', marker, 'run', session ? session.email : '', JSON.stringify(removed));
-  return { ok: true, marker: marker, removed: removed };
-}

@@ -94,7 +94,7 @@ const ProductPage = {
             <a class="btn btn-outline" href="shop.html">${I18N.t("product.backToCatalog")}</a>
           </div>
           <p class="of-nopay">${I18N.t("order.nopay")}</p>
-          <p class="description">${I18N.pick(p.description)}</p>
+          <div class="description">${I18N.pick(p.description)}</div>
           ${specs}
           <div class="labels-row">${labels}</div>
         </div>
