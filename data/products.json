@@ -150,6 +150,31 @@
         "es": "...dD"
       },
       "specs": []
+    },
+    {
+      "id": "prova-2",
+      "type": "own",
+      "price": 5,
+      "codename": "prova-2",
+      "labels": [],
+      "images": [
+        "https://lh3.googleusercontent.com/d/1EiYthvHYtvOk2z1M1ycla1YXEUzMhkkD"
+      ],
+      "name": {
+        "en": "Prova 2",
+        "ca": "Prova 2",
+        "es": "Prueba 2"
+      },
+      "short": {
+        "en": "Short",
+        "ca": "Curt",
+        "es": "Corto"
+      },
+      "description": {
+        "en": "Long",
+        "ca": "Llarg",
+        "es": "Largo"
+      }
     }
   ]
 }
