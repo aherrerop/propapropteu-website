@@ -1304,6 +1304,7 @@ body.shop .site-header { background: var(--color-hero); }
 .mg-line { border: 1px solid var(--color-line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; background: #fafaf9; }
 .mg-line-top { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center; }
 .mg-line-mat { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.adm-editor .mg-line-mat select { width: auto; min-width: 150px; }
 .mg-inline { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--color-muted); }
 .adm-editor input.mg-small { width: 84px; }
 .mg-add { align-self: flex-start; }

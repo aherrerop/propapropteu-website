@@ -63,4 +63,4 @@ const SITE_CONFIG = {
 
 // Frontend build stamp — bump when you change manager JS/HTML. Shown in the dashboard
 // top bar and used to cache-bust the admin scripts (see admin.html ?v=).
-const SITE_VERSION = "2026-11-11.1";
+const SITE_VERSION = "2026-11-12.1";

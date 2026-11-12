@@ -20,57 +20,62 @@
 var MATERIAL_TYPES = ['PLA', 'PETG', 'ABS'];
 var ORDER_TYPES = ['Product', 'Prototype', 'Personal'];
 
-// Column layouts of the tabs this file owns (new columns go at the END only).
+// The tabs this file owns: [spreadsheet, tab name, columns]. New columns go at the END only.
 var MG = {
-  ORDERS:   ['key', 'no', 'created', 'by', 'type', 'price', 'notes', 'source', 'status', 'completedAt', 'emailSent'],
-  PIECES:   ['id', 'orderKey', 'orderNo', 'created', 'productId', 'name', 'link', 'material', 'color', 'anyColor', 'copies', 'grams', 'status', 'preparedAt', 'printedAt', 'roll', 'cost', 'deducted'],
-  HISTORY:  ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Grams', 'Cost (EUR)', 'Stock left (g)', 'By', 'Piece ID'],
-  DELETED:  ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Order notes', 'By', 'Piece ID'],
-  FINANCES: ['Completed', 'Order', 'Type', 'Products', 'Grams', 'Selling price (EUR)', 'Internal cost (EUR)', 'Profit (EUR)', 'Notes', 'Order key'],
-  TOBUY:    ['Date', 'Material', 'Color', 'Rolls', 'Cost per roll (EUR)', 'Added by']
+  orders:    ['ops', 'Order list', ['key', 'no', 'created', 'by', 'type', 'price', 'notes', 'source', 'status', 'completedAt', 'emailSent']],
+  pieces:    ['ops', 'Pieces', ['id', 'orderKey', 'orderNo', 'created', 'productId', 'name', 'link', 'material', 'color', 'anyColor', 'copies', 'grams', 'status', 'preparedAt', 'printedAt', 'roll', 'cost', 'deducted']],
+  history:   ['ops', 'Print history', ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Grams', 'Cost (EUR)', 'Stock left (g)', 'By', 'Piece ID']],
+  deleted:   ['ops', 'Deleted', ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Order notes', 'By', 'Piece ID']],
+  finances:  ['finance', 'Finances', ['Completed', 'Order', 'Type', 'Products', 'Grams', 'Selling price (EUR)', 'Internal cost (EUR)', 'Profit (EUR)', 'Notes', 'Order key']],
+  tobuy:     ['inv', 'To buy', ['Date', 'Material', 'Color', 'Rolls', 'Cost per roll (EUR)', 'Added by']],
+  materials: ['inv', 'Filaments', ['material', 'color', 'hex', 'grams', 'costPerRoll', 'lastTx']]
 };
-function ordersTab_()   { return ensureTab_('ops', 'Order list', MG.ORDERS); }
-function piecesTab_()   { return ensureTab_('ops', 'Pieces', MG.PIECES); }
-function historyTab_()  { return ensureTab_('ops', 'Print history', MG.HISTORY); }
-function deletedTab_()  { return ensureTab_('ops', 'Deleted', MG.DELETED); }
-function financesTab_() { return ensureTab_('finance', 'Finances', MG.FINANCES); }
-function toBuyTab_()    { return ensureTab_('inv', 'To buy', MG.TOBUY); }
 
-/* ---------- small sheet helpers: rows as objects, keyed by header name ---------- */
+/* ---------- sheet access: each tab is read ONCE per request, rows become objects ---------- */
 
-// Read a tab into { sh, head, rows } where each row is an object plus its sheet row number.
-function table_(sh) {
+// tbl_('pieces') -> { sh, head, rows } with every row as an object keyed by header name
+// (plus _row, its sheet row number). Creates the tab / missing columns on first use.
+// The result is cached for the rest of the request and kept in step by the helpers below.
+var MG_CACHE_ = {};
+function tbl_(id) {
+  if (MG_CACHE_[id]) return MG_CACHE_[id];
+  var def = MG[id], ss = ss_(def[0]), sh = ss.getSheetByName(def[1]);
+  if (!sh) { sh = ss.insertSheet(def[1]); sh.getRange(1, 1, 1, def[2].length).setValues([def[2]]); sh.setFrozenRows(1); }
   var v = sh.getDataRange().getValues();
-  var head = v[0].map(function (h) { return String(h).trim(); }), rows = [];
+  var head = v[0].map(function (h) { return String(h).trim(); });
+  def[2].forEach(function (c) { if (head.indexOf(c) < 0) { head.push(c); sh.getRange(1, head.length).setValue(c); } });
+  var rows = [];
   for (var i = 1; i < v.length; i++) {
     if (String(v[i][0] || '').trim() === '') continue;
     var o = { _row: i + 1 };
-    head.forEach(function (h, j) { o[h] = v[i][j]; });
+    head.forEach(function (h, j) { o[h] = v[i][j] === undefined ? '' : v[i][j]; });
     rows.push(o);
   }
-  return { sh: sh, head: head, rows: rows };
+  return (MG_CACHE_[id] = { sh: sh, head: head, rows: rows });
 }
-// Append an object as a new row (missing fields stay blank).
-function appendObj_(t, obj) {
-  t.sh.appendRow(t.head.map(function (h) { return obj[h] != null ? obj[h] : ''; }));
+function rowArray_(t, obj) { return t.head.map(function (h) { return obj[h] != null ? obj[h] : ''; }); }
+// Add a row (missing fields stay blank).
+function addRow_(t, obj) {
+  t.sh.appendRow(rowArray_(t, obj));
+  var o = { _row: t.sh.getLastRow() };
+  t.head.forEach(function (h) { o[h] = obj[h] != null ? obj[h] : ''; });
+  t.rows.push(o);
+  return o;
 }
-// Change some cells of one existing row.
-function patchRow_(t, rowNum, patch) {
-  for (var k in patch) { var c = t.head.indexOf(k); if (c >= 0) t.sh.getRange(rowNum, c + 1).setValue(patch[k]); }
+// Change some fields of an existing row; the whole row is written in ONE call.
+function setRow_(t, row, patch) {
+  for (var k in patch) row[k] = patch[k];
+  t.sh.getRange(row._row, 1, 1, t.head.length).setValues([rowArray_(t, row)]);
 }
 function isTrue_(v) { return v === true || String(v).toLowerCase() === 'true'; }
 function who_(session) { return session ? (session.name || session.email || '') : ''; }
 function iso_(d) { return (d instanceof Date) ? d.toISOString() : String(d || ''); }
 function money_(n) { return Math.round(Number(n || 0) * 100) / 100; }
+function byKey_(t, field, value) { for (var i = 0; i < t.rows.length; i++) if (String(t.rows[i][field]) === String(value)) return t.rows[i]; return null; }
 
 /* ============================ MATERIALS ============================ */
 
-// Inventory lives in Inventory!Filaments. costPerRoll and lastTx were added later, at the end.
-function matTable_() {
-  var sh = tab_('inv', 'Filaments');
-  ensureColumn_(sh, 'costPerRoll'); ensureColumn_(sh, 'lastTx');
-  return table_(sh);
-}
+function findMat_(t, id) { for (var i = 0; i < t.rows.length; i++) if (matId(t.rows[i].material, t.rows[i].color) === id) return t.rows[i]; return null; }
 function matView_(r) {
   return {
     id: matId(r.material, r.color), material: String(r.material).trim(), color: String(r.color || '').trim(),
@@ -78,7 +83,7 @@ function matView_(r) {
     costPerRoll: (r.costPerRoll === '' || r.costPerRoll == null) ? '' : Number(r.costPerRoll)
   };
 }
-function readMaterials() { return matTable_().rows.map(matView_); }
+function readMaterials() { return tbl_('materials').rows.map(matView_); }
 
 // New material (no id) or edit of an existing one (id = the entry being edited).
 // Adding a material + colour that already exists adds its grams to that entry.
@@ -89,46 +94,47 @@ function saveMaterial(session, m) {
   if (!color) return { ok: false, error: 'color', message: 'Enter the color name.' };
   var grams = Math.max(0, Number(m.grams || 0));
   var cost = (m.costPerRoll === '' || m.costPerRoll == null) ? '' : Number(m.costPerRoll);
-  var t = matTable_(), key = matId(material, color), editId = String(m.id || '');
-  var same = null, editing = null;
-  t.rows.forEach(function (r) { var id = matId(r.material, r.color); if (id === key) same = r; if (editId && id === editId) editing = r; });
+  var t = tbl_('materials'), key = matId(material, color), editId = String(m.id || '');
+  var same = findMat_(t, key);
 
   if (editId) {
+    var editing = findMat_(t, editId);
     if (!editing) return { ok: false, error: 'notfound', message: 'Material not found.' };
     if (same && same !== editing) return { ok: false, error: 'exists', message: material + ' ' + color + ' already exists.' };
-    patchRow_(t, editing._row, { material: material, color: color, hex: String(m.hex || ''), grams: grams, costPerRoll: cost });
+    setRow_(t, editing, { material: material, color: color, hex: String(m.hex || ''), grams: grams, costPerRoll: cost });
     return { ok: true, id: key };
   }
   if (same) {
     var patch = { grams: Number(same.grams || 0) + grams };
     if (m.hex) patch.hex = String(m.hex);
     if (cost !== '') patch.costPerRoll = cost;
-    patchRow_(t, same._row, patch);
+    setRow_(t, same, patch);
     return { ok: true, id: key, merged: true };
   }
-  appendObj_(t, { material: material, color: color, hex: String(m.hex || ''), grams: grams, costPerRoll: cost, active: true });
+  addRow_(t, { material: material, color: color, hex: String(m.hex || ''), grams: grams, costPerRoll: cost, active: true });
   return { ok: true, id: key };
 }
 function deleteMaterial(id) {
-  var t = matTable_();
-  for (var i = t.rows.length - 1; i >= 0; i--)
-    if (matId(t.rows[i].material, t.rows[i].color) === id) { t.sh.deleteRow(t.rows[i]._row); return { ok: true }; }
-  return { ok: false, error: 'notfound', message: 'Material not found.' };
+  var t = tbl_('materials'), r = findMat_(t, id);
+  if (!r) return { ok: false, error: 'notfound', message: 'Material not found.' };
+  t.sh.deleteRow(r._row); delete MG_CACHE_.materials;
+  return { ok: true };
 }
 // Repurchase icon: add one roll of this material + colour to the Inventory!To buy list.
 function repurchase(session, id) {
-  var r = matTable_().rows.filter(function (x) { return matId(x.material, x.color) === id; })[0];
+  var r = findMat_(tbl_('materials'), id);
   if (!r) return { ok: false, error: 'notfound', message: 'Material not found.' };
-  toBuyTab_().appendRow([new Date(), r.material, r.color, 1, r.costPerRoll === '' ? '' : Number(r.costPerRoll || 0), who_(session)]);
+  tbl_('tobuy').sh.appendRow([new Date(), r.material, r.color, 1, r.costPerRoll === '' ? '' : Number(r.costPerRoll || 0), who_(session)]);
   return { ok: true };
 }
 // One-off: replace the whole inventory with a given list (used to load the starting stock).
 function resetMaterials(session, list) {
   if (!list || !list.length) return { ok: false, error: 'missing', message: 'Empty list.' };
-  var t = matTable_();
+  var t = tbl_('materials');
   if (t.sh.getLastRow() > 1) t.sh.deleteRows(2, t.sh.getLastRow() - 1);
+  t.rows = [];
   list.forEach(function (m) {
-    appendObj_(t, { material: String(m.material).toUpperCase(), color: m.color, hex: m.hex || '', grams: Number(m.grams || 0),
+    addRow_(t, { material: String(m.material).toUpperCase(), color: m.color, hex: m.hex || '', grams: Number(m.grams || 0),
       costPerRoll: (m.costPerRoll == null ? '' : m.costPerRoll), active: true });
   });
   return { ok: true, count: list.length };
@@ -146,13 +152,14 @@ function pieceView_(p) {
   };
 }
 function isActive_(status) { return status === 'todo' || status === 'prepared' || status === 'printing'; }
+// Order numbers simply continue from the highest one in the Order list.
 function nextOrderNo_() {
-  var n = Number(getSetting_('ORDER_SEQ', '0')) + 1;
-  setSetting_('ORDER_SEQ', String(n));
-  return n;
+  var max = 0;
+  tbl_('orders').rows.forEach(function (r) { max = Math.max(max, Number(r.no) || 0); });
+  return max + 1;
 }
 // Validate + normalise one product line coming from the order form.
-function cleanPiece_(p, requireMaterial) {
+function cleanPiece_(p) {
   var material = String(p.material || '').trim().toUpperCase();
   var any = p.anyColor ? true : false;
   var out = {
@@ -163,11 +170,13 @@ function cleanPiece_(p, requireMaterial) {
   };
   if (out.id.length < 8) return { error: 'A product line has no id.' };
   if (!out.name) return { error: 'Every product needs a name.' };
-  if (requireMaterial) {
-    if (MATERIAL_TYPES.indexOf(material) < 0) return { error: 'Choose a material for "' + out.name + '".' };
-    if (!any && !out.color) return { error: 'Choose a color (or "Color not important") for "' + out.name + '".' };
-  }
+  if (MATERIAL_TYPES.indexOf(material) < 0) return { error: 'Choose a material for "' + out.name + '".' };
+  if (!any && !out.color) return { error: 'Choose a color (or "Color not important") for "' + out.name + '".' };
   return out;
+}
+function newPiece_(key, no, when, c) {
+  addRow_(tbl_('pieces'), { id: c.id, orderKey: key, orderNo: no, created: when, productId: c.productId, name: c.name, link: c.link,
+    material: c.material, color: c.color, anyColor: c.anyColor, copies: c.copies, grams: c.grams, status: 'todo' });
 }
 
 // Create or update an order. The key and the piece ids are made by the browser when the
@@ -182,74 +191,64 @@ function saveOrder(session, o) {
   if (!o.pieces || !o.pieces.length) return { ok: false, error: 'pieces', message: 'Add at least one product.' };
   var clean = [];
   for (var i = 0; i < o.pieces.length; i++) {
-    var c = cleanPiece_(o.pieces[i], true);
+    var c = cleanPiece_(o.pieces[i]);
     if (c.error) return { ok: false, error: 'piece', message: c.error };
     clean.push(c);
   }
 
-  var ot = table_(ordersTab_()), pt = table_(piecesTab_());
-  var order = ot.rows.filter(function (r) { return String(r.key) === key; })[0];
+  var ot = tbl_('orders'), pt = tbl_('pieces'), order = byKey_(ot, 'key', key);
 
   if (!order) {
     var no = nextOrderNo_(), now = new Date();
-    appendObj_(ot, { key: key, no: no, created: now, by: who_(session), type: type, price: price, notes: notes, source: 'manual', status: 'active' });
-    clean.forEach(function (c) { appendPiece_(pt, key, no, now, c); });
-    var mailed = notifyNewOrder_(key);
+    order = addRow_(ot, { key: key, no: no, created: now, by: who_(session), type: type, price: price, notes: notes, source: 'manual', status: 'active' });
+    clean.forEach(function (c) { newPiece_(key, no, now, c); });
+    var mailed = notifyNewOrder_(order);
     return { ok: true, key: key, no: no, created: true, emailed: mailed };
   }
 
   if (String(order.status) !== 'active') return { ok: false, error: 'closed', message: 'This order is already closed.' };
-  patchRow_(ot, order._row, { type: type, price: price, notes: notes });
-  var mine = pt.rows.filter(function (r) { return String(r.orderKey) === key; });
-  var seen = {};
+  setRow_(ot, order, { type: type, price: price, notes: notes });
+  var mine = pt.rows.filter(function (r) { return String(r.orderKey) === key; }), seen = {};
   clean.forEach(function (c) {
     seen[c.id] = true;
-    var ex = mine.filter(function (r) { return String(r.id) === c.id; })[0];
-    if (!ex) { appendPiece_(pt, key, order.no, new Date(), c); return; }
+    var ex = null; mine.forEach(function (r) { if (String(r.id) === c.id) ex = r; });
+    if (!ex) { newPiece_(key, order.no, new Date(), c); return; }
     var st = String(ex.status);
     if (st !== 'todo' && st !== 'prepared') return;            // printed / deleted / mid-print: leave as is
-    patchRow_(pt, ex._row, { productId: c.productId, name: c.name, link: c.link, material: c.material, color: c.color, anyColor: c.anyColor, copies: c.copies, grams: c.grams });
+    setRow_(pt, ex, { productId: c.productId, name: c.name, link: c.link, material: c.material, color: c.color, anyColor: c.anyColor, copies: c.copies, grams: c.grams });
   });
   // Lines removed from the form are deleted (and kept in the Deleted tab).
   mine.forEach(function (r) {
     var st = String(r.status);
-    if (!seen[String(r.id)] && (st === 'todo' || st === 'prepared')) removePiece_(pt, r, order, session);
+    if (!seen[String(r.id)] && (st === 'todo' || st === 'prepared')) removePiece_(r, order, session);
   });
   closeOrderIfDone_(key);
   return { ok: true, key: key, no: Number(order.no), created: false };
 }
-function appendPiece_(pt, key, no, when, c) {
-  appendObj_(pt, { id: c.id, orderKey: key, orderNo: no, created: when, productId: c.productId, name: c.name, link: c.link,
-    material: c.material, color: c.color, anyColor: c.anyColor, copies: c.copies, grams: c.grams, status: 'todo' });
-}
 // Mark a piece deleted and write a readable row in Operations!Deleted (once).
-function removePiece_(pt, r, order, session) {
-  var dt = table_(deletedTab_());
-  var already = dt.rows.some(function (d) { return String(d['Piece ID']) === String(r.id); });
-  if (!already) dt.sh.appendRow([new Date(), '#' + r.orderNo, order ? order.type : '', r.name, r.link, Number(r.copies || 1),
-    r.material, isTrue_(r.anyColor) ? 'Color not important' : r.color, order ? order.notes : '', who_(session), r.id]);
-  patchRow_(pt, r._row, { status: 'deleted' });
+function removePiece_(r, order, session) {
+  var dt = tbl_('deleted');
+  if (!byKey_(dt, 'Piece ID', r.id))
+    addRow_(dt, { 'Date': new Date(), 'Order': '#' + r.orderNo, 'Type': order ? order.type : '', 'Product': r.name, 'Link': r.link, 'Copies': Number(r.copies || 1),
+      'Material': r.material, 'Color': isTrue_(r.anyColor) ? 'Color not important' : r.color, 'Order notes': order ? order.notes : '', 'By': who_(session), 'Piece ID': r.id });
+  setRow_(tbl_('pieces'), r, { status: 'deleted' });
 }
 
 // The single "new order" alert. Sent once, only when the order row is first created.
-function notifyNewOrder_(key) {
-  var sent = false;
-  try { MailApp.sendEmail(notifyEmail_(), 'New order added to the to-do list', ''); sent = true; }
+function notifyNewOrder_(order) {
+  var sent = false, to = notifyEmail_(), subject = 'New order added to the to-do list';
+  try { MailApp.sendEmail(to, subject, ''); sent = true; }
   catch (e) {
-    try { MailApp.sendEmail(notifyEmail_(), 'New order added to the to-do list', ' '); sent = true; }
-    catch (e2) { logErr_('new-order email ' + key, e2); }
+    try { MailApp.sendEmail(to, subject, ' '); sent = true; }
+    catch (e2) { logErr_('new-order email ' + order.key, e2); }
   }
-  if (sent) {
-    var ot = table_(ordersTab_());
-    var o = ot.rows.filter(function (r) { return String(r.key) === key; })[0];
-    if (o) patchRow_(ot, o._row, { emailSent: true });
-  }
+  if (sent) setRow_(tbl_('orders'), order, { emailSent: true });
   return sent;
 }
 
 // Active orders with their open product lines, newest first (the Orders screen).
 function listOrders() {
-  var ot = table_(ordersTab_()), pt = table_(piecesTab_()), byOrder = {}, printed = {};
+  var ot = tbl_('orders'), pt = tbl_('pieces'), byOrder = {}, printed = {};
   pt.rows.forEach(function (p) {
     var k = String(p.orderKey), st = String(p.status);
     if (st === 'printed') printed[k] = (printed[k] || 0) + 1;
@@ -268,10 +267,9 @@ function listOrders() {
 // Delete a whole order: every open line goes to the Deleted tab.
 function deleteOrder(session, key) {
   key = String(key || '');
-  var ot = table_(ordersTab_()), pt = table_(piecesTab_());
-  var order = ot.rows.filter(function (r) { return String(r.key) === key; })[0];
+  var order = byKey_(tbl_('orders'), 'key', key);
   if (!order) return { ok: false, error: 'notfound', message: 'Order not found.' };
-  pt.rows.forEach(function (r) { if (String(r.orderKey) === key && isActive_(String(r.status))) removePiece_(pt, r, order, session); });
+  tbl_('pieces').rows.forEach(function (r) { if (String(r.orderKey) === key && isActive_(String(r.status))) removePiece_(r, order, session); });
   closeOrderIfDone_(key);
   return { ok: true };
 }
@@ -325,10 +323,10 @@ function groupTodo_(pieces, mats) {
 
 // The To-do screen: open pieces (with their order's details) already grouped and ordered.
 function todo() {
-  var ot = table_(ordersTab_()), pt = table_(piecesTab_()), orders = {};
-  ot.rows.forEach(function (o) { orders[String(o.key)] = o; });
+  var orders = {};
+  tbl_('orders').rows.forEach(function (o) { orders[String(o.key)] = o; });
   var pieces = [];
-  pt.rows.forEach(function (p) {
+  tbl_('pieces').rows.forEach(function (p) {
     if (!isActive_(String(p.status))) return;
     var v = pieceView_(p), o = orders[v.orderKey] || {};
     v.orderType = String(o.type || ''); v.orderPrice = (o.price === '' || o.price == null) ? '' : Number(o.price); v.orderNotes = String(o.notes || '');
@@ -338,34 +336,32 @@ function todo() {
   return { ok: true, groups: groupTodo_(pieces, mats), materials: mats };
 }
 
-function findPiece_(pt, id) { return pt.rows.filter(function (r) { return String(r.id) === String(id); })[0]; }
-
 // Tick / untick "prepared for printing" (G-code sent). Never touches inventory.
 function setPrepared(session, id, on) {
-  var pt = table_(piecesTab_()), p = findPiece_(pt, id);
+  var pt = tbl_('pieces'), p = byKey_(pt, 'id', id);
   if (!p) return { ok: false, error: 'notfound', message: 'Not found.' };
   var st = String(p.status);
   if (st !== 'todo' && st !== 'prepared') return { ok: true, status: st };
-  patchRow_(pt, p._row, on ? { status: 'prepared', preparedAt: new Date() } : { status: 'todo', preparedAt: '' });
+  setRow_(pt, p, on ? { status: 'prepared', preparedAt: new Date() } : { status: 'todo', preparedAt: '' });
   return { ok: true, status: on ? 'prepared' : 'todo' };
 }
 // Albert enters the real weight (total grams for the card).
 function setGrams(session, id, grams) {
-  var pt = table_(piecesTab_()), p = findPiece_(pt, id);
+  var pt = tbl_('pieces'), p = byKey_(pt, 'id', id);
   if (!p) return { ok: false, error: 'notfound', message: 'Not found.' };
-  if (!isActive_(String(p.status)) || String(p.status) === 'printing') return { ok: false, error: 'closed', message: 'This product is already closed.' };
-  patchRow_(pt, p._row, { grams: (grams === '' || grams == null) ? '' : Math.max(0, Number(grams)) });
+  var st = String(p.status);
+  if (st !== 'todo' && st !== 'prepared') return { ok: false, error: 'closed', message: 'This product is already closed.' };
+  setRow_(pt, p, { grams: (grams === '' || grams == null) ? '' : Math.max(0, Number(grams)) });
   return { ok: true };
 }
 // The X on a card: remove that product from the to-do (kept in the Deleted tab).
 function deletePiece(session, id) {
-  var pt = table_(piecesTab_()), p = findPiece_(pt, id);
+  var p = byKey_(tbl_('pieces'), 'id', id);
   if (!p) return { ok: false, error: 'notfound', message: 'Not found.' };
   var st = String(p.status);
   if (st === 'deleted' || st === 'printed') return { ok: true };
   if (st === 'printing') return { ok: false, error: 'printing', message: 'This product is half-recorded as printed. Press Printed again to finish it.' };
-  var order = table_(ordersTab_()).rows.filter(function (r) { return String(r.key) === String(p.orderKey); })[0];
-  removePiece_(pt, p, order, session);
+  removePiece_(p, byKey_(tbl_('orders'), 'key', p.orderKey), session);
   closeOrderIfDone_(String(p.orderKey));
   return { ok: true };
 }
@@ -374,7 +370,7 @@ function deletePiece(session, id) {
 // piece. Each step first checks whether it already happened, so pressing twice (or retrying
 // after an error half-way) finishes the same transaction instead of repeating it.
 function printPiece(session, id, roll) {
-  var pt = table_(piecesTab_()), p = findPiece_(pt, id);
+  var pt = tbl_('pieces'), p = byKey_(pt, 'id', id);
   if (!p) return { ok: false, error: 'notfound', message: 'Not found.' };
   var st = String(p.status);
   if (st === 'printed') return { ok: true, already: true };
@@ -384,34 +380,32 @@ function printPiece(session, id, roll) {
 
   // Which roll was used: the one already recorded, the one chosen now, or the piece's own colour.
   var rollId = String(p.roll || '') || String(roll || '') || (isTrue_(p.anyColor) || !p.material ? '' : matId(p.material, p.color));
-  var mt = matTable_();
-  var m = mt.rows.filter(function (r) { return matId(r.material, r.color) === rollId; })[0];
+  var mt = tbl_('materials'), m = findMat_(mt, rollId);
   if (!m) return { ok: false, error: 'roll', message: 'Choose the roll that was used.' };
 
   // 1. Remember the decision, so a retry uses the same roll and weight.
-  if (st !== 'printing') patchRow_(pt, p._row, { status: 'printing', roll: rollId, printedAt: new Date() });
+  if (st !== 'printing') setRow_(pt, p, { status: 'printing', roll: rollId, printedAt: new Date() });
 
-  // 2. Deduct once. The roll keeps the id of the last piece deducted from it (lastTx),
-  //    written in the same call as the new grams.
-  var have = Number(m.grams || 0), left = have, shortBy = 0;
+  // 2. Deduct once. The roll remembers the last piece deducted from it (lastTx), written
+  //    in the same call as the new grams, so a retry can tell it already happened.
+  var left = Number(m.grams || 0), shortBy = 0;
   if (!isTrue_(p.deducted)) {
     if (String(m.lastTx) !== String(p.id)) {
-      left = have - grams; if (left < 0) { shortBy = -left; left = 0; }
-      var row = mt.head.map(function (h) { return h === 'grams' ? left : (h === 'lastTx' ? String(p.id) : (m[h] != null ? m[h] : '')); });
-      mt.sh.getRange(m._row, 1, 1, row.length).setValues([row]);
+      left = left - grams; if (left < 0) { shortBy = -left; left = 0; }
+      setRow_(mt, m, { grams: left, lastTx: String(p.id) });
     }
-    patchRow_(pt, p._row, { deducted: true });
+    setRow_(pt, p, { deducted: true });
   }
 
   // 3. One readable history row per piece.
   var cost = money_(grams * Number(m.costPerRoll || 0) / 1000);
-  var order = table_(ordersTab_()).rows.filter(function (r) { return String(r.key) === String(p.orderKey); })[0];
-  var ht = table_(historyTab_());
-  if (!ht.rows.some(function (h) { return String(h['Piece ID']) === String(p.id); }))
-    ht.sh.appendRow([new Date(), '#' + p.orderNo, order ? order.type : '', p.name, p.link, Number(p.copies || 1), m.material, m.color, grams, cost, left, who_(session), p.id]);
+  var order = byKey_(tbl_('orders'), 'key', p.orderKey), ht = tbl_('history');
+  if (!byKey_(ht, 'Piece ID', p.id))
+    addRow_(ht, { 'Date': new Date(), 'Order': '#' + p.orderNo, 'Type': order ? order.type : '', 'Product': p.name, 'Link': p.link, 'Copies': Number(p.copies || 1),
+      'Material': m.material, 'Color': m.color, 'Grams': grams, 'Cost (EUR)': cost, 'Stock left (g)': left, 'By': who_(session), 'Piece ID': p.id });
 
-  // 4. Done: it leaves the to-do. 5. Last piece of the order -> one finance row.
-  patchRow_(pt, p._row, { status: 'printed', cost: cost });
+  // 4. Done: it leaves the to-do.  5. Last piece of the order -> one finance row.
+  setRow_(pt, p, { status: 'printed', cost: cost });
   closeOrderIfDone_(String(p.orderKey));
   return { ok: true, stockLeft: left, warning: shortBy ? ('Stock for ' + m.material + ' ' + m.color + ' was ' + shortBy + ' g short; it is now 0.') : '' };
 }
@@ -419,37 +413,38 @@ function printPiece(session, id, roll) {
 // When an order has no open pieces left: completed (one Finances row) if anything was
 // printed, otherwise just closed as deleted. Safe to call any number of times.
 function closeOrderIfDone_(key) {
-  var ot = table_(ordersTab_()), order = ot.rows.filter(function (r) { return String(r.key) === key; })[0];
+  var ot = tbl_('orders'), order = byKey_(ot, 'key', key);
   if (!order || String(order.status) !== 'active') return;
-  var mine = table_(piecesTab_()).rows.filter(function (r) { return String(r.orderKey) === key; });
+  var mine = tbl_('pieces').rows.filter(function (r) { return String(r.orderKey) === key; });
   if (mine.some(function (r) { return isActive_(String(r.status)); })) return;
   var printed = mine.filter(function (r) { return String(r.status) === 'printed'; });
-  if (!printed.length) { patchRow_(ot, order._row, { status: 'deleted', completedAt: new Date() }); return; }
+  if (!printed.length) { setRow_(ot, order, { status: 'deleted', completedAt: new Date() }); return; }
 
-  var ft = table_(financesTab_());
-  if (!ft.rows.some(function (f) { return String(f['Order key']) === key; })) {
+  var ft = tbl_('finances');
+  if (!byKey_(ft, 'Order key', key)) {
     var grams = 0, cost = 0, names = [];
     printed.forEach(function (r) {
       grams += Number(r.grams || 0); cost += Number(r.cost || 0);
       names.push((Number(r.copies || 1) > 1 ? r.copies + 'x ' : '') + r.name);
     });
     var price = Number(order.price || 0);
-    ft.sh.appendRow([new Date(), '#' + order.no, order.type, names.join(', '), grams, money_(price), money_(cost), money_(price - cost), order.notes, key]);
+    addRow_(ft, { 'Completed': new Date(), 'Order': '#' + order.no, 'Type': order.type, 'Products': names.join(', '), 'Grams': grams,
+      'Selling price (EUR)': money_(price), 'Internal cost (EUR)': money_(cost), 'Profit (EUR)': money_(price - cost), 'Notes': order.notes, 'Order key': key });
   }
-  patchRow_(ot, order._row, { status: 'completed', completedAt: new Date() });
+  setRow_(ot, order, { status: 'completed', completedAt: new Date() });
 }
 
 // A checkout on the public website also lands in the to-do (material still to be chosen).
 function addWebOrderToTodo_(orderId, lines, total, note) {
-  var ot = table_(ordersTab_());
-  if (ot.rows.some(function (r) { return String(r.key) === orderId; })) return;
-  var pt = table_(piecesTab_()), no = nextOrderNo_(), now = new Date();
-  appendObj_(ot, { key: orderId, no: no, created: now, by: 'website', type: 'Product', price: money_(total),
+  var ot = tbl_('orders');
+  if (byKey_(ot, 'key', orderId)) return;
+  var no = nextOrderNo_(), now = new Date();
+  var order = addRow_(ot, { key: orderId, no: no, created: now, by: 'website', type: 'Product', price: money_(total),
     notes: 'Web order ' + orderId + (note ? ' — ' + note : ''), source: 'web', status: 'active' });
   lines.forEach(function (l, i) {
-    appendPiece_(pt, orderId, no, now, { id: orderId + '-' + (i + 1), productId: l.id, name: l.name, link: '', material: '', color: '', anyColor: false, copies: Math.max(1, Number(l.qty || 1)), grams: '' });
+    newPiece_(orderId, no, now, { id: orderId + '-' + (i + 1), productId: l.id, name: l.name, link: '', material: '', color: '', anyColor: false, copies: Math.max(1, Number(l.qty || 1)), grams: '' });
   });
-  notifyNewOrder_(orderId);
+  notifyNewOrder_(order);
 }
 
 /* ============================ PRODUCTS ============================ */
@@ -535,20 +530,34 @@ function deleteProductSimple(session, id) {
 function purgeTest(session, marker) {
   marker = String(marker || '').trim();
   if (marker.length < 6) return { ok: false, error: 'marker', message: 'Marker too short.' };
-  var removed = {};
-  function purge(sh, cols, label) {
-    var t = table_(sh), n = 0;
+  var removed = {}, rows = {};
+  function purge(id, cols) {
+    var t = tbl_(id), n = 0; rows[id] = [];
     for (var i = t.rows.length - 1; i >= 0; i--) {
       var r = t.rows[i];
-      if (cols.some(function (c) { return String(r[c] == null ? '' : r[c]).indexOf(marker) >= 0; })) { sh.deleteRow(r._row); n++; }
+      if (cols.some(function (c) { return String(r[c] == null ? '' : r[c]).indexOf(marker) >= 0; })) {
+        rows[id].push(t.head.map(function (h) { return String(r[h]); }).join(' | '));
+        t.sh.deleteRow(r._row); n++;
+      }
     }
-    removed[label] = n;
+    delete MG_CACHE_[id];
+    removed[id] = n;
   }
-  purge(piecesTab_(), ['name'], 'pieces');
-  purge(ordersTab_(), ['notes'], 'orders');
-  purge(historyTab_(), ['Product'], 'history');
-  purge(deletedTab_(), ['Product', 'Order notes'], 'deleted');
-  purge(financesTab_(), ['Products', 'Notes'], 'finances');
-  purge(toBuyTab_(), ['Color'], 'toBuy');
-  return { ok: true, removed: removed };
+  // Pieces of a test order go too, whatever their name (website orders use the product name).
+  var keys = {};
+  tbl_('orders').rows.forEach(function (o) { if (String(o.notes).indexOf(marker) >= 0) keys[String(o.key)] = true; });
+  tbl_('pieces').rows.forEach(function (p) { if (keys[String(p.orderKey)]) p._test = marker; });
+  purge('pieces', ['name', '_test']);
+  purge('orders', ['notes']);
+  purge('history', ['Product']);
+  purge('deleted', ['Product', 'Order notes']);
+  purge('finances', ['Products', 'Notes']);
+  purge('tobuy', ['Color']);
+  // The website checkout also writes its own row in the older Operations!Orders tab.
+  try {
+    var sh = tab_('ops', 'Orders'), v = sh.getDataRange().getValues(), n = 0;
+    for (var i = v.length - 1; i >= 1; i--) if (v[i].join(' ').indexOf(marker) >= 0) { sh.deleteRow(i + 1); n++; }
+    removed.webOrders = n;
+  } catch (e) {}
+  return { ok: true, removed: removed, rows: rows };
 }

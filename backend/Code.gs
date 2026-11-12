@@ -837,10 +837,13 @@ function setupSystem(session) {
 }
 
 // Open one of the five spreadsheets by its Script-Property id.
+// Opening a spreadsheet is slow, so each one is opened once per request and reused.
+var SS_OPEN_ = {};
 function ss_(key) {
+  if (SS_OPEN_[key]) return SS_OPEN_[key];
   var id = PropertiesService.getScriptProperties().getProperty(SS_KEYS[key]);
   if (!id) throw new Error('System not set up: missing ' + SS_KEYS[key]);
-  return SpreadsheetApp.openById(id);
+  return (SS_OPEN_[key] = SpreadsheetApp.openById(id));
 }
 function tab_(key, name) {
   var sh = ss_(key).getSheetByName(name);
@@ -1198,7 +1201,7 @@ function logOps_(type, id, action, by, detail) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-11.1';
+var ENGINE_VERSION = '2026-11-12.3';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.
@@ -1243,6 +1246,10 @@ function snapshotAll_(session) {
       try { var sh = ss_(key).getSheetByName(name); if (sh) dump.sheets[key][name] = sh.getDataRange().getValues(); } catch (e) {}
     }
   }
+  // The management tabs are created on demand, so they are not in the schema above.
+  [['ops', 'Order list'], ['ops', 'Pieces'], ['ops', 'Print history'], ['ops', 'Deleted'], ['finance', 'Finances'], ['inv', 'To buy']].forEach(function (x) {
+    try { var t = ss_(x[0]).getSheetByName(x[1]); if (t) dump.sheets[x[0]][x[1]] = t.getDataRange().getValues(); } catch (e) {}
+  });
   var blob = Utilities.newBlob(JSON.stringify(dump), 'application/json', 'backup-' + Utilities.formatDate(new Date(), 'GMT+1', 'yyyyMMdd-HHmmss') + '.json');
   var folderId = prop('DRIVE_FOLDER_ID');
   var parent = folderId ? DriveApp.getFolderById(folderId) : DriveApp.getRootFolder();

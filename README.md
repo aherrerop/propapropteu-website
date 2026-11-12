@@ -5,14 +5,9 @@ Everything is editable with a text editor. This README covers every routine task
 
 ## Documentation
 
-| Doc | For |
-|---|---|
-| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | How the whole system is built (site + engine + 6 sheets), the invariants, deploy mechanics |
-| **[docs/RUNBOOK.md](docs/RUNBOOK.md)** | **What to check when something breaks** — the debugging protocol, symptom→cause table, extension recipes |
-| **[GOING-LIVE.md](GOING-LIVE.md)** | The owner's last-minute, dashboard-only setup checklist |
-| **[MANAGER-GUIDE.md](MANAGER-GUIDE.md)** | Day-to-day dashboard usage for managers |
+**[docs/SYSTEM.md](docs/SYSTEM.md)** — how the internal management system works (Products, Orders, To-do, Materials), where the records are, and how to change, deploy and troubleshoot it.
 
-This README below is for routine site content edits (products, text, colours).
+The rest of this README is about the public website files.
 
 ## Structure
 
