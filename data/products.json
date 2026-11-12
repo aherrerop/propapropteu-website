@@ -150,29 +150,6 @@
         "es": "...dD"
       },
       "specs": []
-    },
-    {
-      "id": "zztest-cable-clip",
-      "type": "own",
-      "price": 12.5,
-      "codename": "ZZTEST-01",
-      "labels": [],
-      "images": [],
-      "name": {
-        "en": "ZZTEST Cable clip",
-        "ca": "Abraçadora de cable ZZTEST",
-        "es": "Clip para cables ZZTEST"
-      },
-      "short": {
-        "en": "A small clip that keeps cables tidy.",
-        "ca": "Un petit clip que manté els cables ordenats.",
-        "es": "Un pequeño clip para mantener los cables ordenados."
-      },
-      "description": {
-        "en": "<p>Keeps cables in place on set.</p><ul><li>Reusable</li><li><b>Strong</b> grip</li></ul>",
-        "ca": "<p>Manté els cables al seu lloc al plató.</p><ul><li> Reutilitzable</li><li> Adherència <b>forta</b></li></ul>",
-        "es": "<p>Mantiene los cables en su lugar en el set.</p><ul><li> Reutilizable</li><li> Agarre <b>fuerte</b></li></ul>"
-      }
     }
   ]
 }
