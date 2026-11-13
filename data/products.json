@@ -175,6 +175,43 @@
         "ca": "Llarg",
         "es": "Largo"
       }
+    },
+    {
+      "id": "zztest-web-widget",
+      "type": "own",
+      "price": 20,
+      "codename": "ZZTEST-W",
+      "labels": [],
+      "images": [],
+      "name": {
+        "en": "ZZTEST Web widget",
+        "ca": "Widget web ZZTEST",
+        "es": "Widget web ZZTEST"
+      },
+      "short": {
+        "en": "Test",
+        "ca": "Prova",
+        "es": "Prueba"
+      },
+      "description": {
+        "en": "<p>Test</p>",
+        "ca": "<p>Prova</p>",
+        "es": "<p>Prueba</p>"
+      },
+      "specs": [
+        {
+          "label": {
+            "en": "Max load",
+            "ca": "Càrrega màxima",
+            "es": "Carga máxima"
+          },
+          "value": {
+            "en": "8 kg",
+            "ca": "8 kg",
+            "es": "8 kg"
+          }
+        }
+      ]
     }
   ]
 }
