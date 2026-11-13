@@ -57,7 +57,7 @@ const Layout = {
       return `<a href="${i.href}" class="${active}" data-i18n="${i.key}"></a>`;
     }).join("");
     const langs = SITE_CONFIG.languages.map(l =>
-      `<button data-lang="${l}" onclick="I18N.set('${l}')">${l.toUpperCase()}</button>`
+      `<button data-lang="${l}" role="menuitem" onclick="I18N.set('${l}')">${{ ca: "Català", es: "Español", en: "English" }[l] || l.toUpperCase()}</button>`
     ).join("");
     const globe = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9S9.5 5.5 12 3z"/></svg>';
 
@@ -70,8 +70,8 @@ const Layout = {
         <nav class="main-nav" onclick="Layout.closeNav()">${nav}</nav>
         <div class="header-tools">
           <div class="lang">
-            <button class="lang-globe" aria-label="Language" onclick="Layout.toggleLang(event)">${globe}<span class="caret">&#9662;</span></button>
-            <div class="lang-menu">${langs}</div>
+            <button class="lang-globe" aria-label="Language" aria-haspopup="true" onclick="Layout.toggleLang(event)">${globe}<svg class="caret" viewBox="0 0 10 6" width="9" height="6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <div class="lang-menu" role="menu">${langs}</div>
           </div>
           <a class="login-link" href="acceso.html" title="Accés equip">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -382,9 +382,7 @@ const Cart = {
       '<input id="c-phone" type="tel" placeholder="' + I18N.t("form.phoneLabel") + '">' +
       '<textarea id="c-note" placeholder="' + I18N.t("order.note") + '"></textarea>' +
       '<input id="c-hp" class="hp-field" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">' +
-      '<fieldset class="of-pay"><legend>' + I18N.t("order.payLabel") + '</legend>' +
-      '<label class="of-radio"><input type="radio" name="cpay" value="transfer" checked> <span>' + I18N.t("order.payTransfer") + '</span></label>' +
-      '<label class="of-radio"><input type="radio" name="cpay" value="card"> <span>' + I18N.t("order.payCard") + '</span></label></fieldset>' +
+      '<p class="of-nopay">' + I18N.t("order.nopay") + '</p>' +
       '<div class="cart-total"><span data-i18n="cart.total"></span><strong>' + Catalog.formatPrice(this.total()) + '</strong></div>' +
       '<button class="btn" type="submit" id="c-send">' + I18N.t("order.send") + '</button>' +
       '<p class="form-status" id="c-status" hidden></p></form>';
@@ -393,23 +391,17 @@ const Cart = {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const g = id => (document.getElementById(id).value || "").trim();
-      const pay = (form.querySelector('input[name="cpay"]:checked') || {}).value || "transfer";
       const btn = document.getElementById("c-send"), status = document.getElementById("c-status");
       const old = btn.textContent; btn.disabled = true; btn.textContent = "…"; status.hidden = true;
       const total = self.total();
       let r;
       try {
         r = await (await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
-          body: JSON.stringify({ action: "placeOrder", name: g("c-name"), email: g("c-email"), phone: g("c-phone"), note: g("c-note"), payment: pay, company_hp: g("c-hp"), returnUrl: location.origin, items: self.items }) })).json();
+          body: JSON.stringify({ action: "placeOrder", name: g("c-name"), email: g("c-email"), phone: g("c-phone"), note: g("c-note"), company_hp: g("c-hp"), items: self.items }) })).json();
       } catch (err) { r = { ok: false }; }
       if (r && r.ok) {
-        // Card with Stripe configured: hand off to the hosted checkout page.
-        if (r.checkoutUrl) { self.write([]); location.href = r.checkoutUrl; return; }
-        // Transfer (or card while Stripe is off): show instructions with the live bank details.
-        const iban = r.bankIban || SITE_CONFIG.bankIban || "", holder = r.bankHolder || SITE_CONFIG.bankHolder || "";
-        const msg = (pay === "card")
-          ? I18N.t("order.cardSoon")
-          : I18N.t("order.transferMsg").replace("{total}", total.toFixed(2)).replace("{iban}", iban).replace("{holder}", holder).replace("{ref}", r.id || "");
+        // No payment online yet: the order is recorded and we contact the customer.
+        const msg = I18N.t("order.received").replace("{ref}", r.id || "");
         self.write([]);
         document.getElementById("cart-body").innerHTML = "";
         status.textContent = msg; status.className = "form-status ok"; status.hidden = false;

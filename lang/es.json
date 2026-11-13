@@ -82,7 +82,8 @@
     "payCard": "Tarjeta (próximamente)",
     "transferMsg": "Haz una transferencia de {total} € a {iban} ({holder}) indicando la referencia {ref}. Confirmamos el pedido al recibirla.",
     "cardSoon": "El pago con tarjeta estará disponible muy pronto. De momento, elige transferencia y te contactamos.",
-    "unit": "u."
+    "unit": "u.",
+    "received": "¡Pedido recibido! Referencia {ref}. Te contactaremos para acordar el pago y la entrega."
   },
   "ship": {
     "title": "Envíos y devoluciones",

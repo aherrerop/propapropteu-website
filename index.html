@@ -34,9 +34,9 @@
     <button class="p-arrow p-prev" aria-label="Anterior" onclick="Hero.prev()">&#171;</button>
 
     <section class="p-hero">
-      <div class="p-watermark" id="hero-wm">ATLAS</div>
+      <div class="p-watermark" id="hero-wm"></div>
       <div class="p-hero-media">
-        <img id="hero-img" src="assets/img/products/atlas.svg" alt="" loading="eager">
+        <img id="hero-img" alt="" loading="eager" hidden>
       </div>
       <div class="p-hero-copy">
         <h1 id="hero-title"></h1>
@@ -57,7 +57,7 @@
     document.addEventListener("DOMContentLoaded", async () => {
       await Layout.init();
       const data = await Catalog.load();
-      const feat = data.products.filter(p => p.featured);
+      const feat = data.products.filter(p => p.featured).sort((a, b) => (a.heroOrder || 99) - (b.heroOrder || 99));
       const slides = feat.length ? feat : data.products.slice(0, 3);
       let i = 0;
       const wm = p => p.codename || (I18N.pick(p.name).split(" ")[0] || "").toUpperCase();
@@ -66,6 +66,7 @@
         document.getElementById("hero-wm").textContent = wm(p);
         const img = document.getElementById("hero-img");
         img.src = Catalog.heroImage(p);
+        img.hidden = false;
         img.alt = I18N.pick(p.name);
         document.getElementById("hero-title").textContent = I18N.pick(p.heroTagline) || I18N.pick(p.name);
         document.getElementById("hero-desc").textContent = I18N.pick(p.heroDesc) || I18N.pick(p.short);

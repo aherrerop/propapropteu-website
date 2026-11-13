@@ -30,7 +30,8 @@ var SESSION_TTL_MS = 1000 * 60 * 60 * 8; // 8 hours
 var MUTATING = {
   placeOrder: 1, register: 1, reorder: 1, updateProfile: 1, getInvoice: 1, verifyPayment: 1,
   saveProduct: 1, deleteProduct: 1, saveMaterial: 1, deleteMaterial: 1, repurchase: 1, resetMaterials: 1,
-  saveOrder: 1, deleteOrder: 1, setPrepared: 1, setGrams: 1, deletePiece: 1, printPiece: 1,
+  saveOrder: 1, deleteOrder: 1, setPrepared: 1, setGrams: 1, deletePiece: 1, printPiece: 1, failPiece: 1,
+  saveMaterials: 1, saveHighlights: 1,
   setupSystem: 1, saveSettings: 1, deleteClient: 1, addManager: 1, deleteManager: 1, purgeTest: 1
 };
 
@@ -84,6 +85,7 @@ function dispatch_(action, req) {
     case 'saveProduct':    return saveProductSimple(session, req.product);
     case 'deleteProduct':  return deleteProductSimple(session, req.id);
     case 'uploadImage':    return uploadImage(req);
+    case 'saveHighlights': return saveHighlights(session, req.list);
     // Orders
     case 'listOrders':     return listOrders();
     case 'saveOrder':      return saveOrder(session, req.order);
@@ -94,9 +96,11 @@ function dispatch_(action, req) {
     case 'setGrams':       return setGrams(session, req.id, req.grams);
     case 'deletePiece':    return deletePiece(session, req.id);
     case 'printPiece':     return printPiece(session, req.id, req.roll);
+    case 'failPiece':      return failPiece(session, req.id, req.grams, req.roll, req.tx);
     // Materials
     case 'listMaterials':  return { ok: true, data: readMaterials() };
     case 'saveMaterial':   return saveMaterial(session, req.material);
+    case 'saveMaterials':  return saveMaterials(session, req.list);
     case 'deleteMaterial': return deleteMaterial(req.id);
     case 'repurchase':     return repurchase(session, req.id);
     case 'resetMaterials': return resetMaterials(session, req.list);
@@ -332,7 +336,8 @@ function verifyToken(token) {
  *          description(json) | heroTagline(json) | heroDesc(json) | specs(json)
  */
 var PRODUCT_COLS = ['id','type','price','cost','stock','featured','cutout','codename','heroImage',
-  'labels','images','name','short','description','heroTagline','heroDesc','specs','bom','active','printTimeMin','prodNotes'];
+  'labels','images','name','short','description','heroTagline','heroDesc','specs','bom','active','printTimeMin','prodNotes',
+  'weightG','webMaterial','webColor','webAnyColor','heroOrder'];
 var PRODUCT_JSON_COLS = ['labels','images','name','short','description','heroTagline','heroDesc','specs','bom'];
 
 /* Guarantee the Products header row is exactly PRODUCT_COLS, in order.
@@ -372,6 +377,11 @@ function rowToProduct(r, col) {
   if (col.active != null && (String(r[col.active]).toLowerCase() === 'false' || r[col.active] === false)) p.active = false;
   if (col.printTimeMin != null && String(r[col.printTimeMin]) !== '') p.printTimeMin = Number(r[col.printTimeMin]);
   if (col.prodNotes != null && String(r[col.prodNotes] || '').trim()) p.prodNotes = String(r[col.prodNotes]).trim();
+  if (col.weightG != null && String(r[col.weightG]) !== '') p.weightG = Number(r[col.weightG]);
+  if (col.webMaterial != null && String(r[col.webMaterial] || '').trim()) p.webMaterial = String(r[col.webMaterial]).trim();
+  if (col.webColor != null && String(r[col.webColor] || '').trim()) p.webColor = String(r[col.webColor]).trim();
+  if (col.webAnyColor != null && (String(r[col.webAnyColor]).toLowerCase() === 'true' || r[col.webAnyColor] === true)) p.webAnyColor = true;
+  if (col.heroOrder != null && String(r[col.heroOrder]) !== '') p.heroOrder = Number(r[col.heroOrder]);
   if (String(r[col.codename] || '').trim()) p.codename = String(r[col.codename]).trim();
   if (col.heroImage != null && String(r[col.heroImage] || '').trim()) p.heroImage = String(r[col.heroImage]).trim();
   PRODUCT_JSON_COLS.forEach(function (k) {
@@ -401,6 +411,7 @@ function saveProduct(product) {
     if (k === 'price') return Number(product.price || 0);
     if (k === 'cost') return (product.cost === '' || product.cost == null) ? '' : Number(product.cost);
     if (k === 'printTimeMin') return (product.printTimeMin === '' || product.printTimeMin == null) ? '' : Number(product.printTimeMin);
+    if (k === 'webAnyColor') return product.webAnyColor ? true : false;
     if (PRODUCT_JSON_COLS.indexOf(k) >= 0) return product[k] != null ? JSON.stringify(product[k]) : '';
     return product[k] != null ? product[k] : '';
   });
@@ -497,7 +508,7 @@ function placeOrder(req) {
   ordersSh.appendRow(oHead.map(function (h) { var k = String(h).trim(); return oVals[k] != null ? oVals[k] : ''; }));
   logOps_('order', id, 'created', '', 'source ' + String(req.source || 'web') + ', total ' + total.toFixed(2));
   // A website order also lands in the to-do list (one alert email, material chosen later).
-  try { addWebOrderToTodo_(id, lines, total, String(req.note || '')); } catch (e) { logErr_('addWebOrderToTodo ' + id, e); }
+  try { addWebOrderToTodo_(id, lines, total, String(req.note || ''), byId); } catch (e) { logErr_('addWebOrderToTodo ' + id, e); }
   // Confirmation to the customer (only when we have their email).
   if (email) phase_('order-confirm', function () {
     return sendMail_({
@@ -667,7 +678,7 @@ function publish(session) {
   var existing = sha ? JSON.parse(Utilities.newBlob(Utilities.base64Decode(JSON.parse(get.getContentText()).content)).getDataAsString()) : {};
   // Publish only visible products; strip internal-only fields (cost, bom, active).
   var publicProducts = readProducts().filter(function (p) { return p.active !== false; }).map(function (p) {
-    var c = {}; for (var k in p) { if (k !== 'cost' && k !== 'bom' && k !== 'active' && k !== 'printTimeMin' && k !== 'prodNotes') c[k] = p[k]; } return c;
+    var c = {}; for (var k in p) { if (['cost', 'bom', 'active', 'printTimeMin', 'prodNotes', 'weightG', 'webMaterial', 'webColor', 'webAnyColor'].indexOf(k) < 0) c[k] = p[k]; } return c;
   });
   var payload = {
     _readme: existing._readme || 'Managed from the admin dashboard. Edit via acceso.html.',
@@ -1201,7 +1212,7 @@ function logOps_(type, id, action, by, detail) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-12.3';
+var ENGINE_VERSION = '2026-11-13.1';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.

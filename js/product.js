@@ -68,7 +68,7 @@ const ProductPage = {
       <table class="specs">
         <caption>${I18N.t("product.specs")}</caption>
         ${p.specs.map(s =>
-          `<tr><td>${I18N.pick(s.label)}</td><td>${s.value}</td></tr>`).join("")}
+          `<tr><td>${I18N.pick(s.label)}</td><td>${I18N.pick(s.value)}</td></tr>`).join("")}
       </table>` : "";
 
     const labels = (Catalog.data.labels || [])
@@ -78,7 +78,10 @@ const ProductPage = {
     document.getElementById("detail").innerHTML = `
       <div class="product-detail">
         <div>
-          <div class="gallery-main"><img id="main-img" src="${images[0]}" alt="${I18N.pick(p.name)}"></div>
+          <div class="gallery-main">
+            <img id="main-img" src="${images[0]}" alt="${I18N.pick(p.name)}">
+            ${images.length > 1 ? '<button class="g-arrow g-prev" aria-label="Previous picture">&#8249;</button><button class="g-arrow g-next" aria-label="Next picture">&#8250;</button>' : ""}
+          </div>
           ${thumbs}
         </div>
         <div class="detail-info">
@@ -100,13 +103,24 @@ const ProductPage = {
         </div>
       </div>`;
 
-    /* thumbnail switching */
-    document.querySelectorAll(".gallery-thumbs img").forEach(t => {
-      t.addEventListener("click", () => {
-        document.getElementById("main-img").src = images[t.dataset.idx];
-        document.querySelectorAll(".gallery-thumbs img").forEach(x => x.classList.remove("active"));
-        t.classList.add("active");
-      });
+    /* picture carousel: arrows, swipe and thumbnails all move the same index */
+    let gi = 0;
+    const showImg = i => {
+      gi = (i + images.length) % images.length;
+      document.getElementById("main-img").src = images[gi];
+      document.querySelectorAll(".gallery-thumbs img").forEach(x => x.classList.toggle("active", +x.dataset.idx === gi));
+    };
+    document.querySelectorAll(".gallery-thumbs img").forEach(t => t.addEventListener("click", () => showImg(+t.dataset.idx)));
+    const gm = document.querySelector(".gallery-main");
+    const gp = gm.querySelector(".g-prev"), gn = gm.querySelector(".g-next");
+    if (gp) gp.addEventListener("click", () => showImg(gi - 1));
+    if (gn) gn.addEventListener("click", () => showImg(gi + 1));
+    let touchX = null;
+    gm.addEventListener("touchstart", e => { touchX = e.touches[0].clientX; }, { passive: true });
+    gm.addEventListener("touchend", e => {
+      if (touchX == null || images.length < 2) return;
+      const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+      if (Math.abs(dx) > 40) showImg(gi + (dx < 0 ? 1 : -1));
     });
 
     /* add to cart (checkout happens in the cart drawer) */

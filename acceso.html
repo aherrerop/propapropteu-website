@@ -1,51 +1,46 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex">
-  <title>Prop a Prop Teu — Acceso</title>
+  <title>Prop a Prop Teu — Log in</title>
   <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/theme.css">
-  <link rel="stylesheet" href="css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/admin.css?v=2026-11-13.1">
 </head>
 <body class="admin-body">
-  <main class="auth-wrap">
-    <a class="auth-logo" href="./" aria-label="Prop a Prop Teu">
-      <img src="assets/logo_mark.svg" alt="Prop a Prop Teu" height="56">
-    </a>
+  <main class="auth">
+    <a class="auth-logo" href="./" aria-label="Prop a Prop Teu"><img src="assets/logo_mark.svg" alt="Prop a Prop Teu"></a>
 
-    <!-- LOGIN -->
+    <!-- LOG IN -->
     <form class="auth-card" id="login-form" autocomplete="on">
-      <h1>Acceso</h1>
-      <p class="auth-sub">Entra para ver tus pedidos y facturas.</p>
-      <div class="cf-field"><label for="l-email">Correo</label>
+      <h1>Log in</h1>
+      <div class="field"><label for="l-email">Email</label>
         <input type="email" id="l-email" required autocomplete="username"></div>
-      <div class="cf-field"><label for="l-pass">Contraseña</label>
+      <div class="field"><label for="l-pass">Password</label>
         <input type="password" id="l-pass" required autocomplete="current-password"></div>
       <p class="auth-error" id="login-error" hidden></p>
-      <button class="btn" type="submit" id="login-btn">Entrar</button>
-      <p class="auth-switch">¿No tienes cuenta? <a href="#" id="to-register">Crear cuenta</a></p>
+      <button class="btn" type="submit" id="login-btn">Log in</button>
+      <p class="auth-switch">No account yet? <button type="button" class="link-btn" id="to-register">Create account</button></p>
     </form>
 
-    <!-- REGISTER -->
+    <!-- CREATE ACCOUNT (shown only after pressing "Create account") -->
     <form class="auth-card" id="register-form" autocomplete="on" hidden>
-      <h1>Crear cuenta</h1>
-      <p class="auth-sub">Guarda tus datos y sigue tus pedidos.</p>
-      <div class="cf-field"><label for="r-name">Nombre</label>
+      <h1>Create account</h1>
+      <div class="field"><label for="r-name">Name</label>
         <input type="text" id="r-name" required autocomplete="name"></div>
-      <div class="cf-field"><label for="r-email">Correo</label>
+      <div class="field"><label for="r-email">Email</label>
         <input type="email" id="r-email" required autocomplete="email"></div>
-      <div class="cf-field"><label for="r-phone">Teléfono (opcional)</label>
-        <input type="tel" id="r-phone" autocomplete="tel"></div>
-      <div class="cf-field"><label for="r-pass">Contraseña (mín. 6)</label>
+      <div class="field"><label for="r-phone">Phone (optional)</label>
+        <input type="text" id="r-phone" autocomplete="tel"></div>
+      <div class="field"><label for="r-pass">Password (6 characters or more)</label>
         <input type="password" id="r-pass" required minlength="6" autocomplete="new-password"></div>
       <input id="r-hp" class="hp-field" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
       <p class="auth-error" id="register-error" hidden></p>
-      <button class="btn" type="submit" id="register-btn">Crear cuenta</button>
-      <p class="auth-switch">¿Ya tienes cuenta? <a href="#" id="to-login">Entrar</a></p>
+      <button class="btn" type="submit" id="register-btn">Create account</button>
+      <p class="auth-switch">Already have an account? <button type="button" class="link-btn" id="to-login">Log in</button></p>
     </form>
   </main>
 
@@ -61,25 +56,32 @@
     // Already logged in? Go to the right place.
     if (Admin.token && Admin.user) routeByRole(Admin.user);
 
-    document.getElementById("to-register").addEventListener("click", e => { e.preventDefault(); loginForm.hidden = true; regForm.hidden = false; });
-    document.getElementById("to-login").addEventListener("click", e => { e.preventDefault(); regForm.hidden = true; loginForm.hidden = false; });
+    document.getElementById("to-register").addEventListener("click", () => { loginForm.hidden = true; regForm.hidden = false; });
+    document.getElementById("to-login").addEventListener("click", () => { regForm.hidden = true; loginForm.hidden = false; });
 
-    function err(id, msg) { const el = document.getElementById(id); el.textContent = msg; el.hidden = false; }
+    // The server answers with a short code; the wording shown here is always English.
+    const MESSAGES = {
+      missing: "Fill in every field.", badcreds: "Wrong email or password.", email: "That email does not look right.",
+      weak: "The password needs 6 characters or more.", exists: "There is already an account with that email.",
+      rate: "Too many attempts. Wait a moment and try again.", busy: "The system is busy for a moment. Try again.",
+      network: "Could not reach the server. Check the connection and try again."
+    };
+    function err(id, r, fallback) { const el = document.getElementById(id); el.textContent = MESSAGES[r.error] || fallback; el.hidden = false; }
 
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       document.getElementById("login-error").hidden = true;
-      const btn = document.getElementById("login-btn"); btn.disabled = true; btn.textContent = "Entrando…";
+      const btn = document.getElementById("login-btn"); btn.disabled = true; btn.textContent = "Logging in…";
       const r = await Admin.call("login", { email: document.getElementById("l-email").value.trim(), password: document.getElementById("l-pass").value });
       if (r.ok) { Admin.setSession(r.token, r.user); routeByRole(r.user); return; }
-      err("login-error", r.message || "No se ha podido iniciar sesión.");
-      btn.disabled = false; btn.textContent = "Entrar";
+      err("login-error", r, "Could not log in. Try again.");
+      btn.disabled = false; btn.textContent = "Log in";
     });
 
     regForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       document.getElementById("register-error").hidden = true;
-      const btn = document.getElementById("register-btn"); btn.disabled = true; btn.textContent = "Creando…";
+      const btn = document.getElementById("register-btn"); btn.disabled = true; btn.textContent = "Creating…";
       const r = await Admin.call("register", {
         name: document.getElementById("r-name").value.trim(),
         email: document.getElementById("r-email").value.trim(),
@@ -88,8 +90,8 @@
         company_hp: document.getElementById("r-hp").value.trim()
       });
       if (r.ok) { Admin.setSession(r.token, r.user); routeByRole(r.user); return; }
-      err("register-error", r.message || "No se ha podido crear la cuenta.");
-      btn.disabled = false; btn.textContent = "Crear cuenta";
+      err("register-error", r, "Could not create the account. Try again.");
+      btn.disabled = false; btn.textContent = "Create account";
     });
   </script>
 </body>

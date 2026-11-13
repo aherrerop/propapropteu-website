@@ -10,7 +10,7 @@ const ShopPage = {
 
   async init() {
     await Catalog.load();
-    this.featured = Catalog.data.products.filter(p => p.featured);
+    this.featured = Catalog.data.products.filter(p => p.featured).sort((a, b) => (a.heroOrder || 99) - (b.heroOrder || 99));
     if (!this.featured.length) this.featured = Catalog.data.products.slice(0, 3);
     this.renderFeatured();
     this.renderFilters();
@@ -51,7 +51,7 @@ const ShopPage = {
     document.getElementById("sf-desc").textContent = I18N.pick(p.heroDesc) || I18N.pick(p.short);
     document.getElementById("sf-wm").textContent = p.codename || (I18N.pick(p.name).split(" ")[0] || "").toUpperCase();
     const img = document.getElementById("sf-img");
-    img.src = Catalog.heroImage(p); img.alt = I18N.pick(p.name);
+    img.src = Catalog.heroImage(p); img.alt = I18N.pick(p.name); img.hidden = false;
     const add = document.getElementById("sf-add");
     add.classList.remove("snipcart-add-item");
     add.onclick = () => Cart.add(p.id);

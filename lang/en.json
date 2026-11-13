@@ -82,7 +82,8 @@
     "payCard": "Card (coming soon)",
     "transferMsg": "Transfer {total} € to {iban} ({holder}) using reference {ref}. We confirm the order once received.",
     "cardSoon": "Card payment is coming very soon. For now choose transfer and we'll contact you.",
-    "unit": "u."
+    "unit": "u.",
+    "received": "Order received! Reference {ref}. We will contact you to arrange payment and delivery."
   },
   "ship": {
     "title": "Shipping & returns",

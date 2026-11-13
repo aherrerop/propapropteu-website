@@ -24,9 +24,9 @@ var ORDER_TYPES = ['Product', 'Prototype', 'Personal'];
 var MG = {
   orders:    ['ops', 'Order list', ['key', 'no', 'created', 'by', 'type', 'price', 'notes', 'source', 'status', 'completedAt', 'emailSent']],
   pieces:    ['ops', 'Pieces', ['id', 'orderKey', 'orderNo', 'created', 'productId', 'name', 'link', 'material', 'color', 'anyColor', 'copies', 'grams', 'status', 'preparedAt', 'printedAt', 'roll', 'cost', 'deducted']],
-  history:   ['ops', 'Print history', ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Grams', 'Cost (EUR)', 'Stock left (g)', 'By', 'Piece ID']],
+  history:   ['ops', 'Print history', ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Grams', 'Cost (EUR)', 'Stock left (g)', 'By', 'Piece ID', 'Result']],
   deleted:   ['ops', 'Deleted', ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Order notes', 'By', 'Piece ID']],
-  finances:  ['finance', 'Finances', ['Completed', 'Order', 'Type', 'Products', 'Grams', 'Selling price (EUR)', 'Internal cost (EUR)', 'Profit (EUR)', 'Notes', 'Order key']],
+  finances:  ['finance', 'Finances', ['Completed', 'Order', 'Type', 'Products', 'Grams', 'Selling price (EUR)', 'Internal cost (EUR)', 'Profit (EUR)', 'Notes', 'Order key', 'Failed prints (g)']],
   tobuy:     ['inv', 'To buy', ['Date', 'Material', 'Color', 'Rolls', 'Cost per roll (EUR)', 'Added by']],
   materials: ['inv', 'Filaments', ['material', 'color', 'hex', 'grams', 'costPerRoll', 'lastTx']]
 };
@@ -113,6 +113,13 @@ function saveMaterial(session, m) {
   }
   addRow_(t, { material: material, color: color, hex: String(m.hex || ''), grams: grams, costPerRoll: cost, active: true });
   return { ok: true, id: key };
+}
+// Save several edited rows in one request (much faster than one call per row).
+function saveMaterials(session, list) {
+  if (!list || !list.length) return { ok: false, error: 'missing', message: 'Nothing to save.' };
+  var errors = [];
+  list.forEach(function (m) { var r = saveMaterial(session, m); if (!r.ok) errors.push((m.color || '?') + ': ' + r.message); });
+  return errors.length ? { ok: false, error: 'some', message: errors.join(' ') } : { ok: true, saved: list.length };
 }
 function deleteMaterial(id) {
   var t = tbl_('materials'), r = findMat_(t, id);
@@ -236,7 +243,8 @@ function removePiece_(r, order, session) {
 
 // The single "new order" alert. Sent once, only when the order row is first created.
 function notifyNewOrder_(order) {
-  var sent = false, to = notifyEmail_(), subject = 'New order added to the to-do list';
+  var sent = false, to = notifyEmail_();
+  var subject = String(order.source) === 'web' ? 'New WEBSITE order added to the to-do list' : 'New order added to the to-do list';
   try { MailApp.sendEmail(to, subject, ''); sent = true; }
   catch (e) {
     try { MailApp.sendEmail(to, subject, ' '); sent = true; }
@@ -402,12 +410,36 @@ function printPiece(session, id, roll) {
   var order = byKey_(tbl_('orders'), 'key', p.orderKey), ht = tbl_('history');
   if (!byKey_(ht, 'Piece ID', p.id))
     addRow_(ht, { 'Date': new Date(), 'Order': '#' + p.orderNo, 'Type': order ? order.type : '', 'Product': p.name, 'Link': p.link, 'Copies': Number(p.copies || 1),
-      'Material': m.material, 'Color': m.color, 'Grams': grams, 'Cost (EUR)': cost, 'Stock left (g)': left, 'By': who_(session), 'Piece ID': p.id });
+      'Material': m.material, 'Color': m.color, 'Grams': grams, 'Cost (EUR)': cost, 'Stock left (g)': left, 'By': who_(session), 'Piece ID': p.id, 'Result': 'Printed' });
 
   // 4. Done: it leaves the to-do.  5. Last piece of the order -> one finance row.
   setRow_(pt, p, { status: 'printed', cost: cost });
   closeOrderIfDone_(String(p.orderKey));
   return { ok: true, stockLeft: left, warning: shortBy ? ('Stock for ' + m.material + ' ' + m.color + ' was ' + shortBy + ' g short; it is now 0.') : '' };
+}
+
+// FAILED: a print went wrong. The lost grams are deducted and written to Print history as
+// "Failed"; the product stays in the to-do. `tx` is made by the browser per click, so a
+// retry of the same click is recorded once.
+function failPiece(session, id, grams, roll, tx) {
+  var p = byKey_(tbl_('pieces'), 'id', id);
+  if (!p) return { ok: false, error: 'notfound', message: 'Not found.' };
+  var st = String(p.status);
+  if (st !== 'todo' && st !== 'prepared') return { ok: false, error: 'closed', message: 'This product is already closed.' };
+  var g = Number(grams || 0);
+  if (!(g > 0)) return { ok: false, error: 'weight', message: 'Enter how many grams were lost.' };
+  if (String(tx || '').length < 6) return { ok: false, error: 'tx', message: 'Missing attempt id.' };
+  var rollId = String(roll || '') || (isTrue_(p.anyColor) || !p.material ? '' : matId(p.material, p.color));
+  var mt = tbl_('materials'), m = findMat_(mt, rollId);
+  if (!m) return { ok: false, error: 'roll', message: 'Choose the roll that was used.' };
+  var ht = tbl_('history'), txId = String(p.id) + ':fail:' + String(tx);
+  if (byKey_(ht, 'Piece ID', txId)) return { ok: true, already: true };
+  var left = Number(m.grams || 0);
+  if (String(m.lastTx) !== txId) { left = Math.max(0, left - g); setRow_(mt, m, { grams: left, lastTx: txId }); }
+  var order = byKey_(tbl_('orders'), 'key', p.orderKey);
+  addRow_(ht, { 'Date': new Date(), 'Order': '#' + p.orderNo, 'Type': order ? order.type : '', 'Product': p.name, 'Link': p.link, 'Copies': Number(p.copies || 1),
+    'Material': m.material, 'Color': m.color, 'Grams': g, 'Cost (EUR)': money_(g * Number(m.costPerRoll || 0) / 1000), 'Stock left (g)': left, 'By': who_(session), 'Piece ID': txId, 'Result': 'Failed' });
+  return { ok: true, stockLeft: left };
 }
 
 // When an order has no open pieces left: completed (one Finances row) if anything was
@@ -427,22 +459,34 @@ function closeOrderIfDone_(key) {
       grams += Number(r.grams || 0); cost += Number(r.cost || 0);
       names.push((Number(r.copies || 1) > 1 ? r.copies + 'x ' : '') + r.name);
     });
+    // Material lost in failed attempts on this order's products is part of its cost.
+    var waste = 0, ids = {};
+    mine.forEach(function (r) { ids[String(r.id)] = true; });
+    tbl_('history').rows.forEach(function (h) {
+      if (String(h['Result']) !== 'Failed') return;
+      if (ids[String(h['Piece ID']).split(':fail:')[0]]) { waste += Number(h['Grams'] || 0); cost += Number(h['Cost (EUR)'] || 0); }
+    });
     var price = Number(order.price || 0);
     addRow_(ft, { 'Completed': new Date(), 'Order': '#' + order.no, 'Type': order.type, 'Products': names.join(', '), 'Grams': grams,
-      'Selling price (EUR)': money_(price), 'Internal cost (EUR)': money_(cost), 'Profit (EUR)': money_(price - cost), 'Notes': order.notes, 'Order key': key });
+      'Selling price (EUR)': money_(price), 'Internal cost (EUR)': money_(cost), 'Profit (EUR)': money_(price - cost), 'Notes': order.notes, 'Order key': key, 'Failed prints (g)': waste });
   }
   setRow_(ot, order, { status: 'completed', completedAt: new Date() });
 }
 
 // A checkout on the public website also lands in the to-do (material still to be chosen).
-function addWebOrderToTodo_(orderId, lines, total, note) {
+function addWebOrderToTodo_(orderId, lines, total, note, products) {
   var ot = tbl_('orders');
   if (byKey_(ot, 'key', orderId)) return;
   var no = nextOrderNo_(), now = new Date();
   var order = addRow_(ot, { key: orderId, no: no, created: now, by: 'website', type: 'Product', price: money_(total),
     notes: 'Web order ' + orderId + (note ? ' — ' + note : ''), source: 'web', status: 'active' });
   lines.forEach(function (l, i) {
-    newPiece_(orderId, no, now, { id: orderId + '-' + (i + 1), productId: l.id, name: l.name, link: '', material: '', color: '', anyColor: false, copies: Math.max(1, Number(l.qty || 1)), grams: '' });
+    // Material, colour and weight come from what was set for that product (Products screen).
+    var pr = (products && products[l.id]) || {}, qty = Math.max(1, Number(l.qty || 1));
+    var any = pr.webAnyColor ? true : false;
+    newPiece_(orderId, no, now, { id: orderId + '-' + (i + 1), productId: l.id, name: (pr.name && pr.name.en) || l.name, link: '',
+      material: String(pr.webMaterial || '').toUpperCase(), color: any ? '' : String(pr.webColor || ''), anyColor: any, copies: qty,
+      grams: pr.weightG ? Number(pr.weightG) * qty : '' });
   });
   notifyNewOrder_(order);
 }
@@ -453,7 +497,12 @@ function addWebOrderToTodo_(orderId, lines, total, note) {
 function productView_(p) {
   var tri = function (v) { v = v || {}; return (typeof v === 'string') ? { en: v, ca: v, es: v } : { en: v.en || '', ca: v.ca || '', es: v.es || '' }; };
   return { id: p.id, code: p.codename || '', name: tri(p.name), price: Number(p.price || 0),
-    printTime: p.printTimeMin == null ? '' : p.printTimeMin, short: tri(p.short), description: tri(p.description), image: (p.images && p.images[0]) || '' };
+    printTime: p.printTimeMin == null ? '' : p.printTimeMin, weight: p.weightG == null ? '' : p.weightG,
+    short: tri(p.short), description: tri(p.description), images: p.images || [],
+    specs: (p.specs || []).map(function (s) { return { label: tri(s.label), value: tri(s.value) }; }),
+    webMaterial: p.webMaterial || '', webColor: p.webColor || '', webAnyColor: p.webAnyColor ? true : false,
+    featured: p.featured ? true : false, heroOrder: p.heroOrder == null ? '' : p.heroOrder,
+    headline: tri(p.heroTagline), heroText: tri(p.heroDesc), heroImage: p.heroImage || '' };
 }
 function listProductsSimple() { return { ok: true, data: readProducts().map(productView_) }; }
 
@@ -507,7 +556,15 @@ function saveProductSimple(session, d) {
   p.price = Number(d.price || 0);
   p.codename = String(d.code || '').trim();
   p.printTimeMin = (d.printTime === '' || d.printTime == null) ? '' : Number(d.printTime);
-  if (d.image) p.images = [String(d.image)];
+  p.weightG = (d.weight === '' || d.weight == null) ? '' : Number(d.weight);
+  if (d.images) p.images = d.images.map(String).filter(function (u) { return u; });
+  // Datasheet: rows of label + value, shown as a table on the product page.
+  p.specs = (d.specs || []).filter(function (s) { return s && s.label && String(s.label.en || '').trim(); })
+    .map(function (s) { return { label: fillLanguages_(s.label, false), value: fillLanguages_(s.value, false) }; });
+  // What a website order of this product is printed in.
+  p.webMaterial = MATERIAL_TYPES.indexOf(String(d.webMaterial || '').toUpperCase()) >= 0 ? String(d.webMaterial).toUpperCase() : '';
+  p.webAnyColor = d.webAnyColor ? true : false;
+  p.webColor = p.webAnyColor ? '' : String(d.webColor || '').trim();
   if (!p.labels) p.labels = [];
   p.active = true;
 
@@ -521,6 +578,28 @@ function deleteProductSimple(session, id) {
   if (!del.ok) return del;
   var pub = publish(session);
   return { ok: true, published: pub.ok, message: pub.ok ? '' : ('Deleted, but the website update failed: ' + (pub.message || '')) };
+}
+
+// Website > Highlights: which products are featured on the home page and shop, in what
+// order, and with what headline, text and picture. One save, one website update.
+function saveHighlights(session, list) {
+  list = list || [];
+  var want = {};
+  list.forEach(function (h, i) { if (h && h.id) want[String(h.id)] = { h: h, i: i + 1 }; });
+  readProducts().forEach(function (p) {
+    var w = want[p.id];
+    if (!w && !p.featured) return;                       // not highlighted before or now: untouched
+    if (w) {
+      p.featured = true; p.heroOrder = w.i;
+      p.heroTagline = fillLanguages_(w.h.headline, false);
+      p.heroDesc = fillLanguages_(w.h.text, false);
+      p.heroImage = String(w.h.image || '');
+      p.cutout = p.heroImage ? true : false;               // a highlight picture is shown whole, not cropped
+    } else { p.featured = false; p.heroOrder = ''; }
+    saveProduct(p);
+  });
+  var pub = publish(session);
+  return { ok: true, published: pub.ok, message: pub.ok ? '' : ('Saved, but the website update failed: ' + (pub.message || '')) };
 }
 
 /* ============================ MAINTENANCE ============================ */
