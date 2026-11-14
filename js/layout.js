@@ -6,13 +6,14 @@
 
 const Layout = {
 
-  // Top nav per the mockups: INICIO · TIENDA · ABOUT · CONTACTO.
-  // Custom Props, Production Packs and FAQ stay reachable from the footer.
+  // Top nav: HOME · SHOP · REQUEST A PROP · ABOUT · CONTACT.
+  // Production Packs and FAQ stay reachable from the footer.
   navItems: [
-    { href: "./",           key: "nav.home" },
-    { href: "shop.html",    key: "nav.catalog" },
-    { href: "about.html",   key: "nav.about" },
-    { href: "contact.html", key: "nav.contact" }
+    { href: "./",                key: "nav.home" },
+    { href: "shop.html",         key: "nav.catalog" },
+    { href: "custom-props.html", key: "nav.request" },
+    { href: "about.html",        key: "nav.about" },
+    { href: "contact.html",      key: "nav.contact" }
   ],
 
   socialIcons: {
@@ -49,6 +50,11 @@ const Layout = {
     }
   },
 
+  // Current language code on the header button (EN / CA / ES).
+  showLang() {
+    document.querySelectorAll(".lang-code").forEach(el => el.textContent = (I18N.lang || "").toUpperCase());
+  },
+
   renderHeader() {
     const cur = this.currentPage();
     const isHome = c => c === "index.html" || c === "";
@@ -56,10 +62,12 @@ const Layout = {
       const active = (i.href === "./" ? isHome(cur) : cur === i.href) ? "active" : "";
       return `<a href="${i.href}" class="${active}" data-i18n="${i.key}"></a>`;
     }).join("");
+    // Language menu: each row = short code + full name; the current one gets a tick.
+    const tick = '<svg class="tick" viewBox="0 0 12 10" width="12" height="10" aria-hidden="true"><path d="M1 5l3.5 3.5L11 1.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     const langs = SITE_CONFIG.languages.map(l =>
-      `<button data-lang="${l}" role="menuitem" onclick="I18N.set('${l}')">${{ ca: "Català", es: "Español", en: "English" }[l] || l.toUpperCase()}</button>`
+      `<button data-lang="${l}" role="menuitem" onclick="I18N.set('${l}')"><span class="lm-code">${l.toUpperCase()}</span><span class="lm-name">${{ ca: "Català", es: "Español", en: "English" }[l] || l}</span>${tick}</button>`
     ).join("");
-    const globe = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9S9.5 5.5 12 3z"/></svg>';
+    const globe = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9S9.5 5.5 12 3z"/></svg>';
 
     document.getElementById("site-header").innerHTML = `
       <div class="container header-inner">
@@ -70,7 +78,7 @@ const Layout = {
         <nav class="main-nav" onclick="Layout.closeNav()">${nav}</nav>
         <div class="header-tools">
           <div class="lang">
-            <button class="lang-globe" aria-label="Language" aria-haspopup="true" onclick="Layout.toggleLang(event)">${globe}<svg class="caret" viewBox="0 0 10 6" width="9" height="6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="lang-globe" aria-label="Language" aria-haspopup="true" onclick="Layout.toggleLang(event)">${globe}<span class="lang-code"></span><svg class="caret" viewBox="0 0 10 6" width="9" height="6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <div class="lang-menu" role="menu">${langs}</div>
           </div>
           <a class="login-link" href="acceso.html" title="Accés equip">
@@ -106,7 +114,7 @@ const Layout = {
           <div>
             <h4 data-i18n="footer.shop"></h4>
             <a href="shop.html" data-i18n="nav.catalog"></a>
-            <a href="custom-props.html" data-i18n="nav.custom"></a>
+            <a href="custom-props.html" data-i18n="nav.request"></a>
             <a href="packs.html" data-i18n="nav.packs"></a>
             <a href="envios.html" data-i18n="ship.title"></a>
             <a href="faq.html" data-i18n="nav.faq"></a>
@@ -224,6 +232,8 @@ const Layout = {
     this.renderCookieBanner();
     this.loadSnipcart();
     I18N.apply();
+    this.showLang();
+    document.addEventListener("langchange", () => this.showLang());
     Cart.updateCount();
     Cart.handlePaymentReturn();
   }
@@ -380,6 +390,13 @@ const Cart = {
       '<input id="c-name" type="text" required placeholder="' + I18N.t("form.name") + '">' +
       '<input id="c-email" type="email" required placeholder="' + I18N.t("form.emailShort") + '">' +
       '<input id="c-phone" type="tel" placeholder="' + I18N.t("form.phoneLabel") + '">' +
+      '<textarea id="c-address" rows="2" required placeholder="' + I18N.t("order.addressPh") + '"></textarea>' +
+      '<label class="co-check"><input type="checkbox" id="c-co"> ' + I18N.t("order.invoiceCompany") + '</label>' +
+      '<div id="c-co-fields" hidden>' +
+      '<input id="c-company" type="text" placeholder="' + I18N.t("order.company") + '">' +
+      '<input id="c-nif" type="text" placeholder="' + I18N.t("order.nif") + '">' +
+      '<textarea id="c-billing" rows="2" placeholder="' + I18N.t("order.billing") + '"></textarea>' +
+      '</div>' +
       '<textarea id="c-note" placeholder="' + I18N.t("order.note") + '"></textarea>' +
       '<input id="c-hp" class="hp-field" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">' +
       '<p class="of-nopay">' + I18N.t("order.nopay") + '</p>' +
@@ -388,26 +405,34 @@ const Cart = {
       '<p class="form-status" id="c-status" hidden></p></form>';
     I18N.apply(foot);
     const self = this, form = document.getElementById("cart-form");
+    // Company invoice: show (and require) the company fields only when ticked.
+    document.getElementById("c-co").addEventListener("change", e => {
+      const on = e.target.checked;
+      document.getElementById("c-co-fields").hidden = !on;
+      ["c-company", "c-nif", "c-billing"].forEach(id => document.getElementById(id).required = on);
+    });
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const g = id => (document.getElementById(id).value || "").trim();
       const btn = document.getElementById("c-send"), status = document.getElementById("c-status");
       const old = btn.textContent; btn.disabled = true; btn.textContent = "…"; status.hidden = true;
-      const total = self.total();
+      const co = document.getElementById("c-co").checked;
       let r;
       try {
         r = await (await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
-          body: JSON.stringify({ action: "placeOrder", name: g("c-name"), email: g("c-email"), phone: g("c-phone"), note: g("c-note"), company_hp: g("c-hp"), items: self.items }) })).json();
+          body: JSON.stringify({ action: "placeOrder", lang: I18N.lang, name: g("c-name"), email: g("c-email"), phone: g("c-phone"),
+            address: g("c-address"), note: g("c-note"), company_hp: g("c-hp"), items: self.items,
+            company: co ? g("c-company") : "", nif: co ? g("c-nif") : "", billingAddress: co ? g("c-billing") : "" }) })).json();
       } catch (err) { r = { ok: false }; }
       if (r && r.ok) {
-        // No payment online yet: the order is recorded and we contact the customer.
+        // Bank transfer: email 1 brings the bank details, email 2 confirms once paid.
         const msg = I18N.t("order.received").replace("{ref}", r.id || "");
         self.write([]);
         document.getElementById("cart-body").innerHTML = "";
         status.textContent = msg; status.className = "form-status ok"; status.hidden = false;
         btn.remove();
       } else {
-        status.textContent = (r && r.message) || ("No s'ha pogut enviar. Escriu-nos a " + SITE_CONFIG.email + ".");
+        status.textContent = I18N.t("order.error") + " " + SITE_CONFIG.email;
         status.className = "form-status err"; status.hidden = false;
         btn.disabled = false; btn.textContent = old;
       }

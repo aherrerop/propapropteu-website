@@ -26,7 +26,7 @@
       <div class="contact-info">
         <a class="ci-email" id="contact-email" href="#"></a>
         <div class="ci-cols">
-          <div>
+          <div id="contact-find">
             <div class="ci-label" data-i18n="contact.findUs"></div>
             <div class="ci-social" id="contact-social"></div>
           </div>
@@ -92,6 +92,8 @@
         .filter(k => s[k])
         .map(k => `<a href="${s[k]}" target="_blank" rel="noopener" aria-label="${k}">${Layout.socialIcons[k] || k}</a>`)
         .join("");
+      // No social accounts yet: hide the "Find us" column.
+      if (!document.getElementById("contact-social").innerHTML) document.getElementById("contact-find").hidden = true;
       const form = document.getElementById("contact-form");
       const status = document.getElementById("form-status");
       form.addEventListener("submit", async (e) => {
@@ -109,10 +111,10 @@
         } catch (err) { r = { ok: false }; }
         if (r && r.ok) {
           form.reset();
-          status.textContent = r.message || "Missatge enviat. Gràcies!";
+          status.textContent = I18N.t("contact.sent");
           status.className = "form-status ok";
         } else {
-          status.textContent = (r && r.message) || "No s'ha pogut enviar. Escriu-nos per WhatsApp o a " + SITE_CONFIG.email + ".";
+          status.textContent = I18N.t("contact.error") + " " + SITE_CONFIG.email;
           status.className = "form-status err";
         }
         status.hidden = false;

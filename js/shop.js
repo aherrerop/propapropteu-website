@@ -5,7 +5,6 @@
 const ShopPage = {
   sort: "featured",
   fi: 0,
-  query: "",
   label: "all",
 
   async init() {
@@ -22,8 +21,6 @@ const ShopPage = {
       document.querySelectorAll("#shop-sort button").forEach(x => x.classList.toggle("active", x === b));
       this.renderGrid();
     });
-    const search = document.getElementById("shop-search");
-    if (search) search.addEventListener("input", () => { this.query = search.value.trim().toLowerCase(); this.renderGrid(); });
     document.getElementById("shop-filters").addEventListener("click", e => {
       const b = e.target.closest("button[data-label]"); if (!b) return;
       this.label = b.dataset.label;
@@ -37,7 +34,7 @@ const ShopPage = {
     // hide arrows + dots when there's only one featured product
     const single = this.featured.length <= 1;
     ["sf-prev", "sf-next"].forEach(id => { const el = document.getElementById(id); if (el) el.hidden = single; });
-    document.addEventListener("langchange", () => { this.renderFeatured(); this.renderGrid(); });
+    document.addEventListener("langchange", () => { this.renderFeatured(); this.renderFilters(); this.renderGrid(); });
   },
 
   esc(s) { return String(s).replace(/"/g, "&quot;"); },
@@ -62,24 +59,23 @@ const ShopPage = {
   renderFilters() {
     const wrap = document.getElementById("shop-filters");
     if (!wrap) return;
-    const labels = Catalog.data.labels || [];
-    const all = `<button data-label="all" class="active" data-i18n="catalog.allCats"></button>`;
+    // Only the tags that at least one product has; no filter row when none are in use.
+    const used = new Set(); Catalog.data.products.forEach(p => (p.labels || []).forEach(l => used.add(l)));
+    const labels = (Catalog.data.labels || []).filter(l => used.has(l.id));
+    if (!labels.length) { wrap.innerHTML = ""; return; }
+    const all = `<button data-label="all" class="${this.label === "all" ? "active" : ""}" data-i18n="catalog.allCats"></button>`;
     wrap.innerHTML = all + labels.map(l =>
-      `<button data-label="${l.id}">${I18N.pick(l.name)}</button>`).join("");
+      `<button data-label="${l.id}" class="${this.label === l.id ? "active" : ""}">${I18N.pick(l.name)}</button>`).join("");
     I18N.apply(wrap);
   },
 
   sortItems() {
     let items = Catalog.data.products.slice();
     if (this.label !== "all") items = items.filter(p => (p.labels || []).includes(this.label));
-    if (this.query) items = items.filter(p => {
-      const hay = (I18N.pick(p.name) + " " + I18N.pick(p.short) + " " + I18N.pick(p.description)).toLowerCase();
-      return hay.includes(this.query);
-    });
     switch (this.sort) {
       case "az": items.sort((a, b) => I18N.pick(a.name).localeCompare(I18N.pick(b.name))); break;
       case "za": items.sort((a, b) => I18N.pick(b.name).localeCompare(I18N.pick(a.name))); break;
-      default:   items.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));  // relevancia / best sellers
+      default:   items.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));  // featured first
     }
     return items;
   },
@@ -99,15 +95,12 @@ const ShopPage = {
             <img src="${Catalog.mainImage(p)}" alt="${this.esc(I18N.pick(p.name))}" loading="lazy">
           </div>
           <div class="sc-name">${I18N.pick(p.name)}</div>
-          <div class="sc-short">${I18N.pick(p.short)}</div>
           <div class="sc-price">${Catalog.formatPrice(p.price)}</div>
         </a>
-        ${out ? `<span class="sc-out-label" data-i18n="stock.out"></span>` : `<button class="sc-add" data-id="${p.id}" data-i18n="catalog.addToCart"></button>`}
       </div>`;
     }).join("");
     const grid = document.getElementById("shop-grid");
     I18N.apply(grid);
-    grid.querySelectorAll(".sc-add").forEach(b => b.addEventListener("click", () => Cart.add(b.dataset.id)));
   }
 };
 

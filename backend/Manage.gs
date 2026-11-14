@@ -22,7 +22,8 @@ var ORDER_TYPES = ['Product', 'Prototype', 'Personal'];
 
 // The tabs this file owns: [spreadsheet, tab name, columns]. New columns go at the END only.
 var MG = {
-  orders:    ['ops', 'Order list', ['key', 'no', 'created', 'by', 'type', 'price', 'notes', 'source', 'status', 'completedAt', 'emailSent']],
+  orders:    ['ops', 'Order list', ['key', 'no', 'created', 'by', 'type', 'price', 'notes', 'source', 'status', 'completedAt', 'emailSent',
+              'customerName', 'email', 'phone', 'address', 'company', 'nif', 'billingAddress', 'lang', 'items', 'paidAt', 'invoiceNo', 'invoiceUrl', 'payEmailAt']],
   pieces:    ['ops', 'Pieces', ['id', 'orderKey', 'orderNo', 'created', 'productId', 'name', 'link', 'material', 'color', 'anyColor', 'copies', 'grams', 'status', 'preparedAt', 'printedAt', 'roll', 'cost', 'deducted']],
   history:   ['ops', 'Print history', ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Grams', 'Cost (EUR)', 'Stock left (g)', 'By', 'Piece ID', 'Result']],
   deleted:   ['ops', 'Deleted', ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Order notes', 'By', 'Piece ID']],
@@ -264,9 +265,13 @@ function listOrders() {
   });
   var out = [];
   ot.rows.forEach(function (o) {
-    if (String(o.status) !== 'active') return;
+    var web = String(o.source) === 'web', awaitingPay = web && !o.payEmailAt && String(o.status) !== 'deleted';
+    if (String(o.status) !== 'active' && !awaitingPay) return;
     out.push({ key: String(o.key), no: Number(o.no), created: iso_(o.created), type: String(o.type), price: o.price === '' ? '' : Number(o.price),
-      notes: String(o.notes || ''), source: String(o.source || ''), pieces: byOrder[String(o.key)] || [], printed: printed[String(o.key)] || 0 });
+      notes: String(o.notes || ''), source: String(o.source || ''), pieces: byOrder[String(o.key)] || [], printed: printed[String(o.key)] || 0,
+      open: String(o.status) === 'active', customer: String(o.customerName || ''), email: String(o.email || ''), phone: String(o.phone || ''),
+      address: String(o.address || ''), company: String(o.company || ''), nif: String(o.nif || ''),
+      paid: !!o.payEmailAt, invoiceNo: String(o.invoiceNo || ''), invoiceUrl: String(o.invoiceUrl || '') });
   });
   out.sort(function (a, b) { return b.no - a.no; });
   return { ok: true, data: out };
@@ -501,10 +506,11 @@ function productView_(p) {
     short: tri(p.short), description: tri(p.description), images: p.images || [],
     specs: (p.specs || []).map(function (s) { return { label: tri(s.label), value: tri(s.value) }; }),
     webMaterial: p.webMaterial || '', webColor: p.webColor || '', webAnyColor: p.webAnyColor ? true : false,
+    tags: validTags_(p.labels),
     featured: p.featured ? true : false, heroOrder: p.heroOrder == null ? '' : p.heroOrder,
     headline: tri(p.heroTagline), heroText: tri(p.heroDesc), heroImage: p.heroImage || '' };
 }
-function listProductsSimple() { return { ok: true, data: readProducts().map(productView_) }; }
+function listProductsSimple() { return { ok: true, data: readProducts().map(productView_), tags: TAGS }; }
 
 // Keep only simple formatting in the long description.
 function sanitizeHtml_(s) {
@@ -530,7 +536,7 @@ function fillLanguages_(v, html) {
   var en = html ? sanitizeHtml_(v.en) : String(v.en || '').trim(), out = { en: en };
   ['ca', 'es'].forEach(function (l) {
     var t = html ? sanitizeHtml_(v[l]) : String(v[l] || '').trim();
-    if (!t && en) {
+    if ((!t || t === en) && en) {
       try { t = LanguageApp.translate(en, 'en', l, html ? { contentType: 'html' } : {}); } catch (e) { t = ''; }
       t = html ? sanitizeHtml_(t) : String(t || '').trim();
       if (!t) t = en;
@@ -562,6 +568,7 @@ function saveProductSimple(session, d) {
   p.specs = (d.specs || []).filter(function (s) { return s && s.label && String(s.label.en || '').trim(); })
     .map(function (s) { return { label: fillLanguages_(s.label, false), value: fillLanguages_(s.value, false) }; });
   // What a website order of this product is printed in.
+  p.labels = validTags_(d.tags);
   p.webMaterial = MATERIAL_TYPES.indexOf(String(d.webMaterial || '').toUpperCase()) >= 0 ? String(d.webMaterial).toUpperCase() : '';
   p.webAnyColor = d.webAnyColor ? true : false;
   p.webColor = p.webAnyColor ? '' : String(d.webColor || '').trim();
@@ -632,6 +639,10 @@ function purgeTest(session, marker) {
   purge('deleted', ['Product', 'Order notes']);
   purge('finances', ['Products', 'Notes']);
   purge('tobuy', ['Color']);
+  try {
+    var rq = ss_('clients').getSheetByName('Requests');
+    if (rq) { var rv = rq.getDataRange().getValues(), rn = 0; for (var ri = rv.length - 1; ri >= 1; ri--) if (rv[ri].join(' ').indexOf(marker) >= 0) { rq.deleteRow(ri + 1); rn++; } removed.requests = rn; }
+  } catch (e) {}
   // The website checkout also writes its own row in the older Operations!Orders tab.
   try {
     var sh = tab_('ops', 'Orders'), v = sh.getDataRange().getValues(), n = 0;

@@ -8,7 +8,7 @@
 
 const MATERIAL_TYPES = ["PLA", "PETG", "ABS"];
 const ORDER_TYPES = ["Product", "Prototype", "Personal"];
-const State = { products: [], materials: [], tick: 0, sheetUrl: "" };
+const State = { products: [], materials: [], tags: [], tick: 0, sheetUrl: "" };
 
 /* ---------- tiny helpers ---------- */
 const $ = id => document.getElementById(id);
@@ -135,7 +135,7 @@ function screen(title, ...actions) {
   return { form, body, alive: () => tick === State.tick };
 }
 async function loadMaterials() { const r = await api("listMaterials"); if (r.ok) State.materials = r.data; return r; }
-async function loadProducts() { const r = await api("listProducts"); if (r.ok) State.products = r.data; return r; }
+async function loadProducts() { const r = await api("listProducts"); if (r.ok) { State.products = r.data; State.tags = r.tags || []; } return r; }
 
 /* ---------- shared form pieces ---------- */
 // A small rich-text box: bold, italic and bullet points.
@@ -228,23 +228,36 @@ async function renderProducts() {
   ]))));
 }
 
+// The product editor looks like the product page: pictures on the left, texts, price,
+// datasheet and tags on the right. EN / CA / ES tabs switch the texts; a Catalan or
+// Spanish text still equal to the English is translated automatically on save.
+// Below, "Hidden features" holds what only we see.
+const LANGS = [["en", "EN"], ["ca", "CA"], ["es", "ES"]];
 function productForm(p, mount) {
   const isNew = !p;
-  p = p || { id: "", code: "", name: {}, price: "", printTime: "", weight: "", short: {}, description: {}, images: [], specs: [], webMaterial: "", webColor: "", webAnyColor: false };
-  const name = text(p.name.en), code = text(p.code);
-  const price = number(p.price, "", "0.01"), time = number(p.printTime, "minutes"), weight = number(p.weight, "grams");
-  const short = text(p.short.en), long = richText(p.description.en);
+  p = p || { id: "", code: "", name: {}, price: "", printTime: "", weight: "", short: {}, description: {}, images: [], specs: [], tags: [], webMaterial: "", webColor: "", webAnyColor: false };
+  let lang = "en";
+
+  // One input per language for every text; only the current language is visible.
+  const tri = (make, v) => { const o = {}; LANGS.forEach(([l]) => { o[l] = make((v && v[l]) || ""); o[l].dataset.lang = l; }); return o; };
+  const nameIn = tri(v => el("input", { type: "text", class: "pe-name", value: v, placeholder: "Product name" }), p.name);
+  const shortIn = tri(v => el("input", { type: "text", class: "pe-short", value: v, placeholder: "Short description (one line)" }), p.short);
+  const longIn = tri(v => { const r = richText(v); r.querySelector(".rich-box").setAttribute("data-ph", "Long description"); return r; }, p.description);
+  const price = number(p.price, "0.00", "0.01");
 
   // Pictures: the first one is the main picture; arrows change the order.
-  const pics = p.images.slice(), picBox = el("div", { class: "pics" });
-  const drawPics = () => picBox.replaceChildren(...pics.map((url, i) => el("div", { class: "pic" }, [
-    el("div", { class: "thumb" }, [el("img", { src: url, alt: "" })]),
-    el("div", { class: "pic-tools" }, [
-      icon("left", "Move earlier", () => { if (i > 0) { pics.splice(i - 1, 0, pics.splice(i, 1)[0]); drawPics(); } }),
-      icon("right", "Move later", () => { if (i < pics.length - 1) { pics.splice(i + 1, 0, pics.splice(i, 1)[0]); drawPics(); } }),
-      icon("x", "Remove picture", () => { pics.splice(i, 1); drawPics(); }, "danger")
-    ])
-  ])));
+  const pics = p.images.slice(), mainPic = el("div", { class: "pe-main" }), picBox = el("div", { class: "pics" });
+  const drawPics = () => {
+    mainPic.replaceChildren(pics[0] ? el("img", { src: pics[0], alt: "" }) : el("span", {}, ["No picture yet"]));
+    picBox.replaceChildren(...pics.map((url, i) => el("div", { class: "pic" }, [
+      el("div", { class: "thumb" }, [el("img", { src: url, alt: "" })]),
+      el("div", { class: "pic-tools" }, [
+        icon("left", "Move earlier", () => { if (i > 0) { pics.splice(i - 1, 0, pics.splice(i, 1)[0]); drawPics(); } }),
+        icon("right", "Move later", () => { if (i < pics.length - 1) { pics.splice(i + 1, 0, pics.splice(i, 1)[0]); drawPics(); } }),
+        icon("x", "Remove picture", () => { pics.splice(i, 1); drawPics(); }, "danger")
+      ])
+    ])));
+  };
   drawPics();
   const file = el("input", { type: "file", accept: "image/*", multiple: true, hidden: true, onchange: async () => {
     for (const f of file.files) {
@@ -254,26 +267,56 @@ function productForm(p, mount) {
     file.value = ""; toast("Pictures uploaded.");
   } });
 
-  // Datasheet: label + value rows, shown as a table on the product page.
-  const specs = p.specs.map(s => ({ before: s, label: text(s.label.en, "e.g. Max load"), value: text(s.value.en, "e.g. 8 kg") }));
-  const specBox = el("div", { class: "rows" });
-  const drawSpecs = () => specBox.replaceChildren(...specs.map(s => el("div", { class: "row2" }, [s.label, s.value, icon("x", "Remove row", () => { specs.splice(specs.indexOf(s), 1); drawSpecs(); }, "danger")])));
-  drawSpecs();
+  // Datasheet: label + value rows, in every language.
+  const specRow = s => ({ before: s, label: tri(v => text(v, "e.g. Max load"), s && s.label), value: tri(v => text(v, "e.g. 8 kg"), s && s.value) });
+  const specs = p.specs.map(specRow);
+  const specBox = el("div", { class: "pe-specs" });
+  const drawSpecs = () => { specBox.replaceChildren(...specs.map(s => el("div", { class: "pe-spec" }, [
+    ...LANGS.map(([l]) => s.label[l]), ...LANGS.map(([l]) => s.value[l]),
+    icon("x", "Remove row", () => { specs.splice(specs.indexOf(s), 1); drawSpecs(); }, "danger")
+  ]))); showLang(); };
 
-  // What a website order of this product is printed in.
+  // Tags: fixed list from the engine; a product can have several.
+  const tags = new Set(p.tags || []), tagBox = el("div", { class: "chips" });
+  const drawTags = () => tagBox.replaceChildren(...(State.tags || []).map(t => el("button", { type: "button", class: "chip" + (tags.has(t.id) ? " on" : ""),
+    onclick: () => { tags.has(t.id) ? tags.delete(t.id) : tags.add(t.id); drawTags(); } }, [t.name[lang] || t.name.en])));
+
+  // Every text field of one language (for the tabs and the "still in English" mark).
+  const fieldsOf = l => [nameIn[l], shortIn[l], longIn[l]].concat(...specs.map(s => [s.label[l], s.value[l]]));
+  const val = i => read(i);
+  const untranslated = l => fieldsOf("en").some((enI, k) => val(enI) && (!val(fieldsOf(l)[k]) || val(fieldsOf(l)[k]) === val(enI)));
+  const tabs = el("div", { class: "pe-tabs", role: "tablist" });
+  const drawTabs = () => tabs.replaceChildren(...LANGS.map(([l, label]) => el("button", { type: "button", role: "tab", class: l === lang ? "on" : "",
+    title: l !== "en" && untranslated(l) ? "Some texts are still in English: they are translated automatically when you save, or paste your own translation." : "",
+    onclick: () => setLang(l) }, [label, l !== "en" && untranslated(l) ? el("span", { class: "pe-todo" }) : null])));
+  function setLang(l) {
+    // Opening Catalan / Spanish: empty fields start with the English text, ready to overwrite.
+    if (l !== "en") fieldsOf("en").forEach((enI, k) => {
+      const t = fieldsOf(l)[k];
+      if (!val(t) && val(enI)) { if (t.read) t.querySelector(".rich-box").innerHTML = t.read() || enI.querySelector(".rich-box").innerHTML; else t.value = enI.value; }
+    });
+    lang = l; showLang(); drawTags();
+  }
+  function showLang() {
+    form.querySelectorAll("[data-lang]").forEach(n => { n.hidden = n.dataset.lang !== lang; });
+    drawTabs();
+  }
+
+  // Hidden features: what a website order is printed in, plus internal data.
+  const code = text(p.code), time = number(p.printTime, "minutes"), weight = number(p.weight, "grams");
   const web = { material: p.webMaterial, color: p.webColor, anyColor: p.webAnyColor };
   const webChips = colorChips(web);
 
-  const tr = { name: { ca: text(p.name.ca), es: text(p.name.es) }, short: { ca: text(p.short.ca), es: text(p.short.es) }, description: { ca: richText(p.description.ca), es: richText(p.description.es) } };
   const save = el("button", { class: "btn", type: "submit" }, ["Save"]);
-  const form = el("form", { class: "panel", onsubmit: async e => {
+  const langOf = (ins, before) => languages(read(ins.en), before, { ca: ins.ca, es: ins.es });
+  const form = el("form", { class: "panel pe", onsubmit: async e => {
     e.preventDefault();
     if (save.disabled) return;
-    if (!name.value.trim()) return toast("Enter the product name.", "err");
+    if (!read(nameIn.en)) { setLang("en"); return toast("Enter the product name (English).", "err"); }
     const product = {
-      id: p.id, code: code.value.trim(), price: price.value, printTime: time.value, weight: weight.value, images: pics,
-      name: languages(name.value.trim(), p.name, tr.name), short: languages(short.value.trim(), p.short, tr.short), description: languages(long.read(), p.description, tr.description),
-      specs: specs.filter(s => s.label.value.trim()).map(s => ({ label: languages(s.label.value.trim(), s.before && s.before.label), value: languages(s.value.value.trim(), s.before && s.before.value) })),
+      id: p.id, code: code.value.trim(), price: price.value, printTime: time.value, weight: weight.value, images: pics, tags: [...tags],
+      name: langOf(nameIn, p.name), short: langOf(shortIn, p.short), description: langOf(longIn, p.description),
+      specs: specs.filter(s => read(s.label.en)).map(s => ({ label: langOf(s.label, s.before && s.before.label), value: langOf(s.value, s.before && s.before.value) })),
       webMaterial: web.material, webColor: web.color, webAnyColor: web.anyColor
     };
     save.disabled = true; save.textContent = "Saving…";
@@ -282,21 +325,30 @@ function productForm(p, mount) {
     if (!r.ok) return fail(r);
     toast(r.message || "Saved. The website updates in 1–2 minutes.", r.message ? "err" : ""); renderProducts();
   } }, [
-    el("h2", {}, [isNew ? "New product" : "Edit product"]),
-    el("div", { class: "cols c2" }, [field("Name", name), field("Internal ID", code)]),
-    el("div", { class: "cols c3" }, [field("Price (€)", price), field("Printing time (min)", time), field("Weight (g)", weight)]),
-    field("Short description", short), field("Long description", long),
-    field("Pictures", el("div", {}, [picBox, file, el("button", { type: "button", class: "btn ghost", style: "margin-top:10px", onclick: () => file.click() }, ["Add pictures"])])),
-    field("Datasheet", el("div", {}, [specBox, el("button", { type: "button", class: "btn ghost", style: "margin-top:10px", onclick: () => { specs.push({ before: null, label: text("", "e.g. Max load"), value: text("", "e.g. 8 kg") }); drawSpecs(); } }, ["Add row"])])),
-    field("Website orders are printed in", el("div", { class: "rows" }, [el("div", { style: "max-width:220px" }, [materialSelect(web, webChips, "Not set")]), webChips])),
-    el("details", { class: "more" }, [
-      el("summary", {}, ["Translations (optional — filled in automatically when left empty)"]),
-      el("div", { class: "cols c2" }, [field("Name — Catalan", tr.name.ca), field("Name — Spanish", tr.name.es)]),
-      el("div", { class: "cols c2" }, [field("Short description — Catalan", tr.short.ca), field("Short description — Spanish", tr.short.es)]),
-      field("Long description — Catalan", tr.description.ca), field("Long description — Spanish", tr.description.es)
+    el("div", { class: "pe-top" }, [el("h2", {}, [isNew ? "New product" : "Edit product"]), tabs]),
+    el("div", { class: "pe-page" }, [
+      el("div", { class: "pe-left" }, [mainPic, picBox, file,
+        el("button", { type: "button", class: "btn ghost", onclick: () => file.click() }, ["Add pictures"]),
+        el("p", { class: "hint" }, ["The first picture is the main one. Arrows change the order."])]),
+      el("div", { class: "pe-right" }, [
+        ...LANGS.map(([l]) => nameIn[l]), ...LANGS.map(([l]) => shortIn[l]),
+        el("div", { class: "pe-price" }, [price, el("span", {}, ["€ · VAT included"])]),
+        ...LANGS.map(([l]) => longIn[l]),
+        el("div", { class: "pe-label" }, ["Datasheet"]), specBox,
+        el("button", { type: "button", class: "btn ghost", onclick: () => { specs.push(specRow(null)); drawSpecs(); } }, ["Add row"]),
+        el("div", { class: "pe-label" }, ["Tags"]), tagBox
+      ])
+    ]),
+    el("div", { class: "pe-hidden" }, [
+      el("h3", {}, ["Hidden features"]), el("p", { class: "hint" }, ["Only for us, never shown on the website."]),
+      el("div", { class: "cols c3" }, [field("Internal ID", code), field("Printing time (min)", time), field("Weight (g)", weight)]),
+      field("Website orders are printed in", el("div", { class: "rows" }, [el("div", { style: "max-width:220px" }, [materialSelect(web, webChips, "Not set")]), webChips]))
     ]),
     el("div", { class: "foot" }, [save, el("button", { class: "link-btn", type: "button", onclick: () => mount.replaceChildren() }, ["Cancel"])])
   ]);
+  // Re-check the tab marks while typing.
+  form.addEventListener("input", () => drawTabs());
+  drawSpecs(); drawTags();
   mount.replaceChildren(form);
   form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -313,10 +365,16 @@ async function renderOrders() {
       el("div", { class: "card-title" }, ["#" + o.no + " · " + o.type + (o.price !== "" ? " · " + euro(o.price) : "") + (o.source === "web" ? " · website" : "")]),
       el("div", { class: "card-meta" }, [o.pieces.map(p => (p.copies > 1 ? p.copies + "× " : "") + p.name + " (" + (p.material ? p.material + " " + (p.anyColor ? "any color" : p.color) : "material not set") + ")").join(" · ") || "—"]),
       o.notes ? el("div", { class: "card-meta" }, [o.notes]) : null,
-      o.printed ? el("div", { class: "card-meta" }, [o.printed + " already printed"]) : null
+      o.printed ? el("div", { class: "card-meta" }, [o.open ? o.printed + " already printed" : "All printed"]) : null,
+      o.source === "web" ? el("div", { class: "card-meta" }, [[o.customer, o.email, o.phone].filter(Boolean).join(" · ")]) : null,
+      o.source === "web" && o.address ? el("div", { class: "card-meta" }, ["Deliver to: " + o.address]) : null,
+      o.source === "web" && o.company ? el("div", { class: "card-meta" }, ["Invoice to: " + o.company + (o.nif ? " · " + o.nif : "")]) : null,
+      o.source === "web" ? el("div", { class: "pay-row" }, o.paid
+        ? [el("span", { class: "tag ok" }, ["Paid"]), o.invoiceUrl ? el("a", { href: o.invoiceUrl, target: "_blank", rel: "noopener" }, ["Invoice " + o.invoiceNo]) : null]
+        : [el("span", { class: "tag" }, ["Waiting for payment"]), el("button", { type: "button", class: "btn ghost small", onclick: () => paymentDialog(o) }, ["Payment received"])]) : null
     ]),
     el("div", { class: "actions" }, [
-      icon("edit", "Edit", () => orderForm(o, { mount: s.form, done: renderOrders })),
+      o.open ? icon("edit", "Edit", () => orderForm(o, { mount: s.form, done: renderOrders })) : null,
       icon("x", "Delete order", async () => {
         if (!(await dialog({ title: "Delete order #" + o.no + "?", text: "Its products leave the to-do list.", ok: "Delete" }))) return;
         const d = await api("deleteOrder", { key: o.key });
@@ -325,6 +383,34 @@ async function renderOrders() {
       }, "danger")
     ])
   ]))));
+}
+
+// "Payment received": the engine prepares the confirmation email in the customer's language;
+// we can change it, then it is sent once with the invoice PDF (also saved in Drive).
+async function paymentDialog(o) {
+  toast("Preparing the email…");
+  const d = await api("paymentDraft", { key: o.key });
+  if (!d.ok) return fail(d);
+  if (d.already) { toast("This order was already confirmed."); return renderOrders(); }
+  const subject = text(d.subject), body = el("textarea", { rows: "12" }, [d.body]);
+  const send = el("button", { class: "btn", type: "submit" }, ["Send email + invoice"]);
+  const close = () => overlay.remove();
+  const form = el("form", { class: "dialog wide", onclick: e => e.stopPropagation(), onsubmit: async e => {
+    e.preventDefault();
+    if (send.disabled) return;
+    send.disabled = true; send.textContent = "Sending…";
+    const r = await api("confirmPayment", { key: o.key, subject: subject.value, body: body.value });
+    send.disabled = false; send.textContent = "Send email + invoice";
+    if (!r.ok) return fail(r);
+    close(); toast(r.already ? "Already sent before." : "Sent to " + d.to + " with invoice " + r.invoiceNo + "."); renderOrders();
+  } }, [
+    el("h3", {}, ["Payment received — order #" + o.no]),
+    el("p", {}, ["Sends this email to " + d.to + " with invoice " + d.invoiceNo + " attached. You can change the text first."]),
+    field("Subject", subject), field("Email", body),
+    el("div", { class: "foot" }, [el("button", { type: "button", class: "link-btn", onclick: close }, ["Cancel"]), send])
+  ]);
+  const overlay = el("div", { class: "overlay", onclick: close }, [form]);
+  document.body.appendChild(overlay);
 }
 
 // The order form. Used for a new order, for editing one, and (with the weight column)

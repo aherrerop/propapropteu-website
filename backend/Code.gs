@@ -31,7 +31,7 @@ var MUTATING = {
   placeOrder: 1, register: 1, reorder: 1, updateProfile: 1, getInvoice: 1, verifyPayment: 1,
   saveProduct: 1, deleteProduct: 1, saveMaterial: 1, deleteMaterial: 1, repurchase: 1, resetMaterials: 1,
   saveOrder: 1, deleteOrder: 1, setPrepared: 1, setGrams: 1, deletePiece: 1, printPiece: 1, failPiece: 1,
-  saveMaterials: 1, saveHighlights: 1,
+  saveMaterials: 1, saveHighlights: 1, requestProp: 1, confirmPayment: 1,
   setupSystem: 1, saveSettings: 1, deleteClient: 1, addManager: 1, deleteManager: 1, purgeTest: 1
 };
 
@@ -63,6 +63,8 @@ function dispatch_(action, req) {
   if (action === 'placeOrder')return placeOrder(req);
   if (action === 'pubinfo')   return pubinfo();
   if (action === 'verifyPayment') return verifyPayment(req);
+  if (action === 'requestFile')   return requestFile(req);
+  if (action === 'requestProp')   return requestProp(req);
 
   // Everything else needs a valid session token.
   var session = verifyToken(req.token);
@@ -90,6 +92,8 @@ function dispatch_(action, req) {
     case 'listOrders':     return listOrders();
     case 'saveOrder':      return saveOrder(session, req.order);
     case 'deleteOrder':    return deleteOrder(session, req.key);
+    case 'paymentDraft':   return paymentDraft(session, req.key);
+    case 'confirmPayment': return confirmPayment(session, req.key, req.subject, req.body);
     // To-do
     case 'todo':           return todo();
     case 'setPrepared':    return setPrepared(session, req.id, req.on);
@@ -132,9 +136,9 @@ function contact(req) {
   var email = String(req.email || '').trim();
   var message = String(req.message || '').trim();
   if (req.company_hp) return { ok: true };                 // honeypot: silently accept bots
-  if (!floodOk_('contact')) return { ok: false, error: 'rate', message: 'Massa peticions. Espera un moment.' };
-  if (!name || !email || !message) return { ok: false, error: 'missing', message: 'Falten camps obligatoris.' };
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email', message: 'Email no vàlid.' };
+  if (!floodOk_('contact')) return { ok: false, error: 'rate' };
+  if (!name || !email || !message) return { ok: false, error: 'missing' };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, error: 'email' };
   if (message.length > 5000) message = message.slice(0, 5000);
 
   var source = String(req.source || 'contacte');
@@ -145,16 +149,16 @@ function contact(req) {
   var sh = ensureMessagesSheet();
   sh.appendRow([new Date(), source, name, email, phone, company, message + (extra ? ('\n\n' + extra) : '')]);
 
+  // Straight to our inbox; replying answers the person directly.
   sendMail_({
-    to: 'info@propapropteu.com',
+    to: notifyEmail_(),
     replyTo: email,
-    subject: '[Web · ' + source + '] ' + name,
-    body: 'Nom: ' + name + '\nEmail: ' + email + '\nTelèfon: ' + phone +
-          '\nEmpresa: ' + company + '\nOrigen: ' + source +
-          (extra ? ('\n' + extra) : '') + '\n\nMissatge:\n' + message
+    subject: 'New message from the website — ' + name,
+    body: 'Name: ' + name + '\nEmail: ' + email + '\nPhone: ' + (phone || '—') +
+          '\nCompany: ' + (company || '—') + (extra ? ('\n' + extra) : '') + '\n\nMessage:\n' + message
   }, 'contact');
 
-  return { ok: true, message: 'Missatge enviat. Gràcies, et responem aviat.' };
+  return { ok: true };
 }
 
 function ensureMessagesSheet() {
@@ -485,7 +489,8 @@ function placeOrder(req) {
     var p = byId[items[i].id]; if (!p) continue;
     var qty = Math.max(1, Math.floor(Number(items[i].qty || 1)));
     units += qty; revenue += p.price * qty; cost += (p.cost || 0) * qty;
-    lines.push({ id: p.id, name: (p.name && (p.name.ca || p.name.es || p.name.en)) || p.id, qty: qty, price: p.price, cost: p.cost || 0 });
+    var lang = String(req.lang || 'es'), nm = p.name || {};
+    lines.push({ id: p.id, name: (typeof nm === 'string' ? nm : (nm[lang] || nm.es || nm.ca || nm.en)) || p.id, qty: qty, price: p.price, cost: p.cost || 0 });
   }
   if (!lines.length) return { ok: false, error: 'noitems', message: 'Cap producte vàlid a la comanda.' };
 
@@ -509,16 +514,15 @@ function placeOrder(req) {
   logOps_('order', id, 'created', '', 'source ' + String(req.source || 'web') + ', total ' + total.toFixed(2));
   // A website order also lands in the to-do list (one alert email, material chosen later).
   try { addWebOrderToTodo_(id, lines, total, String(req.note || ''), byId); } catch (e) { logErr_('addWebOrderToTodo ' + id, e); }
-  // Confirmation to the customer (only when we have their email).
-  if (email) phase_('order-confirm', function () {
-    return sendMail_({
-      to: email, name: 'Prop a Prop Teu', replyTo: 'info@propapropteu.com',
-      subject: 'Hemos recibido tu pedido (' + id + ') — Prop a Prop Teu',
-      body: 'Hola ' + name + ',\n\nGracias por tu pedido. Lo hemos recibido correctamente y te contactaremos en breve para confirmar el pago y la entrega.\n\n' +
-            'Pedido ' + id + ':\n' + lines.map(function (l) { return '· ' + l.qty + 'x ' + l.name + ' — ' + (l.price * l.qty).toFixed(2) + ' €'; }).join('\n') +
-            '\n\nTotal: ' + revenue.toFixed(2) + ' € (IVA incl.)' +
-            '\n\nSi tienes cualquier duda, responde a este correo o escríbenos a info@propapropteu.com.\n\nUn saludo,\nEl equipo de Prop a Prop Teu'
-    }, 'customer');
+  // Keep the customer's details on the order (for the payment email + invoice), then send
+  // email 1: the order summary with the bank details.
+  phase_('order-customer', function () {
+    var ot = tbl_('orders'), o = byKey_(ot, 'key', id);
+    if (!o) return false;
+    setRow_(ot, o, { customerName: name, email: email, phone: String(req.phone || '').trim(), address: String(req.address || '').trim(),
+      company: String(req.company || '').trim(), nif: String(req.nif || '').trim(), billingAddress: String(req.billingAddress || '').trim(),
+      lang: String(req.lang || 'es'), items: JSON.stringify(lines.map(function (l) { return { id: l.id, name: l.name, qty: l.qty, price: l.price }; })) });
+    return sendOrderReceived_(o);
   });
 
   // Card payment: if Stripe is configured, hand back a hosted checkout URL to redirect to.
@@ -532,7 +536,7 @@ function placeOrder(req) {
     }
   }
   // Transfer (or card while Stripe is off): return the live bank details for the instructions.
-  return { ok: true, id: id, payment: payment, bankHolder: getSetting_('BANK_HOLDER', 'Prop a Prop Teu'), bankIban: getSetting_('BANK_IBAN', ''), message: 'Comanda rebuda. Et contactem per confirmar.' };
+  return { ok: true, id: id, payment: payment };
 }
 function readOrders() {
   var sh = ensureOrdersSheet();
@@ -682,7 +686,7 @@ function publish(session) {
   });
   var payload = {
     _readme: existing._readme || 'Managed from the admin dashboard. Edit via acceso.html.',
-    labels: existing.labels || [],
+    labels: TAGS,
     products: publicProducts
   };
   var content = JSON.stringify(payload, null, 2) + '\n';
@@ -1212,7 +1216,7 @@ function logOps_(type, id, action, by, detail) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-13.1';
+var ENGINE_VERSION = '2026-11-15.1';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.

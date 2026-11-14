@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prop a Prop Teu — Qui som</title>
+  <title>Prop a Prop Teu — About</title>
   <meta name="description" content="Prop a Prop Teu: taller en Barcelona que diseña y fabrica atrezo, herramientas y materiales para cine, TV, teatro y eventos. Conoce al equipo.">
-  <meta property="og:title" content="Prop a Prop Teu — Qui som">
+  <meta property="og:title" content="Prop a Prop Teu — About">
   <meta property="og:description" content="Taller de atrezo, herramientas y materiales para rodajes y escena, en Barcelona.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="assets/logo_mark.svg">
@@ -18,73 +18,75 @@
 <body>
   <header class="site-header" id="site-header"></header>
 
-  <main class="container">
-    <h1 class="rule-title" data-i18n="about.title"></h1>
-
-    <!-- VISUAL INTRO: brand on one side, workshop/product image on the other -->
-    <section class="about-hero">
-      <div class="about-brand">
-        <img src="assets/logo_mark.svg" alt="Prop a Prop Teu">
-      </div>
-      <div class="about-media media-box">
-        <img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/about/workshop.jpg">
-        <span class="media-tag">assets/img/about/workshop.jpg</span>
-      </div>
+  <main>
+    <!-- STATEMENT: one sentence that says who we are -->
+    <section class="container about-statement">
+      <span class="eyebrow" data-i18n="about.eyebrow"></span>
+      <h1 data-i18n="about.statement"></h1>
     </section>
 
-    <div class="content-block">
+    <!-- STORY: title on the left, text on the right -->
+    <section class="container about-split">
       <h2 data-i18n="about.storyTitle"></h2>
-      <p data-i18n="about.story1"></p>
-      <p data-i18n="about.story2"></p>
-    </div>
-
-    <div class="content-block">
-      <h2 data-i18n="about.whatTitle"></h2>
-      <ul>
-        <li data-i18n="about.what1"></li>
-        <li data-i18n="about.what2"></li>
-        <li data-i18n="about.what3"></li>
-      </ul>
-    </div>
-
-    <div class="content-block">
-      <h2 data-i18n="about.valuesTitle"></h2>
-      <p data-i18n="about.values"></p>
-    </div>
-
-    <!-- ==============================================
-         TEAM — larger cards with space for real photos.
-         Replace the placeholder portraits (assets/img/team/*.jpg)
-         and the bracketed placeholder bios in lang/*.json.
-         ============================================== -->
-    <h2 class="rule-title" data-i18n="team.title" style="margin-top:40px"></h2>
-    <p class="muted" style="margin-bottom:24px;max-width:60ch" data-i18n="team.intro"></p>
-    <section class="team-grid team-2">
-      <article class="team-card">
-        <div class="media-box" style="aspect-ratio:4/5">
-          <img src="assets/img/placeholder-portrait.svg" alt="" loading="lazy" data-final="assets/img/team/member-1.jpg">
-          <span class="media-tag">assets/img/team/member-1.jpg</span>
-        </div>
-        <h3 data-i18n="team.member1name"></h3>
-        <div class="role" data-i18n="team.member1role"></div>
-      </article>
-      <article class="team-card">
-        <div class="media-box" style="aspect-ratio:4/5">
-          <img src="assets/img/placeholder-portrait.svg" alt="" loading="lazy" data-final="assets/img/team/member-2.jpg">
-          <span class="media-tag">assets/img/team/member-2.jpg</span>
-        </div>
-        <h3 data-i18n="team.member2name"></h3>
-        <div class="role" data-i18n="team.member2role"></div>
-      </article>
+      <div>
+        <p data-i18n="about.story1"></p>
+        <p data-i18n="about.story2"></p>
+      </div>
     </section>
 
-    <!-- FAQ section (kept; full list lives on the FAQ page) -->
-    <section class="cta-band" style="margin-top:12px">
-      <div>
-        <h2 data-i18n="about.faqTitle"></h2>
-        <p data-i18n="about.faqText"></p>
+    <!-- WORKSHOP PHOTO (drop the real file at assets/img/about/workshop.jpg) -->
+    <section class="container">
+      <figure class="about-photo">
+        <img src="assets/img/about/workshop.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'">
+      </figure>
+    </section>
+
+    <!-- HOW WE WORK: three short points -->
+    <section class="container">
+      <h2 class="rule-title" data-i18n="about.howTitle"></h2>
+      <div class="qualities about-how">
+        <div class="quality"><span class="quality-mark quality-mark-1">01</span><h3 data-i18n="about.how1t"></h3><p data-i18n="about.how1"></p></div>
+        <div class="quality"><span class="quality-mark quality-mark-2">02</span><h3 data-i18n="about.how2t"></h3><p data-i18n="about.how2"></p></div>
+        <div class="quality"><span class="quality-mark quality-mark-3">03</span><h3 data-i18n="about.how3t"></h3><p data-i18n="about.how3"></p></div>
       </div>
-      <a href="faq.html" class="btn" data-i18n="about.faqBtn"></a>
+    </section>
+
+    <!-- TEAM: photo, name, title, what they do, short bio.
+         Photos: assets/img/team/yerai.jpg and assets/img/team/albert.jpg (portrait 4:5).
+         Texts: team.* in lang/*.json -->
+    <section class="container">
+      <h2 class="rule-title" data-i18n="team.title"></h2>
+      <div class="team-duo">
+        <article class="person">
+          <img src="assets/img/team/yerai.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-portrait.svg'">
+          <div>
+            <h3 data-i18n="team.member1name"></h3>
+            <span class="person-role" data-i18n="team.member1role"></span>
+            <p class="person-what" data-i18n="team.member1what"></p>
+            <p class="person-bio" data-i18n="team.member1bio"></p>
+          </div>
+        </article>
+        <article class="person">
+          <img src="assets/img/team/albert.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-portrait.svg'">
+          <div>
+            <h3 data-i18n="team.member2name"></h3>
+            <span class="person-role" data-i18n="team.member2role"></span>
+            <p class="person-what" data-i18n="team.member2what"></p>
+            <p class="person-bio" data-i18n="team.member2bio"></p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- CALL TO ACTION: request a prop -->
+    <section class="cta-band about-cta">
+      <div class="cta-inner">
+        <div>
+          <h2 data-i18n="about.ctaTitle"></h2>
+          <p data-i18n="about.ctaText"></p>
+        </div>
+        <a href="custom-props.html" class="btn" data-i18n="about.ctaBtn"></a>
+      </div>
     </section>
   </main>
 

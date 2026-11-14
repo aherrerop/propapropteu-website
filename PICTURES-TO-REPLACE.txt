@@ -1,0 +1,60 @@
+PICTURES TO REPLACE
+===================
+
+How it works: save the real picture with EXACTLY the name and folder below,
+then upload it to GitHub (same folder). The site picks it up on its own;
+until then a grey placeholder is shown. No code changes needed.
+
+Use .jpg, about 1600 px on the long side, under 500 KB if possible.
+
+
+ABOUT PAGE (about.html)
+-----------------------
+assets/img/team/yerai.jpg        Yerai's portrait. Vertical, 4:5 (e.g. 1200 x 1500).
+assets/img/team/albert.jpg       Albert's portrait. Vertical, 4:5 (e.g. 1200 x 1500).
+assets/img/about/workshop.jpg    The workshop / printers / a shoot. Very wide, 21:9 (e.g. 2100 x 900).
+                                 On phones it is cropped to 4:3, so keep the subject in the middle.
+
+
+REQUEST A PROP PAGE (custom-props.html) — "Our work" gallery
+------------------------------------------------------------
+assets/img/custom/work-1.jpg     Square, 1:1 (e.g. 1200 x 1200). Pieces you made, ideally on set.
+assets/img/custom/work-2.jpg     Square
+assets/img/custom/work-3.jpg     Square
+assets/img/custom/work-4.jpg     Square
+assets/img/custom/work-5.jpg     Square
+assets/img/custom/work-6.jpg     Square
+
+
+PACKS PAGE (packs.html) — page not decided yet, only if you keep it
+--------------------------------------------------------------------
+assets/img/packs/tool-essentials.jpg      Landscape, 4:3
+assets/img/packs/consumables-basic.jpg    Landscape, 4:3
+assets/img/packs/paint-finishing.jpg      Landscape, 4:3
+assets/img/packs/foam-fabrication.jpg     Landscape, 4:3
+assets/img/packs/set-dressing.jpg         Landscape, 4:3
+assets/img/packs/all-round.jpg            Landscape, 4:3
+
+
+PRODUCTS
+--------
+Not here: product pictures are added in the management area
+(Workshop > Products > the product > Pictures). They are uploaded and
+published automatically.
+
+
+LOGO
+----
+assets/logo_mark.svg             Header logo. Current file is a provisional trace;
+                                 replace with the designer's vector (SVG), same name.
+
+
+TEXTS WAITING FOR YOU (not pictures, same idea)
+-----------------------------------------------
+lang/ca.json, lang/es.json, lang/en.json  ->  "team": member1what, member1bio,
+                                 member2what, member2bio (now in [brackets]).
+legal.html                       Every [BRACKETED] field: legal name, NIF, address,
+                                 days to pay an order. Have a gestor check it.
+Management > Settings sheet      BANK_HOLDER, BANK_IBAN (shown in the order email),
+                                 fiscal data for invoices (FISCAL_NAME, FISCAL_NIF,
+                                 FISCAL_ADDR).

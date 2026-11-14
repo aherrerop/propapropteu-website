@@ -19,86 +19,181 @@
     <h1 class="rule-title" data-i18n="legal.title"></h1>
 
     <!-- ================================================================
-      IMPORTANT: the texts below are TEMPLATES. Fill the [BRACKETED]
-      fields with your real company data and have them reviewed before
-      going live. Spanish e-commerce requires: Aviso Legal (LSSI),
-      Política de Privacidad (RGPD), Política de Cookies and
-      Condiciones de Venta (incl. 14-day withdrawal right).
-      Each section exists once per language inside .lang-block divs —
-      only the active language is shown.
+      Each section has one block per language (only the active one shows).
+      Fill every [BRACKETED] field with the real data before selling, and
+      have the texts checked by a gestor/lawyer. Section ids (#aviso,
+      #propiedad, #condiciones, #desistimiento, #garantia, #privacidad, #cookies) are
+      the ones the footer links to.
     ================================================================= -->
 
-    <!-- ============ CATALAN ============ -->
-    <div class="lang-block" data-lang="ca">
-      <div class="content-block" id="aviso">
+    <!-- ===================== LEGAL NOTICE ===================== -->
+    <section class="content-block" id="aviso">
+      <div class="lang-block" data-lang="ca">
         <h2>Avís legal</h2>
-        <p>Titular del lloc web: [NOM FISCAL / AUTÒNOM], NIF [XXXXXXXX], amb domicili a [ADREÇA COMPLETA]. Contacte: info@propapropteu.com. Inscrita al [REGISTRE MERCANTIL, si escau].</p>
-        <p>L'ús d'aquest lloc web implica l'acceptació d'aquestes condicions. Tots els continguts (textos, imatges, dissenys de producte) són propietat de Prop a Prop Teu o dels seus llicenciants.</p>
+        <p>En compliment de la Llei 34/2002 (LSSI), t'informem que aquest lloc web és titularitat de <strong>[NOM I COGNOMS O RAÓ SOCIAL]</strong>, NIF <strong>[NIF]</strong>, amb domicili a <strong>[ADREÇA COMPLETA]</strong>. Correu: info@propapropteu.com · Telèfon: +34 638 00 33 67. [Dades del Registre Mercantil, si és una societat].</p>
+        <p>Vegeu també la secció de propietat intel·lectual i industrial.</p>
       </div>
-      <div class="content-block" id="privacidad">
-        <h2>Política de privacitat</h2>
-        <p>Responsable del tractament: [NOM FISCAL]. Les dades que ens facilites (formularis de contacte, comandes) es fan servir únicament per gestionar la teva sol·licitud o comanda. Base legal: execució de contracte i consentiment. No cedim dades a tercers excepte els necessaris per operar (processador de pagaments, empresa de transport).</p>
-        <p>Pots exercir els drets d'accés, rectificació, supressió, oposició, limitació i portabilitat escrivint a info@propapropteu.com. També pots reclamar davant l'AEPD (aepd.es).</p>
-      </div>
-      <div class="content-block" id="cookies">
-        <h2>Política de cookies</h2>
-        <p>Aquest lloc fa servir cookies tècniques pròpies (idioma, cistella de la compra) i les cookies de la passarel·la de pagament, necessàries per al funcionament de la botiga. No fem servir cookies publicitàries ni de seguiment de tercers. Pots esborrar les cookies des de la configuració del teu navegador.</p>
-      </div>
-      <div class="content-block" id="condiciones">
-        <h2>Condicions de venda</h2>
-        <p>Preus amb IVA (21%) inclòs. Despeses d'enviament calculades al finalitzar la compra segons destinació. Enviaments a [ZONES: Península, Balears...] en un termini de [X-Y] dies laborables.</p>
-        <p>Dret de desistiment: disposes de 14 dies naturals des de la recepció per retornar un producte sense necessitat de justificació. Els productes fets a mida queden exclosos (art. 103 LGDCU). Per iniciar una devolució, escriu a info@propapropteu.com.</p>
-        <p>Garantia legal de 3 anys per a productes nous (RDL 7/2021).</p>
-      </div>
-    </div>
-
-    <!-- ============ SPANISH ============ -->
-    <div class="lang-block" data-lang="es">
-      <div class="content-block">
+      <div class="lang-block" data-lang="es">
         <h2>Aviso legal</h2>
-        <p>Titular del sitio web: [NOMBRE FISCAL / AUTÓNOMO], NIF [XXXXXXXX], con domicilio en [DIRECCIÓN COMPLETA]. Contacto: info@propapropteu.com. Inscrita en el [REGISTRO MERCANTIL, si procede].</p>
-        <p>El uso de este sitio web implica la aceptación de estas condiciones. Todos los contenidos (textos, imágenes, diseños de producto) son propiedad de Prop a Prop Teu o de sus licenciantes.</p>
+        <p>En cumplimiento de la Ley 34/2002 (LSSI), te informamos de que este sitio web es titularidad de <strong>[NOMBRE Y APELLIDOS O RAZÓN SOCIAL]</strong>, NIF <strong>[NIF]</strong>, con domicilio en <strong>[DIRECCIÓN COMPLETA]</strong>. Correo: info@propapropteu.com · Teléfono: +34 638 00 33 67. [Datos del Registro Mercantil, si es una sociedad].</p>
+        <p>Ver también la sección de propiedad intelectual e industrial.</p>
       </div>
-      <div class="content-block">
-        <h2>Política de privacidad</h2>
-        <p>Responsable del tratamiento: [NOMBRE FISCAL]. Los datos que nos facilitas (formularios de contacto, pedidos) se usan únicamente para gestionar tu solicitud o pedido. Base legal: ejecución de contrato y consentimiento. No cedemos datos a terceros salvo los necesarios para operar (procesador de pagos, empresa de transporte).</p>
-        <p>Puedes ejercer los derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a info@propapropteu.com. También puedes reclamar ante la AEPD (aepd.es).</p>
-      </div>
-      <div class="content-block">
-        <h2>Política de cookies</h2>
-        <p>Este sitio usa cookies técnicas propias (idioma, cesta de la compra) y las cookies de la pasarela de pago, necesarias para el funcionamiento de la tienda. No usamos cookies publicitarias ni de seguimiento de terceros. Puedes borrar las cookies desde la configuración de tu navegador.</p>
-      </div>
-      <div class="content-block">
-        <h2>Condiciones de venta</h2>
-        <p>Precios con IVA (21%) incluido. Gastos de envío calculados al finalizar la compra según destino. Envíos a [ZONAS: Península, Baleares...] en un plazo de [X-Y] días laborables.</p>
-        <p>Derecho de desistimiento: dispones de 14 días naturales desde la recepción para devolver un producto sin necesidad de justificación. Los productos hechos a medida quedan excluidos (art. 103 LGDCU). Para iniciar una devolución, escribe a info@propapropteu.com.</p>
-        <p>Garantía legal de 3 años para productos nuevos (RDL 7/2021).</p>
-      </div>
-    </div>
-
-    <!-- ============ ENGLISH ============ -->
-    <div class="lang-block" data-lang="en">
-      <div class="content-block">
+      <div class="lang-block" data-lang="en">
         <h2>Legal notice</h2>
-        <p>Website owner: [LEGAL NAME / SOLE TRADER], tax ID [XXXXXXXX], registered address [FULL ADDRESS]. Contact: info@propapropteu.com. Registered at the [COMPANIES REGISTRY, if applicable].</p>
-        <p>Using this website implies acceptance of these terms. All content (texts, images, product designs) is property of Prop a Prop Teu or its licensors.</p>
+        <p>Under Spanish Law 34/2002 (LSSI), this website belongs to <strong>[FULL NAME OR COMPANY NAME]</strong>, tax ID <strong>[NIF]</strong>, address <strong>[FULL ADDRESS]</strong>. Email: info@propapropteu.com · Phone: +34 638 00 33 67. [Companies Registry details, if a company].</p>
+        <p>See also the intellectual and industrial property section.</p>
       </div>
-      <div class="content-block">
-        <h2>Privacy policy</h2>
-        <p>Data controller: [LEGAL NAME]. Data you provide (contact forms, orders) is used only to handle your request or order. Legal basis: contract performance and consent. We do not share data with third parties except those needed to operate (payment processor, shipping carrier).</p>
-        <p>You may exercise your rights of access, rectification, erasure, objection, restriction and portability by writing to info@propapropteu.com. You may also file a complaint with the Spanish DPA (aepd.es).</p>
+    </section>
+
+<!-- ===================== INTELLECTUAL PROPERTY ===================== -->
+    <section class="content-block" id="propiedad">
+      <div class="lang-block" data-lang="ca">
+        <h2>Propietat intel·lectual i industrial</h2>
+        <p>Tots els dissenys de producte de Prop a Prop Teu (formes, models 3D, arxius d'impressió, plànols i prototips), així com les fotografies, textos, logotips i la marca d'aquest web, són propietat de <strong>[TITULAR]</strong> i estan protegits per la Llei de Propietat Intel·lectual (RDL 1/1996), la Llei 20/2003 de Protecció Jurídica del Disseny Industrial i el Reglament (CE) 6/2002 sobre dibuixos i models comunitaris.</p>
+        <p>Comprar un producte et dona la propietat d'aquella unitat i el dret a fer-la servir, també en produccions audiovisuals i fotografies. No et dona cap dret sobre el disseny: no està permès copiar-lo, escanejar-lo, reproduir-lo (també amb impressió 3D), modificar-lo per fer-ne versions derivades, distribuir-ne els arxius ni vendre'l sense la nostra autorització per escrit.</p>
+        <p><strong>Peces a mida.</strong> Quan dissenyem una peça a partir de la teva petició, el disseny resultant és nostre llevat que acordem per escrit una cessió de drets. Si ens envies material propi (dibuixos, referències, arxius), en continues sent el titular i ens autoritzes a fer-lo servir només per fer el teu encàrrec; garanteixes que tens dret a fer-lo servir.</p>
       </div>
-      <div class="content-block">
-        <h2>Cookie policy</h2>
-        <p>This site uses first-party technical cookies (language, shopping cart) and cookies from our payment gateway, required for the shop to work. We use no advertising or third-party tracking cookies. You can delete cookies in your browser settings.</p>
+      <div class="lang-block" data-lang="es">
+        <h2>Propiedad intelectual e industrial</h2>
+        <p>Todos los diseños de producto de Prop a Prop Teu (formas, modelos 3D, archivos de impresión, planos y prototipos), así como las fotografías, textos, logotipos y la marca de esta web, son propiedad de <strong>[TITULAR]</strong> y están protegidos por la Ley de Propiedad Intelectual (RDL 1/1996), la Ley 20/2003 de Protección Jurídica del Diseño Industrial y el Reglamento (CE) 6/2002 sobre dibujos y modelos comunitarios.</p>
+        <p>Comprar un producto te da la propiedad de esa unidad y el derecho a usarla, también en producciones audiovisuales y fotografías. No te da ningún derecho sobre el diseño: no está permitido copiarlo, escanearlo, reproducirlo (también con impresión 3D), modificarlo para hacer versiones derivadas, distribuir sus archivos ni venderlo sin nuestra autorización por escrito.</p>
+        <p><strong>Piezas a medida.</strong> Cuando diseñamos una pieza a partir de tu petición, el diseño resultante es nuestro salvo que acordemos por escrito una cesión de derechos. Si nos envías material propio (dibujos, referencias, archivos), sigues siendo su titular y nos autorizas a usarlo solo para hacer tu encargo; garantizas que tienes derecho a usarlo.</p>
       </div>
-      <div class="content-block">
+      <div class="lang-block" data-lang="en">
+        <h2>Intellectual and industrial property</h2>
+        <p>All Prop a Prop Teu product designs (shapes, 3D models, print files, drawings and prototypes), as well as the photos, texts, logos and brand of this website, belong to <strong>[OWNER]</strong> and are protected by Spanish Intellectual Property Law (RDL 1/1996), Law 20/2003 on Industrial Design and Regulation (EC) 6/2002 on Community designs.</p>
+        <p>Buying a product makes that unit yours and lets you use it, including in film, TV and photography. It gives you no rights over the design: you may not copy, scan, reproduce (including by 3D printing), modify it into derived versions, share its files or sell it without our written permission.</p>
+        <p><strong>Custom pieces.</strong> When we design a piece from your request, the resulting design is ours unless we agree in writing to transfer the rights. If you send us your own material (drawings, references, files), it stays yours and you allow us to use it only to make your order; you confirm you have the right to use it.</p>
+      </div>
+    </section>
+
+    <!-- ===================== TERMS OF SALE ===================== -->
+    <section class="content-block" id="condiciones">
+      <div class="lang-block" data-lang="ca">
+        <h2>Condicions de venda</h2>
+        <p><strong>Qui ven.</strong> El venedor és el titular indicat a l'Avís legal. Aquestes condicions s'apliquen a les compres fetes a propapropteu.com.</p>
+        <p><strong>Preus.</strong> Tots els preus són en euros i inclouen l'IVA (21%). Les despeses d'enviament no estan incloses: te les confirmem per correu abans que paguis, i no cal pagar res fins que les acceptis.</p>
+        <p><strong>Com es fa una comanda.</strong> 1) Fas la comanda a la cistella. 2) Rebràs un correu amb el resum i les dades bancàries per a la transferència. 3) Quan rebem la transferència, t'enviem un correu de confirmació de la compra amb la factura adjunta. El contracte es formalitza en aquest moment. Les comandes no pagades en [7] dies es poden anul·lar.</p>
+        <p><strong>Pagament.</strong> Transferència bancària. [Pagament amb targeta: properament.]</p>
+        <p><strong>Fabricació i lliurament.</strong> Moltes peces es fabriquen quan les demanes. Et confirmem el termini i la forma de lliurament (enviament o recollida a Barcelona) per correu. El termini màxim de lliurament és de 30 dies des del pagament, llevat que acordem un altre termini.</p>
+        <p><strong>Empreses.</strong> Si compres com a empresa o professional, el dret de desistiment no s'aplica, i la garantia es regeix pel Codi de Comerç.</p>
+        <p><strong>Llei aplicable.</strong> Llei espanyola. Si ets consumidor, pots acudir als tribunals del teu domicili.</p>
+      </div>
+      <div class="lang-block" data-lang="es">
+        <h2>Condiciones de venta</h2>
+        <p><strong>Quién vende.</strong> El vendedor es el titular indicado en el Aviso legal. Estas condiciones se aplican a las compras hechas en propapropteu.com.</p>
+        <p><strong>Precios.</strong> Todos los precios son en euros e incluyen el IVA (21%). Los gastos de envío no están incluidos: te los confirmamos por correo antes de que pagues, y no tienes que pagar nada hasta que los aceptes.</p>
+        <p><strong>Cómo se hace un pedido.</strong> 1) Haces el pedido en la cesta. 2) Recibes un correo con el resumen y los datos bancarios para la transferencia. 3) Cuando recibimos la transferencia, te enviamos un correo confirmando la compra con la factura adjunta. El contrato se formaliza en ese momento. Los pedidos no pagados en [7] días pueden anularse.</p>
+        <p><strong>Pago.</strong> Transferencia bancaria. [Pago con tarjeta: próximamente.]</p>
+        <p><strong>Fabricación y entrega.</strong> Muchas piezas se fabrican cuando las pides. Te confirmamos el plazo y la forma de entrega (envío o recogida en Barcelona) por correo. El plazo máximo de entrega es de 30 días desde el pago, salvo que acordemos otro.</p>
+        <p><strong>Empresas.</strong> Si compras como empresa o profesional, el derecho de desistimiento no se aplica y la garantía se rige por el Código de Comercio.</p>
+        <p><strong>Ley aplicable.</strong> Ley española. Si eres consumidor, puedes acudir a los tribunales de tu domicilio.</p>
+      </div>
+      <div class="lang-block" data-lang="en">
         <h2>Terms of sale</h2>
-        <p>Prices include Spanish VAT (21%). Shipping costs are calculated at checkout by destination. We ship to [ZONES] within [X-Y] working days.</p>
-        <p>Right of withdrawal: you have 14 calendar days from delivery to return a product without justification. Made-to-order items are excluded (art. 103 LGDCU). To start a return, write to info@propapropteu.com.</p>
-        <p>New products carry the 3-year legal guarantee (RDL 7/2021).</p>
+        <p><strong>Who sells.</strong> The seller is the owner named in the Legal notice. These terms apply to purchases made on propapropteu.com.</p>
+        <p><strong>Prices.</strong> All prices are in euros and include Spanish VAT (21%). Shipping is not included: we confirm the cost by email before you pay, and you pay nothing until you accept it.</p>
+        <p><strong>How an order works.</strong> 1) You place the order in the cart. 2) You get an email with the summary and the bank details for the transfer. 3) Once the transfer arrives, we email you a purchase confirmation with the invoice attached. The contract is made at that point. Orders not paid within [7] days may be cancelled.</p>
+        <p><strong>Payment.</strong> Bank transfer. [Card payment: coming soon.]</p>
+        <p><strong>Making and delivery.</strong> Many pieces are made when you order them. We confirm the timing and delivery method (shipping or pickup in Barcelona) by email. Maximum delivery time is 30 days from payment unless we agree otherwise.</p>
+        <p><strong>Businesses.</strong> If you buy as a business or professional, the right of withdrawal does not apply and the guarantee follows the Spanish Commercial Code.</p>
+        <p><strong>Applicable law.</strong> Spanish law. If you are a consumer, you may go to the courts where you live.</p>
       </div>
-    </div>
+    </section>
+
+    <!-- ===================== RIGHT OF WITHDRAWAL ===================== -->
+    <section class="content-block" id="desistimiento">
+      <div class="lang-block" data-lang="ca">
+        <h2>Dret de desistiment (devolucions)</h2>
+        <p>Si ets consumidor, tens <strong>14 dies naturals</strong> des que reps el producte per desistir de la compra sense donar cap motiu (arts. 102–108 de la Llei General per a la Defensa dels Consumidors i Usuaris).</p>
+        <p><strong>Com fer-ho.</strong> Envia'ns un correu a info@propapropteu.com dient que vols desistir, amb el número de comanda. Pots fer servir aquest model: <em>«Comunico que desisteixo del contracte de venda del següent producte: [producte], comanda [número], rebut el [data]. Nom, adreça, data i signatura (si és en paper).»</em></p>
+        <p><strong>Devolució del producte.</strong> L'has de retornar en un termini de 14 dies des que ens ho comuniquis, en bon estat. Les despeses de devolució van a càrrec teu.</p>
+        <p><strong>Reemborsament.</strong> Et retornem l'import pagat, inclòs l'enviament estàndard, en un màxim de 14 dies des que ens comuniques el desistiment, pel mateix mitjà de pagament. Podem esperar a rebre el producte abans de reemborsar-lo.</p>
+        <p><strong>Excepció.</strong> No hi ha dret de desistiment per a productes fets segons les teves especificacions o personalitzats (art. 103.c), com les peces fetes a mida a través de «Demana una peça».</p>
+      </div>
+      <div class="lang-block" data-lang="es">
+        <h2>Derecho de desistimiento (devoluciones)</h2>
+        <p>Si eres consumidor, tienes <strong>14 días naturales</strong> desde que recibes el producto para desistir de la compra sin dar ningún motivo (arts. 102–108 de la Ley General para la Defensa de los Consumidores y Usuarios).</p>
+        <p><strong>Cómo hacerlo.</strong> Envíanos un correo a info@propapropteu.com diciendo que quieres desistir, con el número de pedido. Puedes usar este modelo: <em>«Comunico que desisto del contrato de venta del siguiente producto: [producto], pedido [número], recibido el [fecha]. Nombre, dirección, fecha y firma (si es en papel).»</em></p>
+        <p><strong>Devolución del producto.</strong> Debes devolverlo en un plazo de 14 días desde que nos lo comuniques, en buen estado. Los gastos de devolución corren de tu cuenta.</p>
+        <p><strong>Reembolso.</strong> Te devolvemos el importe pagado, incluido el envío estándar, en un máximo de 14 días desde que nos comunicas el desistimiento, por el mismo medio de pago. Podemos esperar a recibir el producto antes de reembolsarlo.</p>
+        <p><strong>Excepción.</strong> No hay derecho de desistimiento para productos hechos según tus especificaciones o personalizados (art. 103.c), como las piezas a medida pedidas en «Pide una pieza».</p>
+      </div>
+      <div class="lang-block" data-lang="en">
+        <h2>Right of withdrawal (returns)</h2>
+        <p>If you are a consumer, you have <strong>14 calendar days</strong> from receiving the product to withdraw from the purchase without giving any reason (arts. 102–108 of the Spanish Consumer Protection Law).</p>
+        <p><strong>How.</strong> Email info@propapropteu.com saying you wish to withdraw, with your order number. You can use this model: <em>"I hereby give notice that I withdraw from my contract for the sale of the following goods: [product], order [number], received on [date]. Name, address, date and signature (if on paper)."</em></p>
+        <p><strong>Sending it back.</strong> Return the product within 14 days of telling us, in good condition. You pay the return shipping.</p>
+        <p><strong>Refund.</strong> We refund what you paid, including standard shipping, within 14 days of your notice, using the same payment method. We may wait until we receive the product before refunding.</p>
+        <p><strong>Exception.</strong> There is no right of withdrawal for goods made to your specifications or personalised (art. 103.c), such as custom pieces ordered through "Request a prop".</p>
+      </div>
+    </section>
+
+    <!-- ===================== LEGAL GUARANTEE ===================== -->
+    <section class="content-block" id="garantia">
+      <div class="lang-block" data-lang="ca">
+        <h2>Garantia legal</h2>
+        <p>Tots els productes tenen la <strong>garantia legal de 3 anys</strong> des del lliurament (art. 120 de la Llei General per a la Defensa dels Consumidors i Usuaris). Si un producte té un defecte o no és com es va descriure, pots triar entre la reparació o la substitució, sense cost; si no és possible, una rebaixa del preu o la resolució del contracte.</p>
+        <p>Escriu-nos a info@propapropteu.com amb el número de comanda i una foto del problema. La garantia no cobreix el desgast normal ni l'ús en condicions diferents de les indicades a la fitxa del producte (per exemple, superar la càrrega màxima).</p>
+        <p><strong>Reclamacions.</strong> Tenim fulls oficials de queixa, reclamació i denúncia a la teva disposició; demana'ls a info@propapropteu.com. També pots adreçar-te a l'Agència Catalana del Consum (consum.cat) o a l'oficina de consum del teu municipi.</p>
+      </div>
+      <div class="lang-block" data-lang="es">
+        <h2>Garantía legal</h2>
+        <p>Todos los productos tienen la <strong>garantía legal de 3 años</strong> desde la entrega (art. 120 de la Ley General para la Defensa de los Consumidores y Usuarios). Si un producto tiene un defecto o no es como se describió, puedes elegir entre la reparación o la sustitución, sin coste; si no es posible, una rebaja del precio o la resolución del contrato.</p>
+        <p>Escríbenos a info@propapropteu.com con el número de pedido y una foto del problema. La garantía no cubre el desgaste normal ni el uso en condiciones distintas de las indicadas en la ficha del producto (por ejemplo, superar la carga máxima).</p>
+        <p><strong>Reclamaciones.</strong> Tenemos hojas oficiales de queja, reclamación y denuncia a tu disposición; pídelas en info@propapropteu.com. También puedes dirigirte a la Agència Catalana del Consum (consum.cat) o a la oficina de consumo de tu municipio.</p>
+      </div>
+      <div class="lang-block" data-lang="en">
+        <h2>Legal guarantee</h2>
+        <p>All products carry the <strong>3-year legal guarantee</strong> from delivery (art. 120 of the Spanish Consumer Protection Law). If a product is faulty or not as described, you can choose repair or replacement at no cost; if neither is possible, a price reduction or cancelling the contract.</p>
+        <p>Email info@propapropteu.com with your order number and a photo of the problem. The guarantee does not cover normal wear or use outside the conditions on the product's datasheet (for example, going over the maximum load).</p>
+        <p><strong>Complaints.</strong> Official complaint forms are available on request at info@propapropteu.com. You can also contact the Catalan Consumer Agency (consum.cat) or your local consumer office.</p>
+      </div>
+    </section>
+
+    <!-- ===================== PRIVACY ===================== -->
+    <section class="content-block" id="privacidad">
+      <div class="lang-block" data-lang="ca">
+        <h2>Política de privacitat</h2>
+        <p><strong>Responsable:</strong> [NOM O RAÓ SOCIAL], NIF [NIF], [ADREÇA]. Contacte: info@propapropteu.com.</p>
+        <p><strong>Què fem amb les teves dades.</strong> Comandes: nom, correu, telèfon, adreces i dades de facturació, per gestionar la comanda, el pagament, l'enviament i la factura (base: execució del contracte i obligació legal). Formularis de contacte i «Demana una peça»: les dades i els arxius que ens envies, per respondre't i preparar el pressupost (base: la teva sol·licitud).</p>
+        <p><strong>Quant de temps.</strong> Les dades de comandes i factures, el temps que exigeix la llei fiscal i mercantil (fins a 6 anys). Els missatges i peticions sense comanda, fins a 2 anys o fins que ens demanis esborrar-los.</p>
+        <p><strong>Qui més les veu.</strong> No les venem ni les cedim. Fem servir proveïdors que les tracten per compte nostre: Google (correu i emmagatzematge de comandes i arxius), GitHub (allotjament del web), Google Fonts (tipografies del web, que reben la teva adreça IP) i, quan s'activi el pagament amb targeta, Stripe. Alguns poden tractar dades fora de l'UE amb garanties adequades (Marc de Privacitat de Dades UE-EUA o clàusules contractuals tipus).</p>
+        <p><strong>Els teus drets.</strong> Accés, rectificació, supressió, oposició, limitació i portabilitat, escrivint a info@propapropteu.com. Si no estàs d'acord amb la resposta, pots reclamar a l'Agència Espanyola de Protecció de Dades (aepd.es).</p>
+      </div>
+      <div class="lang-block" data-lang="es">
+        <h2>Política de privacidad</h2>
+        <p><strong>Responsable:</strong> [NOMBRE O RAZÓN SOCIAL], NIF [NIF], [DIRECCIÓN]. Contacto: info@propapropteu.com.</p>
+        <p><strong>Qué hacemos con tus datos.</strong> Pedidos: nombre, correo, teléfono, direcciones y datos de facturación, para gestionar el pedido, el pago, el envío y la factura (base: ejecución del contrato y obligación legal). Formularios de contacto y «Pide una pieza»: los datos y archivos que nos envías, para responderte y preparar el presupuesto (base: tu solicitud).</p>
+        <p><strong>Cuánto tiempo.</strong> Los datos de pedidos y facturas, el tiempo que exige la ley fiscal y mercantil (hasta 6 años). Los mensajes y peticiones sin pedido, hasta 2 años o hasta que nos pidas borrarlos.</p>
+        <p><strong>Quién más los ve.</strong> No los vendemos ni cedemos. Usamos proveedores que los tratan por cuenta nuestra: Google (correo y almacenamiento de pedidos y archivos), GitHub (alojamiento de la web), Google Fonts (tipografías de la web, que reciben tu dirección IP) y, cuando se active el pago con tarjeta, Stripe. Algunos pueden tratar datos fuera de la UE con garantías adecuadas (Marco de Privacidad de Datos UE-EE. UU. o cláusulas contractuales tipo).</p>
+        <p><strong>Tus derechos.</strong> Acceso, rectificación, supresión, oposición, limitación y portabilidad, escribiendo a info@propapropteu.com. Si no estás de acuerdo con la respuesta, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
+      </div>
+      <div class="lang-block" data-lang="en">
+        <h2>Privacy policy</h2>
+        <p><strong>Controller:</strong> [FULL NAME OR COMPANY NAME], tax ID [NIF], [ADDRESS]. Contact: info@propapropteu.com.</p>
+        <p><strong>What we do with your data.</strong> Orders: name, email, phone, addresses and billing details, to handle the order, payment, delivery and invoice (basis: performing the contract and legal obligations). Contact and "Request a prop" forms: the details and files you send, to reply and prepare an estimate (basis: your request).</p>
+        <p><strong>How long.</strong> Order and invoice data for as long as tax and commercial law requires (up to 6 years). Messages and requests without an order, up to 2 years or until you ask us to delete them.</p>
+        <p><strong>Who else sees it.</strong> We do not sell or share it. We use providers that process it on our behalf: Google (email and storage of orders and files), GitHub (website hosting), Google Fonts (the website's fonts, which receive your IP address) and, once card payment is enabled, Stripe. Some may process data outside the EU with appropriate safeguards (EU-US Data Privacy Framework or standard contractual clauses).</p>
+        <p><strong>Your rights.</strong> Access, rectification, erasure, objection, restriction and portability, by writing to info@propapropteu.com. If you disagree with our answer, you can complain to the Spanish Data Protection Agency (aepd.es).</p>
+      </div>
+    </section>
+
+    <!-- ===================== COOKIES ===================== -->
+    <section class="content-block" id="cookies">
+      <div class="lang-block" data-lang="ca">
+        <h2>Política de cookies</h2>
+        <p>Aquest web només guarda al teu navegador el que necessita per funcionar: l'idioma triat, la cistella i si has tancat l'avís de cookies. No fem servir cookies d'analítica ni de publicitat. Pots esborrar aquestes dades des de la configuració del navegador.</p>
+      </div>
+      <div class="lang-block" data-lang="es">
+        <h2>Política de cookies</h2>
+        <p>Esta web solo guarda en tu navegador lo que necesita para funcionar: el idioma elegido, la cesta y si has cerrado el aviso de cookies. No usamos cookies de analítica ni de publicidad. Puedes borrar estos datos desde la configuración del navegador.</p>
+      </div>
+      <div class="lang-block" data-lang="en">
+        <h2>Cookie policy</h2>
+        <p>This website only stores in your browser what it needs to work: your chosen language, your cart and whether you closed the cookie notice. We use no analytics or advertising cookies. You can delete this data in your browser settings.</p>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer" id="site-footer"></footer>

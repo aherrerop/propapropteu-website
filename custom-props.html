@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prop a Prop Teu — Attrezzo a mida</title>
-  <meta name="description" content="Fabriquem attrezzo a mida per a teatre, cinema, televisió i esdeveniments: impressió 3D, emmotllament, disseny i prototipatge, acabats i fabricació. Demana pressupost.">
+  <title>Prop a Prop Teu — Request a prop</title>
+  <meta name="description" content="Fabriquem attrezzo a mida per a teatre, cinema, televisió i esdeveniments: impressió 3D, emmotllament, disseny i prototipatge, acabats i fabricació. Demana una peça a mida.">
   <meta property="og:image" content="assets/logo_mark.svg">
   <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,22 +16,62 @@
   <header class="site-header" id="site-header"></header>
 
   <main class="container">
-    <h1 data-i18n="custom.title"></h1>
-    <p class="mission-lead" data-i18n="custom.intro" style="margin-top:14px"></p>
-
-    <!-- REQUEST A QUOTE — top of page, home-style band -->
-    <section class="cta-band bleed" style="margin-bottom:clamp(56px,8vw,110px)">
-      <div class="cta-inner">
-        <div>
-          <h2 data-i18n="home.ctaTitle"></h2>
-          <p data-i18n="home.ctaText"></p>
-        </div>
-        <a href="#quote" class="btn" data-i18n="custom.quoteCtaBtn"></a>
-      </div>
+    <!-- INTRO -->
+    <section class="req-hero">
+      <span class="eyebrow" data-i18n="nav.request"></span>
+      <h1 data-i18n="request.title"></h1>
+      <p data-i18n="request.intro"></p>
     </section>
 
-    <!-- INSTAGRAM-STYLE WORK GALLERY.
-         Replace the placeholder squares with real photos at assets/img/custom/work-N.jpg -->
+    <!-- HOW IT WORKS: three steps -->
+    <section class="req-steps">
+      <div><span class="quality-mark quality-mark-1">01</span><h3 data-i18n="request.s1t"></h3><p data-i18n="request.s1"></p></div>
+      <div><span class="quality-mark quality-mark-2">02</span><h3 data-i18n="request.s2t"></h3><p data-i18n="request.s2"></p></div>
+      <div><span class="quality-mark quality-mark-3">03</span><h3 data-i18n="request.s3t"></h3><p data-i18n="request.s3"></p></div>
+    </section>
+
+    <!-- REQUEST FORM: files go up one by one first, then the request itself -->
+    <form class="std-form req-form" id="req-form" novalidate>
+      <div class="row2">
+        <label><span data-i18n="form.name"></span><input type="text" name="name" required autocomplete="name"></label>
+        <label><span data-i18n="form.email"></span><input type="email" name="email" required autocomplete="email"></label>
+      </div>
+      <div class="row2">
+        <label><span data-i18n="form.phone"></span><input type="tel" name="phone" autocomplete="tel"></label>
+        <label><span data-i18n="request.company"></span><input type="text" name="company" autocomplete="organization"></label>
+      </div>
+      <label><span data-i18n="request.what"></span><textarea name="what" required rows="6" data-i18n-placeholder="request.whatPh"></textarea></label>
+      <div class="row2">
+        <label><span data-i18n="request.quantity"></span><input type="number" name="quantity" min="1" step="1"></label>
+        <label><span data-i18n="request.needBy"></span><input type="date" name="needBy"></label>
+      </div>
+      <div class="row2">
+        <label><span data-i18n="request.delivery"></span>
+          <select name="delivery">
+            <option value="" data-i18n="request.notSure"></option>
+            <option value="pickup" data-i18n="request.pickup"></option>
+            <option value="shipping" data-i18n="request.shipping"></option>
+          </select>
+        </label>
+        <label><span data-i18n="request.budget"></span><input type="text" name="budget" data-i18n-placeholder="request.budgetPh"></label>
+      </div>
+
+      <div class="req-files">
+        <strong data-i18n="request.files"></strong>
+        <p class="hint" data-i18n="request.filesHint"></p>
+        <button type="button" class="btn btn-ghost" id="req-add" data-i18n="request.addFiles"></button>
+        <input type="file" id="req-input" multiple accept="image/*,video/*,.pdf,.stl,.3mf,.obj,.step,.stp">
+        <ul id="req-list"></ul>
+      </div>
+      <label><span data-i18n="request.link"></span><input type="url" name="link" data-i18n-placeholder="request.linkPh"></label>
+
+      <label class="cf-check"><input type="checkbox" name="privacy" required> <span><span data-i18n="form.privacyPre"></span> <a href="legal.html#privacidad" data-i18n="form.privacyLink"></a> *</span></label>
+      <input name="company_hp" class="hp-field" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button class="btn" type="submit" id="req-send" data-i18n="request.send"></button>
+      <p class="form-status" id="req-status" role="status" hidden></p>
+    </form>
+
+    <!-- OUR WORK: replace with real photos at assets/img/custom/work-1.jpg … work-6.jpg -->
     <div class="section-head">
       <div>
         <span class="eyebrow" data-i18n="custom.workEyebrow"></span>
@@ -39,15 +79,15 @@
       </div>
     </div>
     <section class="work-gallery" style="margin-bottom:clamp(56px,8vw,110px)">
-      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-1.jpg"><span class="media-tag">work-1.jpg</span></div>
-      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-2.jpg"><span class="media-tag">work-2.jpg</span></div>
-      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-3.jpg"><span class="media-tag">work-3.jpg</span></div>
-      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-4.jpg"><span class="media-tag">work-4.jpg</span></div>
-      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-5.jpg"><span class="media-tag">work-5.jpg</span></div>
-      <div class="media-box"><img src="assets/img/placeholder-landscape.svg" alt="" loading="lazy" data-final="assets/img/custom/work-6.jpg"><span class="media-tag">work-6.jpg</span></div>
+      <div class="media-box"><img src="assets/img/custom/work-1.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div>
+      <div class="media-box"><img src="assets/img/custom/work-2.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div>
+      <div class="media-box"><img src="assets/img/custom/work-3.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div>
+      <div class="media-box"><img src="assets/img/custom/work-4.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div>
+      <div class="media-box"><img src="assets/img/custom/work-5.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div>
+      <div class="media-box"><img src="assets/img/custom/work-6.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div>
     </section>
 
-    <!-- CAPABILITIES — clean numbered list -->
+    <!-- WHAT WE CAN MAKE -->
     <div class="section-head">
       <div>
         <span class="eyebrow" data-i18n="custom.capEyebrow"></span>
@@ -55,38 +95,11 @@
       </div>
     </div>
     <section class="capabilities" style="margin-bottom:clamp(56px,8vw,110px)">
-      <div class="capability">
-        <span class="cap-no">01</span>
-        <div><h3 data-i18n="custom.cap3dTitle"></h3><p data-i18n="custom.cap3dText"></p></div>
-      </div>
-      <div class="capability">
-        <span class="cap-no">02</span>
-        <div><h3 data-i18n="custom.capMouldTitle"></h3><p data-i18n="custom.capMouldText"></p></div>
-      </div>
-      <div class="capability">
-        <span class="cap-no">03</span>
-        <div><h3 data-i18n="custom.capDesignTitle"></h3><p data-i18n="custom.capDesignText"></p></div>
-      </div>
-      <div class="capability">
-        <span class="cap-no">04</span>
-        <div><h3 data-i18n="custom.capFinishTitle"></h3><p data-i18n="custom.capFinishText"></p></div>
-      </div>
+      <div class="capability"><span class="cap-no">01</span><div><h3 data-i18n="custom.cap3dTitle"></h3><p data-i18n="custom.cap3dText"></p></div></div>
+      <div class="capability"><span class="cap-no">02</span><div><h3 data-i18n="custom.capMouldTitle"></h3><p data-i18n="custom.capMouldText"></p></div></div>
+      <div class="capability"><span class="cap-no">03</span><div><h3 data-i18n="custom.capDesignTitle"></h3><p data-i18n="custom.capDesignText"></p></div></div>
+      <div class="capability"><span class="cap-no">04</span><div><h3 data-i18n="custom.capFinishTitle"></h3><p data-i18n="custom.capFinishText"></p></div></div>
     </section>
-
-    <!-- QUOTE FORM (unchanged functionality) -->
-    <div class="page-narrow" id="quote">
-      <h2 data-i18n="custom.quoteTitle" style="margin-bottom:10px"></h2>
-      <p class="muted" data-i18n="custom.quoteIntro" style="margin-bottom:22px"></p>
-      <form class="std-form" id="quote-form" method="POST">
-        <label><span data-i18n="form.name"></span><input type="text" name="name" required></label>
-        <label><span data-i18n="form.email"></span><input type="email" name="email" required></label>
-        <label><span data-i18n="form.phone"></span><input type="tel" name="phone"></label>
-        <label><span data-i18n="custom.quoteWhat"></span><textarea name="message" required></textarea></label>
-        <label><span data-i18n="custom.quoteDeadline"></span><input type="text" name="deadline"></label>
-        <button class="btn" type="submit" data-i18n="custom.quoteSend"></button>
-        <p class="form-status" id="quote-status" role="status" hidden></p>
-      </form>
-    </div>
   </main>
 
   <footer class="site-footer" id="site-footer"></footer>
@@ -95,28 +108,71 @@
   <script src="js/i18n.js"></script>
   <script src="js/layout.js"></script>
   <script>
+    // Request a prop: pick files (max 5 × 10 MB), upload them one by one, then send the request.
     document.addEventListener("DOMContentLoaded", async () => {
       await Layout.init();
-      const form = document.getElementById("quote-form");
-      const status = document.getElementById("quote-status");
+      const MAX_FILES = 5, MAX_BYTES = 10 * 1024 * 1024;
+      const EXT = ["jpg","jpeg","png","gif","webp","heic","mp4","mov","webm","m4v","pdf","stl","3mf","obj","step","stp"];
+      const reqId = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2)));
+      const form = document.getElementById("req-form"), status = document.getElementById("req-status");
+      const input = document.getElementById("req-input"), list = document.getElementById("req-list");
+      const sent = new Set();          // file names already uploaded (a retry skips them)
+      let files = [];
+
+      const say = (text, ok) => { status.textContent = text; status.className = "form-status " + (ok ? "ok" : "err"); status.hidden = false; };
+      const draw = () => {
+        list.innerHTML = "";
+        files.forEach((f, i) => {
+          const li = document.createElement("li");
+          li.innerHTML = "<span></span><button type='button' aria-label='Remove'>&times;</button>";
+          li.firstChild.textContent = f.name + " · " + (f.size / 1048576).toFixed(1) + " MB";
+          li.lastChild.onclick = () => { files.splice(i, 1); draw(); };
+          list.appendChild(li);
+        });
+      };
+      document.getElementById("req-add").onclick = () => input.click();
+      input.onchange = () => {
+        status.hidden = true;
+        for (const f of input.files) {
+          const ext = (f.name.split(".").pop() || "").toLowerCase();
+          if (files.length >= MAX_FILES) { say(I18N.t("request.tooMany")); break; }
+          if (EXT.indexOf(ext) < 0) { say(I18N.t("request.badType").replace("{name}", f.name)); continue; }
+          if (f.size > MAX_BYTES) { say(I18N.t("request.tooBig").replace("{name}", f.name)); continue; }
+          if (!files.some(x => x.name === f.name)) files.push(f);
+        }
+        input.value = ""; draw();
+      };
+      const b64 = f => new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = bad; r.readAsDataURL(f); });
+      const api = body => fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow", body: JSON.stringify(body) }).then(r => r.json());
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const btn = form.querySelector("button[type=submit]");
+        if (!form.checkValidity()) { form.reportValidity(); return; }
         const d = Object.fromEntries(new FormData(form).entries());
-        const old = btn.textContent; btn.disabled = true; btn.textContent = "…";
-        status.hidden = true;
-        let r;
+        const btn = document.getElementById("req-send"), old = btn.textContent;
+        btn.disabled = true; status.hidden = true;
         try {
-          const res = await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
-            body: JSON.stringify({ action: "contact", source: "pressupost",
-              name: d.name, email: d.email, phone: d.phone, message: d.message,
-              extra: d.deadline ? ("Termini: " + d.deadline) : "" }) });
-          r = await res.json();
-        } catch (err) { r = { ok: false }; }
-        if (r && r.ok) { form.reset(); status.textContent = r.message || "Sol·licitud enviada. Gràcies!"; status.className = "form-status ok"; }
-        else { status.textContent = (r && r.message) || ("No s'ha pogut enviar. Escriu-nos a " + SITE_CONFIG.email + "."); status.className = "form-status err"; }
-        status.hidden = false;
-        btn.disabled = false; btn.textContent = old;
+          for (let i = 0; i < files.length; i++) {
+            const f = files[i];
+            if (sent.has(f.name)) continue;
+            btn.textContent = I18N.t("request.uploading").replace("{n}", i + 1).replace("{t}", files.length);
+            const r = await api({ action: "requestFile", reqId, filename: f.name, mimeType: f.type, dataBase64: await b64(f) });
+            if (!r || !r.ok) throw new Error(r && r.error);
+            sent.add(f.name);
+          }
+          btn.textContent = "…";
+          const r = await api({ action: "requestProp", reqId, lang: I18N.lang, name: d.name, email: d.email, phone: d.phone,
+            company: d.company, what: d.what, quantity: d.quantity, needBy: d.needBy, delivery: d.delivery,
+            budget: d.budget, link: d.link, company_hp: d.company_hp });
+          if (!r || !r.ok) throw new Error(r && r.error);
+          form.reset(); files = []; draw();
+          form.querySelectorAll("input,textarea,select,button").forEach(el => el.disabled = true);
+          say(I18N.t("request.ok"), true);
+          btn.textContent = old;
+        } catch (err) {
+          say(I18N.t("request.err") + " " + SITE_CONFIG.email);
+          btn.disabled = false; btn.textContent = old;
+        }
       });
     });
   </script>
