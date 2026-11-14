@@ -88,7 +88,7 @@ const ShopPage = {
       const out = p.stock === 0;
       return `
       <div class="shop-card${out ? " sold-out" : ""}">
-        <a class="sc-link" href="product.html?id=${p.id}">
+        <a class="sc-link" href="${Catalog.url(p)}">
           <div class="sc-img ${Catalog.isCutout(p) ? "cut" : "photo"}">
             <span class="sc-corner" aria-hidden="true"></span>
             ${out ? `<span class="sc-soldout" data-i18n="stock.out"></span>` : ""}

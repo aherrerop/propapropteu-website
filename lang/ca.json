@@ -19,7 +19,7 @@
     "heroCtaShop": "Explora la botiga",
     "heroCtaCustom": "Demana attrezzo a mida",
     "heroEyebrow": "Attrezzo · Fabricació · Packs",
-    "collectionTitle": "Compra la nostra col·lecció",
+    "collectionTitle": "Els nostres productes",
     "collectionLink": "Veure-ho tot",
     "sceneTitle": "Fet amb les nostres eines",
     "sceneLink": "Mira què fem",
@@ -46,7 +46,28 @@
     "aboutLink": "Coneix l'equip",
     "ctaTitle": "Tens un projecte entre mans?",
     "ctaText": "Explica'ns què necessites i quan ho necessites. Responem en 24-48 h laborables.",
-    "ctaBtn": "Parlem"
+    "ctaBtn": "Parlem",
+    "productsEyebrow": "Botiga",
+    "testiEyebrow": "Opinions",
+    "testiTitle": "El que diuen al plató",
+    "t1": "Necessitàvem dotze suports iguals per al rodatge de l'endemà. A les 8 del matí eren al plató.",
+    "t1who": "Laia R. · Set dresser, llargmetratge",
+    "t2": "L'ATLAS ja va fix al camió. Penjar i despenjar quadres als decorats ens costa la meitat de temps.",
+    "t2who": "Marc T. · Coordinador d'art, sèrie de TV",
+    "t3": "Els vam enviar una captura i una data. Sense anades i vingudes: va arribar exactament el que demanàvem.",
+    "t3who": "Núria S. · Directora d'art, publicitat",
+    "madeEyebrow": "Demana una peça",
+    "madeTitle": "El que fem a mida",
+    "madeIntro": "Si no existeix, el dissenyem i el fabriquem per a la teva producció.",
+    "ex1t": "Props de mà",
+    "ex1": "L'objecte que demana el guió i no és a cap botiga: rèpliques, aparells, peces d'època.",
+    "ex2t": "Suports i fixacions",
+    "ex2": "Per penjar, subjectar o amagar coses als decorats sense fer-los malbé.",
+    "ex3t": "Sèries i múltiples",
+    "ex3": "La mateixa peça ×20 per a fons, especialistes o continuïtat.",
+    "ex4t": "Recanvis i arranjaments",
+    "ex4": "La peça trencada o perduda d'un moble o un atrezzo de lloguer, reproduïda igual.",
+    "madeBtn": "Demana una peça"
   },
   "catalog": {
     "pageTitle": "Botiga",
@@ -111,13 +132,15 @@
   "stock": {
     "in": "En estoc",
     "low": "Últimes unitats",
-    "out": "Esgotat"
+    "out": "Esgotat",
+    "made": "Fet per encàrrec"
   },
   "product": {
     "specs": "Fitxa tècnica",
     "related": "Productes relacionats",
     "backToCatalog": "Torna a la botiga",
-    "notFound": "No hem trobat aquest producte."
+    "notFound": "No hem trobat aquest producte.",
+    "delivery": "El fabriquem a Barcelona quan el demanes. Recollida a Barcelona o enviament: et confirmem termini i cost per correu abans de pagar."
   },
   "custom": {
     "title": "Attrezzo a mida",
@@ -187,8 +210,8 @@
     "emptyAlert": "Afegeix almenys un producte al pack abans de sol·licitar-lo.",
     "mailSubject": "Sol·licitud de pack de producció",
     "mailIntro": "Hola! M'agradaria configurar un pack de producció amb aquests productes:",
-    "accountTitle": "Comptes i pagament recurrent",
-    "accountText": "Per als packs recurrents crearem un compte per a la teva producció i configurarem el cobrament periòdic a través d'una passarel·la de pagament segura (no guardem mai les dades bancàries en aquesta web). Escriu-nos amb el pack configurat i t'enviem els passos per activar la subscripció.",
+    "accountTitle": "Com es paga",
+    "accountText": "Cada lliurament es paga per transferència i porta la seva factura. Escriu-nos amb el pack configurat i ho organitzem amb tu per correu.",
     "cat_tools": "Pack d'eines",
     "cat_consumables": "Pack de consumibles",
     "cat_duration": "Per durada",
@@ -354,9 +377,9 @@
     "title": "Avisos legals"
   },
   "cookies": {
-    "text": "Fem servir cookies tècniques pròpies i del proveïdor de pagament, imprescindibles per al funcionament de la botiga.",
+    "text": "Aquest web només guarda al navegador l'idioma i la cistella. No fem servir galetes de seguiment.",
     "more": "Més informació",
-    "accept": "Entesos"
+    "accept": "D'acord"
   },
   "notfound": {
     "text": "Aquesta pàgina no existeix (o encara no l'hem fabricada).",
@@ -394,5 +417,66 @@
     "tooBig": "{name} supera els 10 MB. Fes servir el camp d'enllaç per a arxius grans.",
     "tooMany": "Màxim 5 arxius.",
     "badType": "{name}: tipus d'arxiu no admès."
+  },
+  "ui": {
+    "skip": "Salta al contingut",
+    "close": "Tancar",
+    "remove": "Treure",
+    "prev": "Anterior",
+    "next": "Següent",
+    "team": "Accés equip",
+    "payCancel": "Pagament cancel·lat. La teva cistella continua disponible.",
+    "payOk": "Pagament rebut! Gràcies per la comanda ({ref}).",
+    "payPending": "Hem rebut la teva comanda ({ref}). Si el pagament no apareix, escriu-nos."
+  },
+  "meta": {
+    "home": {
+      "title": "Atrezzo, eines i peces a mida per a rodatges",
+      "desc": "Taller a Barcelona: dissenyem i fabriquem eines i atrezzo per a cinema, TV, teatre i esdeveniments, i fem per encàrrec les peces que no existeixen."
+    },
+    "shop": {
+      "title": "Botiga",
+      "desc": "Eines i atrezzo de disseny propi per a rodatges, provats en produccions reals. Fets per encàrrec a Barcelona."
+    },
+    "request": {
+      "title": "Demana una peça a mida",
+      "desc": "Explica'ns quina peça necessites i per a quan, adjunta fotos o plànols i et responem amb preu i termini."
+    },
+    "about": {
+      "title": "About",
+      "desc": "Som un taller a Barcelona que fa les eines que ens faltaven al plató. Coneix l'equip."
+    },
+    "contact": {
+      "title": "Contacte",
+      "desc": "Escriu-nos, truca'ns o envia'ns un WhatsApp. Responem en català, castellà o anglès."
+    },
+    "faq": {
+      "title": "Preguntes freqüents",
+      "desc": "Comandes, pagament, lliurament, devolucions, garantia i peces a mida: tot el que ens solen preguntar."
+    },
+    "legal": {
+      "title": "Avisos legals",
+      "desc": "Avís legal, propietat intel·lectual, condicions de venda, devolucions, garantia, privacitat i galetes."
+    },
+    "shipping": {
+      "title": "Enviaments i devolucions",
+      "desc": "Com fabriquem i lliurem la teva comanda, com es paga, devolucions en 14 dies i garantia de 3 anys."
+    },
+    "packs": {
+      "title": "Packs de producció",
+      "desc": "Packs d'eines, consumibles i materials per a equips de rodatge."
+    },
+    "packConfig": {
+      "title": "Configura el pack",
+      "desc": "Tria productes, freqüència i durada del teu pack de producció."
+    },
+    "product": {
+      "title": "Producte",
+      "desc": ""
+    },
+    "notfound": {
+      "title": "Pàgina no trobada",
+      "desc": ""
+    }
   }
 }

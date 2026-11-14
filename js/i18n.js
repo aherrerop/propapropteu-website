@@ -11,6 +11,9 @@ const I18N = {
   dict: {},
 
   detect() {
+    // A shared link such as ?lang=en opens in that language.
+    const q = new URLSearchParams(location.search).get("lang");
+    if (q && SITE_CONFIG.languages.includes(q)) return q;
     const saved = localStorage.getItem("ppt-lang");
     if (saved && SITE_CONFIG.languages.includes(saved)) return saved;
     if (SITE_CONFIG.autoDetectLang) {
@@ -42,6 +45,7 @@ const I18N = {
 
   apply(root = document) {
     try { document.documentElement.lang = this.lang; } catch (e) {}
+    root.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", this.t(el.dataset.i18nAria)));
     root.querySelectorAll("[data-i18n]").forEach(el => {
       el.innerHTML = this.t(el.dataset.i18n);
     });
@@ -63,6 +67,8 @@ const I18N = {
 
   async set(lang) {
     await this.load(lang);
+    // Keep the address in the chosen language, so a copied link opens the same way.
+    try { const u = new URL(location.href); if (lang === SITE_CONFIG.defaultLang) u.searchParams.delete("lang"); else u.searchParams.set("lang", lang); history.replaceState(null, "", u); } catch (e) {}
     this.apply();
     document.dispatchEvent(new CustomEvent("langchange", { detail: lang }));
   },

@@ -8,7 +8,8 @@ const ProductPage = {
 
   async init() {
     const data = await Catalog.load();
-    const id = new URLSearchParams(location.search).get("id");
+    // p/<id>.html carries the id on <body>; the old product.html?id= links still work.
+    const id = document.body.dataset.product || new URLSearchParams(location.search).get("id");
     this.product = data.products.find(p => p.id === id);
 
     if (!this.product) {
@@ -23,7 +24,8 @@ const ProductPage = {
   render() {
     const p = this.product;
     const badge = Catalog.badge(p.type);
-    const stock = Catalog.stock(p);
+    // Everything is made when ordered: no stock counter, only "sold out" if switched off.
+    const stock = p.stock === 0 ? Catalog.stock(p) : { cls: "stock-in", key: "stock.made" };
     const out = p.stock === 0;
     const images = p.images && p.images.length ? p.images : ["assets/img/placeholder.svg"];
 
@@ -41,7 +43,7 @@ const ProductPage = {
       brand: { "@type": "Brand", name: SITE_CONFIG.businessName },
       offers: { "@type": "Offer", price: p.price, priceCurrency: "EUR",
         availability: out ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
-        url: location.href }
+        url: new URL(Catalog.url(p), location.href).href }
     };
     let lds = document.getElementById("ld-product");
     if (!lds) { lds = document.createElement("script"); lds.type = "application/ld+json"; lds.id = "ld-product"; document.head.appendChild(lds); }
@@ -51,7 +53,7 @@ const ProductPage = {
       itemListElement: [
         { "@type": "ListItem", position: 1, name: SITE_CONFIG.businessName, item: location.origin + "/" },
         { "@type": "ListItem", position: 2, name: I18N.t("nav.catalog"), item: location.origin + "/shop.html" },
-        { "@type": "ListItem", position: 3, name: I18N.pick(p.name), item: location.href }
+        { "@type": "ListItem", position: 3, name: I18N.pick(p.name), item: new URL(Catalog.url(p), location.href).href }
       ]
     };
     let bc = document.getElementById("ld-crumbs");
@@ -96,6 +98,7 @@ const ProductPage = {
             </button>
             <a class="btn btn-outline" href="shop.html">${I18N.t("product.backToCatalog")}</a>
           </div>
+          <p class="of-nopay">${I18N.t("product.delivery")}</p>
           <p class="of-nopay">${I18N.t("order.nopay")}</p>
           <div class="description">${I18N.pick(p.description)}</div>
           ${specs}
@@ -146,7 +149,7 @@ const ProductPage = {
           return `
           <article class="product-card">
             <span class="badge ${badge.cls}">${I18N.t(badge.key)}</span>
-            <a class="card-link" href="product.html?id=${r.id}">
+            <a class="card-link" href="${Catalog.url(r)}">
               <div class="card-img"><img src="${Catalog.mainImage(r)}" alt="${I18N.pick(r.name)}" loading="lazy"></div>
               <div class="card-body">
                 <h3>${I18N.pick(r.name)}</h3>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ca">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404 — Prop a Prop Teu</title>
+  <title>Prop a Prop Teu — Página no encontrada</title>
   <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -24,6 +24,10 @@
   <script src="js/config.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/layout.js"></script>
-  <script>document.addEventListener("DOMContentLoaded", () => Layout.init());</script>
+  <script>
+    // A product page that is not built yet (p/<id>.html) opens the general product page instead.
+    (function () { var m = location.pathname.match(/\/p\/([^\/]+)\.html$/); if (m) location.replace("/product.html?id=" + m[1] + location.search.replace("?", "&")); })();
+    document.addEventListener("DOMContentLoaded", () => Layout.init());
+  </script>
 </body>
 </html>

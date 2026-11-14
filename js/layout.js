@@ -81,11 +81,11 @@ const Layout = {
             <button class="lang-globe" aria-label="Language" aria-haspopup="true" onclick="Layout.toggleLang(event)">${globe}<span class="lang-code"></span><svg class="caret" viewBox="0 0 10 6" width="9" height="6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <div class="lang-menu" role="menu">${langs}</div>
           </div>
-          <a class="login-link" href="acceso.html" title="Accés equip">
+          <a class="login-link" href="acceso.html" data-i18n-aria="ui.team">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             <span data-i18n="nav.login"></span>
           </a>
-          <button class="cart-btn" title="Cistella" onclick="Cart.open()">
+          <button class="cart-btn" onclick="Cart.open()">
             <span data-i18n="nav.cart"></span>
             <span class="cart-count">0</span>
           </button>
@@ -206,8 +206,9 @@ const Layout = {
     if (!document.querySelector(".skip-link")) {
       const a = document.createElement("a");
       a.className = "skip-link";
-      a.href = "#" + main.id;
-      a.textContent = "Saltar al contenido";
+      // Full address + #: product pages use <base href="/">, where a bare #id would jump to the home page.
+      a.href = location.pathname + location.search + "#" + main.id;
+      a.setAttribute("data-i18n", "ui.skip");
       document.body.insertBefore(a, document.body.firstChild);
     }
   },
@@ -218,8 +219,27 @@ const Layout = {
       let c = document.querySelector('link[rel="canonical"]');
       if (!c) { c = document.createElement("link"); c.rel = "canonical"; document.head.appendChild(c); }
       const path = location.pathname.replace(/index\.html$/, "");
-      c.href = location.origin + path + (path.endsWith("product.html") ? location.search : "");
+      const q = new URLSearchParams(location.search), keep = new URLSearchParams();
+      if (path.endsWith("product.html") && q.get("id")) keep.set("id", q.get("id"));
+      if (q.get("lang") && q.get("lang") !== SITE_CONFIG.defaultLang) keep.set("lang", q.get("lang"));
+      c.href = location.origin + path + (keep.toString() ? "?" + keep : "");
     } catch (e) {}
+  },
+
+  // Page title and description in the current language (texts: meta.* in lang/*.json).
+  pageKey() {
+    const map = { "index.html": "home", "shop.html": "shop", "custom-props.html": "request", "about.html": "about", "contact.html": "contact",
+      "faq.html": "faq", "legal.html": "legal", "envios.html": "shipping", "packs.html": "packs", "pack-config.html": "packConfig", "404.html": "notfound" };
+    return document.body.dataset.product ? "product" : (map[this.currentPage()] || "");
+  },
+  setMeta() {
+    const k = this.pageKey();
+    if (!k || k === "product") return;              // product pages set their own
+    const m = I18N.t("meta." + k);
+    if (!m || typeof m !== "object") return;
+    document.title = SITE_CONFIG.businessName + " — " + m.title;
+    const set = (sel, v) => { const el = document.querySelector(sel); if (el && v) el.setAttribute("content", v); };
+    set('meta[name="description"]', m.desc); set('meta[property="og:title"]', document.title); set('meta[property="og:description"]', m.desc);
   },
 
   async init() {
@@ -233,7 +253,8 @@ const Layout = {
     this.loadSnipcart();
     I18N.apply();
     this.showLang();
-    document.addEventListener("langchange", () => this.showLang());
+    this.setMeta();
+    document.addEventListener("langchange", () => { this.showLang(); this.setMeta(); this.renderCanonical(); });
     Cart.updateCount();
     Cart.handlePaymentReturn();
   }
@@ -271,6 +292,9 @@ const Catalog = {
       return { cls: "stock-low", key: "stock.low" };
     return { cls: "stock-in", key: "stock.in" };
   },
+
+  // Each product has its own page, p/<id>.html, so shared links show its picture and name.
+  url(p) { return "p/" + encodeURIComponent(p.id) + ".html"; },
 
   mainImage(p) {
     return (p.images && p.images[0]) || "assets/img/placeholder.svg";
@@ -335,13 +359,13 @@ const Cart = {
       setTimeout(() => d.classList.add("show"), 30);
       setTimeout(() => { d.classList.remove("show"); setTimeout(() => d.remove(), 400); }, 9000);
     };
-    if (cancel) { strip(); banner("Pagament cancel·lat. La teva cistella segueix disponible.", false); return; }
+    if (cancel) { strip(); banner(I18N.t("ui.payCancel"), false); return; }
     try {
       const r = await (await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
         body: JSON.stringify({ action: "verifyPayment", order: paid, cs: cs }) })).json();
-      if (r && r.ok && r.paid) { this.write([]); banner("¡Pago recibido! Gracias por tu pedido (" + paid + ").", true); }
-      else banner("Hemos recibido tu pedido (" + paid + "); si el pago no aparece, contáctanos.", true);
-    } catch (e) { banner("Pedido " + paid + " registrado. Si tienes dudas, escríbenos.", true); }
+      if (r && r.ok && r.paid) { this.write([]); banner(I18N.t("ui.payOk").replace("{ref}", paid), true); }
+      else banner(I18N.t("ui.payPending").replace("{ref}", paid), true);
+    } catch (e) { banner(I18N.t("ui.payPending").replace("{ref}", paid), true); }
     strip();
   },
   total() { return this.items.reduce((s, i) => { const p = this.byId[i.id]; return s + (p ? p.price * i.qty : 0); }, 0); },
@@ -351,8 +375,8 @@ const Cart = {
     d.id = "cart-drawer"; d.className = "cart-drawer"; d.hidden = true;
     d.innerHTML =
       '<div class="cart-overlay" onclick="Cart.close()"></div>' +
-      '<aside class="cart-panel" role="dialog" aria-label="Cistella">' +
-      '<div class="cart-head"><h2 data-i18n="nav.cart"></h2><button class="cart-x" aria-label="Tancar" onclick="Cart.close()">&times;</button></div>' +
+      '<aside class="cart-panel" role="dialog" data-i18n-aria="nav.cart">' +
+      '<div class="cart-head"><h2 data-i18n="nav.cart"></h2><button class="cart-x" data-i18n-aria="ui.close" onclick="Cart.close()">&times;</button></div>' +
       '<div class="cart-body" id="cart-body"></div><div class="cart-foot" id="cart-foot"></div></aside>';
     document.body.appendChild(d);
   },
@@ -376,7 +400,7 @@ const Cart = {
         '<div class="cart-row-price">' + Catalog.formatPrice(p.price) + '</div></div>' +
         '<div class="cart-qty"><button aria-label="-" onclick="Cart.setQty(\'' + p.id + '\',' + (i.qty - 1) + ')">&minus;</button>' +
         '<span>' + i.qty + '</span><button aria-label="+" onclick="Cart.setQty(\'' + p.id + '\',' + (i.qty + 1) + ')">+</button></div>' +
-        '<button class="cart-rm" aria-label="Treure" title="Treure" onclick="Cart.setQty(\'' + p.id + '\',0)">&times;</button></div>';
+        '<button class="cart-rm" data-i18n-aria="ui.remove" onclick="Cart.setQty(\'' + p.id + '\',0)">&times;</button></div>';
     }).join("");
     foot.innerHTML = '<div class="cart-total"><span data-i18n="cart.total"></span><strong>' + Catalog.formatPrice(this.total()) + '</strong></div>' +
       '<button class="btn" onclick="Cart.checkout()" data-i18n="cart.checkout"></button>' +

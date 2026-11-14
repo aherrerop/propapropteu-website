@@ -64,6 +64,9 @@ customer accounts) are untouched.
 | `admin.html`, `js/admin.js`, `css/admin.css` | the management screens (they only draw and call the engine) |
 | `backend/Manage.gs` | everything the four screens do: products, orders, to-do grouping (`groupTodo_`), printed (`printPiece`), materials |
 | `backend/Code.gs` | login, the router (`dispatch_`), website checkout, customer accounts, contact form, publishing `data/products.json` |
+| `backend/Website.gs` | tags (`TAGS`), Request a prop (files + request), customer emails, Payment received + invoice PDF |
+| `backend/Pages.gs` | one page per product (`p/<id>.html`, with its share picture) + `sitemap.xml` (all languages); written on every publish |
+| `tools/build-pages.js` | builds the same product pages + sitemap locally from `data/products.json` |
 | `tools/run-tests.js` | `npm test` — syntax, duplicate functions, router check, and the grouping rules |
 
 Rules that keep the data safe:

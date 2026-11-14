@@ -1,13 +1,17 @@
 <!DOCTYPE html>
-<html lang="ca">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prop a Prop Teu — Attrezzo, eines i materials</title>
-  <meta name="description" content="Attrezzo, eines i materials de disseny propi per a cinema, TV, teatre i esdeveniments. Cuelga, ajusta y sigue rodando.">
-  <meta property="og:title" content="Prop a Prop Teu">
-  <meta property="og:description" content="Attrezzo, eines i materials per a rodatges i escena.">
-  <meta property="og:image" content="assets/logo_mark.svg">
+  <title>Prop a Prop Teu — Atrezo, herramientas y piezas a medida para rodajes</title>
+  <meta name="description" content="Taller en Barcelona: diseñamos y fabricamos herramientas y atrezo para cine, TV, teatro y eventos, y hacemos por encargo las piezas que no existen.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Prop a Prop Teu">
+  <meta property="og:title" content="Prop a Prop Teu — Atrezo, herramientas y piezas a medida para rodajes">
+  <meta property="og:description" content="Taller en Barcelona: diseñamos y fabricamos herramientas y atrezo para cine, TV, teatro y eventos, y hacemos por encargo las piezas que no existen.">
+  <meta property="og:image" content="https://propapropteu.com/assets/og-image.png">
+  <meta property="og:url" content="https://propapropteu.com/">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/logo_mark.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -29,22 +33,76 @@
 <body class="home">
   <header class="site-header" id="site-header"></header>
 
-  <main class="p-hero-wrap">
-    <button class="p-arrow p-prev" aria-label="Anterior" onclick="Hero.prev()">&#171;</button>
+  <main class="home-main">
+    <!-- HERO: featured products (Website > Highlights in the management area) -->
+    <div class="p-hero-wrap">
+      <button class="p-arrow p-prev" data-i18n-aria="ui.prev" aria-label="Anterior" onclick="Hero.prev()">&#171;</button>
+      <section class="p-hero">
+        <div class="p-watermark" id="hero-wm"></div>
+        <div class="p-hero-media">
+          <img id="hero-img" alt="" loading="eager" hidden>
+        </div>
+        <div class="p-hero-copy">
+          <h1 id="hero-title"></h1>
+          <div class="p-hero-desc"><p id="hero-desc"></p></div>
+        </div>
+        <a class="p-saber" id="hero-link" href="shop.html"><span data-i18n="home.saberMas"></span></a>
+      </section>
+      <button class="p-arrow p-next" data-i18n-aria="ui.next" aria-label="Siguiente" onclick="Hero.next()">&#187;</button>
+    </div>
 
-    <section class="p-hero">
-      <div class="p-watermark" id="hero-wm"></div>
-      <div class="p-hero-media">
-        <img id="hero-img" alt="" loading="eager" hidden>
+    <!-- PRODUCTS: up to 6, featured first -->
+    <section class="home-band">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow" data-i18n="home.productsEyebrow"></span>
+            <h2 data-i18n="home.collectionTitle"></h2>
+          </div>
+          <a class="link-more" href="shop.html" data-i18n="home.collectionLink"></a>
+        </div>
+        <div class="shop-grid" id="home-products"></div>
       </div>
-      <div class="p-hero-copy">
-        <h1 id="hero-title"></h1>
-        <div class="p-hero-desc"><p id="hero-desc"></p></div>
-      </div>
-      <a class="p-saber" id="hero-link" href="#"><span data-i18n="home.saberMas"></span></a>
     </section>
 
-    <button class="p-arrow p-next" aria-label="Següent" onclick="Hero.next()">&#187;</button>
+    <!-- TESTIMONIALS. The texts in lang/*.json (home.t1…t3) are PLACEHOLDERS: the section
+         only shows when SITE_CONFIG.showTestimonials is true (or with ?preview=1 in the URL).
+         Put real testimonials in, then switch it on in js/config.js. -->
+    <section class="home-band home-testi" id="home-testi" hidden>
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow" data-i18n="home.testiEyebrow"></span>
+            <h2 data-i18n="home.testiTitle"></h2>
+          </div>
+        </div>
+        <div class="testi-grid">
+          <figure class="testi"><blockquote data-i18n="home.t1"></blockquote><figcaption data-i18n="home.t1who"></figcaption></figure>
+          <figure class="testi"><blockquote data-i18n="home.t2"></blockquote><figcaption data-i18n="home.t2who"></figcaption></figure>
+          <figure class="testi"><blockquote data-i18n="home.t3"></blockquote><figcaption data-i18n="home.t3who"></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- MADE TO ORDER: kinds of custom pieces. Photos: assets/img/custom/example-1…4.jpg -->
+    <section class="home-band">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow" data-i18n="home.madeEyebrow"></span>
+            <h2 data-i18n="home.madeTitle"></h2>
+            <p class="muted" data-i18n="home.madeIntro" style="margin-top:8px"></p>
+          </div>
+          <a class="link-more" href="custom-props.html" data-i18n="home.madeBtn"></a>
+        </div>
+        <div class="made-grid">
+          <a class="made" href="custom-props.html"><div class="made-img"><img src="assets/img/custom/example-1.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div><h3 data-i18n="home.ex1t"></h3><p data-i18n="home.ex1"></p></a>
+          <a class="made" href="custom-props.html"><div class="made-img"><img src="assets/img/custom/example-2.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div><h3 data-i18n="home.ex2t"></h3><p data-i18n="home.ex2"></p></a>
+          <a class="made" href="custom-props.html"><div class="made-img"><img src="assets/img/custom/example-3.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div><h3 data-i18n="home.ex3t"></h3><p data-i18n="home.ex3"></p></a>
+          <a class="made" href="custom-props.html"><div class="made-img"><img src="assets/img/custom/example-4.jpg" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/img/placeholder-landscape.svg'"></div><h3 data-i18n="home.ex4t"></h3><p data-i18n="home.ex4"></p></a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer" id="site-footer"></footer>
@@ -62,6 +120,7 @@
       const wm = p => p.codename || (I18N.pick(p.name).split(" ")[0] || "").toUpperCase();
       const render = () => {
         const p = slides[i];
+        if (!p) return;
         document.getElementById("hero-wm").textContent = wm(p);
         const img = document.getElementById("hero-img");
         img.src = Catalog.heroImage(p);
@@ -69,14 +128,25 @@
         img.alt = I18N.pick(p.name);
         document.getElementById("hero-title").textContent = I18N.pick(p.heroTagline) || I18N.pick(p.name);
         document.getElementById("hero-desc").textContent = I18N.pick(p.heroDesc) || I18N.pick(p.short);
-        document.getElementById("hero-link").href = "product.html?id=" + p.id;
+        document.getElementById("hero-link").href = Catalog.url(p);
+      };
+      // Products band: featured first, at most six.
+      const cards = () => {
+        const list = data.products.slice().sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0)).slice(0, 6);
+        document.getElementById("home-products").innerHTML = list.map(p => `
+          <a class="shop-card" href="${Catalog.url(p)}">
+            <div class="sc-img ${Catalog.isCutout(p) ? "cut" : "photo"}"><img src="${Catalog.mainImage(p)}" alt="${I18N.pick(p.name).replace(/"/g, "&quot;")}" loading="lazy"></div>
+            <div class="sc-name">${I18N.pick(p.name)}</div>
+            <div class="sc-price">${Catalog.formatPrice(p.price)}</div>
+          </a>`).join("");
       };
       window.Hero = {
         next() { i = (i + 1) % slides.length; render(); },
         prev() { i = (i - 1 + slides.length) % slides.length; render(); }
       };
-      render();
-      document.addEventListener("langchange", render);
+      render(); cards();
+      if (SITE_CONFIG.showTestimonials || new URLSearchParams(location.search).has("preview")) document.getElementById("home-testi").hidden = false;
+      document.addEventListener("langchange", () => { render(); cards(); });
     });
   </script>
 </body>

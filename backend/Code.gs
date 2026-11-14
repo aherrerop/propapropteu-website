@@ -701,7 +701,8 @@ function publish(session) {
     })
   });
   var code = put.getResponseCode();
-  if (code === 200 || code === 201) return { ok: true, message: 'Publicat. El web s’actualitzarà en 1-2 minuts.' };
+  // Then the product pages + sitemap (separate commit; a problem there never undoes the publish).
+  if (code === 200 || code === 201) return { ok: true, message: 'Publicat. El web s’actualitzarà en 1-2 minuts.', pages: publishPages_(publicProducts) };
   return { ok: false, error: 'github', message: 'GitHub ' + code + ': ' + put.getContentText() };
 }
 
@@ -1216,7 +1217,7 @@ function logOps_(type, id, action, by, detail) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-15.3';
+var ENGINE_VERSION = '2026-11-16.1';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.

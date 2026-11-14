@@ -259,7 +259,8 @@ nav.main-nav a:hover::after { transform: scaleX(1); }
 /* On the home page the whole page + header are the warm grey */
 body.home { --color-bg: var(--color-hero); }
 
-main.p-hero-wrap { position: relative; flex: 1; padding: 0; display: flex; }
+main.home-main { flex: 1; display: block; padding: 0; }
+.p-hero-wrap { position: relative; padding: 0; display: flex; }
 
 /* carousel arrows — thin light chevrons, vertically centred, not clipped */
 .p-arrow {
@@ -1353,3 +1354,23 @@ body.shop .site-header { background: var(--color-hero); }
 
 /* FAQ group headings */
 .faq-group { font-size: 1.3rem; margin: 34px 0 6px; color: var(--color-muted); }
+
+/* ---------------- HOME: bands under the hero ---------------- */
+.home-band { --color-bg: #ffffff; background: var(--color-bg); padding: clamp(50px, 8vw, 100px) 0; }
+.home-band .shop-grid { margin-bottom: 0; }
+.home-testi { --color-bg: var(--color-hero); }
+.testi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(20px, 3vw, 40px); }
+.testi { margin: 0; display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--color-ink); padding-top: 22px; }
+.testi blockquote { margin: 0; font-size: 1.08rem; line-height: 1.55; }
+.testi blockquote::before { content: "“"; display: block; font-family: var(--font-display); font-size: 3rem; line-height: .6; color: var(--color-accent); margin-bottom: 6px; }
+.testi figcaption { font-size: 0.74rem; text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--color-muted); font-weight: 500; }
+.made-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(18px, 2.5vw, 32px); }
+.made { color: var(--color-ink); display: flex; flex-direction: column; }
+.made:hover { color: var(--color-ink); }
+.made-img { aspect-ratio: 4 / 3; overflow: hidden; background: var(--color-hero); margin-bottom: 14px; }
+.made-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+.made:hover .made-img img { transform: scale(1.04); }
+.made h3 { font-size: 1.3rem; margin-bottom: 6px; }
+.made p { color: var(--color-muted); font-size: 0.92rem; line-height: 1.5; }
+@media (max-width: 900px) { .testi-grid { grid-template-columns: 1fr; } .made-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .made-grid { grid-template-columns: 1fr; } }

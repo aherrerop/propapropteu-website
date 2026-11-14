@@ -19,8 +19,8 @@
     "heroCtaShop": "Explora la tienda",
     "heroCtaCustom": "Pide atrezo a medida",
     "heroEyebrow": "Atrezo · Fabricación · Packs",
-    "collectionTitle": "Compra nuestra colección",
-    "collectionLink": "Verlo todo",
+    "collectionTitle": "Nuestros productos",
+    "collectionLink": "Ver todos",
     "sceneTitle": "Hecho con nuestras herramientas",
     "sceneLink": "Mira lo que hacemos",
     "missionTitle": "Para quién trabajamos",
@@ -46,7 +46,28 @@
     "aboutLink": "Conoce al equipo",
     "ctaTitle": "¿Tienes un proyecto entre manos?",
     "ctaText": "Cuéntanos qué necesitas y para cuándo. Respondemos en 24-48 h laborables.",
-    "ctaBtn": "Hablemos"
+    "ctaBtn": "Hablemos",
+    "productsEyebrow": "Tienda",
+    "testiEyebrow": "Opiniones",
+    "testiTitle": "Lo que dicen en el set",
+    "t1": "Necesitábamos doce soportes iguales para el rodaje del día siguiente. A las 8 de la mañana estaban en el set.",
+    "t1who": "Laia R. · Set dresser, largometraje",
+    "t2": "ATLAS ya va fijo en el camión. Colgar y descolgar cuadros en los decorados nos lleva la mitad de tiempo.",
+    "t2who": "Marc T. · Coordinador de arte, serie de TV",
+    "t3": "Les mandamos una captura y una fecha. Sin idas y venidas: llegó exactamente lo que pedimos.",
+    "t3who": "Núria S. · Directora de arte, publicidad",
+    "madeEyebrow": "Pide una pieza",
+    "madeTitle": "Lo que hacemos a medida",
+    "madeIntro": "Si no existe, lo diseñamos y lo fabricamos para tu producción.",
+    "ex1t": "Props de mano",
+    "ex1": "El objeto que pide el guion y no está en ninguna tienda: réplicas, aparatos, piezas de época.",
+    "ex2t": "Soportes y fijaciones",
+    "ex2": "Para colgar, sujetar o esconder cosas en decorados sin dañarlos.",
+    "ex3t": "Series y múltiples",
+    "ex3": "La misma pieza ×20 para fondo, especialistas o continuidad.",
+    "ex4t": "Recambios y arreglos",
+    "ex4": "La pieza rota o perdida de un mueble o un atrezo de alquiler, reproducida igual.",
+    "madeBtn": "Pide una pieza"
   },
   "catalog": {
     "pageTitle": "Tienda",
@@ -111,13 +132,15 @@
   "stock": {
     "in": "En stock",
     "low": "Últimas unidades",
-    "out": "Agotado"
+    "out": "Agotado",
+    "made": "Hecho por encargo"
   },
   "product": {
     "specs": "Ficha técnica",
     "related": "Productos relacionados",
     "backToCatalog": "Volver a la tienda",
-    "notFound": "No hemos encontrado este producto."
+    "notFound": "No hemos encontrado este producto.",
+    "delivery": "Lo fabricamos en Barcelona cuando lo pides. Recogida en Barcelona o envío: te confirmamos plazo y coste por email antes de pagar."
   },
   "custom": {
     "title": "Atrezo a medida",
@@ -187,8 +210,8 @@
     "emptyAlert": "Añade al menos un producto al pack antes de solicitarlo.",
     "mailSubject": "Solicitud de pack de producción",
     "mailIntro": "¡Hola! Me gustaría configurar un pack de producción con estos productos:",
-    "accountTitle": "Cuentas y pago recurrente",
-    "accountText": "Para los packs recurrentes crearemos una cuenta para tu producción y configuraremos el cobro periódico a través de una pasarela de pago segura (nunca guardamos los datos bancarios en esta web). Escríbenos con el pack configurado y te enviamos los pasos para activar la suscripción.",
+    "accountTitle": "Cómo se paga",
+    "accountText": "Cada entrega se paga por transferencia y lleva su factura. Escríbenos con el pack configurado y lo organizamos contigo por email.",
     "cat_tools": "Pack de herramientas",
     "cat_consumables": "Pack de consumibles",
     "cat_duration": "Por duración",
@@ -354,7 +377,7 @@
     "title": "Avisos legales"
   },
   "cookies": {
-    "text": "Usamos cookies técnicas propias y del proveedor de pago, imprescindibles para el funcionamiento de la tienda.",
+    "text": "Esta web solo guarda en tu navegador el idioma y la cesta. No usamos cookies de seguimiento.",
     "more": "Más información",
     "accept": "Entendido"
   },
@@ -394,5 +417,66 @@
     "tooBig": "{name} supera los 10 MB. Usa el campo de enlace para archivos grandes.",
     "tooMany": "Máximo 5 archivos.",
     "badType": "{name}: tipo de archivo no admitido."
+  },
+  "ui": {
+    "skip": "Saltar al contenido",
+    "close": "Cerrar",
+    "remove": "Quitar",
+    "prev": "Anterior",
+    "next": "Siguiente",
+    "team": "Acceso equipo",
+    "payCancel": "Pago cancelado. Tu cesta sigue disponible.",
+    "payOk": "¡Pago recibido! Gracias por tu pedido ({ref}).",
+    "payPending": "Hemos recibido tu pedido ({ref}). Si el pago no aparece, escríbenos."
+  },
+  "meta": {
+    "home": {
+      "title": "Atrezo, herramientas y piezas a medida para rodajes",
+      "desc": "Taller en Barcelona: diseñamos y fabricamos herramientas y atrezo para cine, TV, teatro y eventos, y hacemos por encargo las piezas que no existen."
+    },
+    "shop": {
+      "title": "Tienda",
+      "desc": "Herramientas y atrezo de diseño propio para rodajes, probados en producciones reales. Hechos por encargo en Barcelona."
+    },
+    "request": {
+      "title": "Pide una pieza a medida",
+      "desc": "Cuéntanos qué pieza necesitas y para cuándo, adjunta fotos o planos y te respondemos con precio y plazo."
+    },
+    "about": {
+      "title": "About",
+      "desc": "Somos un taller en Barcelona que hace las herramientas que nos faltaban en el set. Conoce al equipo."
+    },
+    "contact": {
+      "title": "Contacto",
+      "desc": "Escríbenos, llámanos o mándanos un WhatsApp. Respondemos en catalán, castellano o inglés."
+    },
+    "faq": {
+      "title": "Preguntas frecuentes",
+      "desc": "Pedidos, pago, entrega, devoluciones, garantía y piezas a medida: todo lo que nos suelen preguntar."
+    },
+    "legal": {
+      "title": "Avisos legales",
+      "desc": "Aviso legal, propiedad intelectual, condiciones de venta, devoluciones, garantía, privacidad y cookies."
+    },
+    "shipping": {
+      "title": "Envíos y devoluciones",
+      "desc": "Cómo fabricamos y entregamos tu pedido, cómo se paga, devoluciones en 14 días y garantía de 3 años."
+    },
+    "packs": {
+      "title": "Packs de producción",
+      "desc": "Packs de herramientas, consumibles y materiales para equipos de rodaje."
+    },
+    "packConfig": {
+      "title": "Configura el pack",
+      "desc": "Elige productos, frecuencia y duración de tu pack de producción."
+    },
+    "product": {
+      "title": "Producto",
+      "desc": ""
+    },
+    "notfound": {
+      "title": "Página no encontrada",
+      "desc": ""
+    }
   }
 }

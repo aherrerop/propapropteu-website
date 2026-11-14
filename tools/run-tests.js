@@ -140,6 +140,19 @@ if (sandbox.slug_) {
   eq(sandbox.slug_('ATLAS', { atlas: true }), 'atlas-2', 'slug stays unique');
 } else fail('slug_ not found');
 
+// Product pages + sitemap (backend/Pages.gs)
+if (sandbox.productPageHtml_ && sandbox.sitemapXml_) {
+  const tpl = '<!DOCTYPE html>\n<html lang="ca">\n<head>\n  <meta charset="UTF-8">\n  <title>x</title>\n</head>\n<body>\n</body>\n</html>';
+  const html = sandbox.productPageHtml_(tpl, { id: 'atlas', name: { es: 'Cuelga "ATLAS"' }, short: { es: 'Hasta 8 kg' }, images: ['assets/img/a.png'] });
+  eq(html.startsWith('<!DOCTYPE html>'), true, 'product page starts with the doctype');
+  eq(/<base href="\/">/.test(html) && /data-product="atlas"/.test(html), true, 'product page has base + id');
+  eq(/og:image" content="https:\/\/propapropteu\.com\/assets\/img\/a\.png"/.test(html), true, 'product page picture is absolute');
+  eq(/<title>Cuelga &quot;ATLAS&quot; — Prop a Prop Teu<\/title>/.test(html), true, 'product page title escaped');
+  const sm = sandbox.sitemapXml_([{ id: 'atlas' }]);
+  eq((sm.match(/<url>/g) || []).length, (sandbox.SITEMAP_PAGES.length + 1) * 3, 'sitemap: every page in 3 languages');
+  eq(/hreflang="x-default"/.test(sm) && /p\/atlas\.html\?lang=en/.test(sm), true, 'sitemap has language alternates');
+} else fail('Pages.gs functions not found');
+
 console.log('');
 if (fails) { console.error(`TESTS FAILED (${fails}).`); process.exit(1); }
 console.log('All tests passed.');

@@ -55,7 +55,9 @@ const SITE_CONFIG = {
   // --- LANGUAGES ---
   languages: ["ca", "es", "en"],
   defaultLang: "es",       // Spanish first (per current design/reference)
-  autoDetectLang: false,   // always start in Spanish until the visitor switches
+  autoDetectLang: false,
+  // Home testimonials: keep false until the texts in lang/*.json (home.t1…t3) are real.
+  showTestimonials: false,   // always start in Spanish until the visitor switches
 
   // --- CATALOG ---
   showPricesWithIva: true  // prices in products.json are IVA included

@@ -19,7 +19,7 @@
     "heroCtaShop": "Explore the shop",
     "heroCtaCustom": "Request a custom prop",
     "heroEyebrow": "Props · Fabrication · Packs",
-    "collectionTitle": "Shop our collection",
+    "collectionTitle": "Our products",
     "collectionLink": "View all",
     "sceneTitle": "Made with our tools",
     "sceneLink": "See what we make",
@@ -46,7 +46,28 @@
     "aboutLink": "Meet the team",
     "ctaTitle": "Got a project on your hands?",
     "ctaText": "Tell us what you need and when you need it. We reply within 24-48 working hours.",
-    "ctaBtn": "Let's talk"
+    "ctaBtn": "Let's talk",
+    "productsEyebrow": "Shop",
+    "testiEyebrow": "Testimonials",
+    "testiTitle": "What they say on set",
+    "t1": "We needed twelve identical brackets for the next morning. They were on set at 8 a.m.",
+    "t1who": "Laia R. · Set dresser, feature film",
+    "t2": "ATLAS lives in our truck now. Hanging and striking frames on the flats takes half the time.",
+    "t2who": "Marc T. · Art department coordinator, TV series",
+    "t3": "We sent a screenshot and a date. No back-and-forth: we got exactly what we asked for.",
+    "t3who": "Núria S. · Production designer, commercial",
+    "madeEyebrow": "Request a prop",
+    "madeTitle": "What we make to order",
+    "madeIntro": "If it doesn't exist, we design and make it for your production.",
+    "ex1t": "Hand props",
+    "ex1": "The object the script asks for that no shop sells: replicas, gadgets, period pieces.",
+    "ex2t": "Mounts and fixings",
+    "ex2": "To hang, hold or hide things on sets without damaging them.",
+    "ex3t": "Multiples",
+    "ex3": "The same piece ×20 for background, stunts or continuity.",
+    "ex4t": "Spare parts and fixes",
+    "ex4": "The broken or missing part of a rented prop or piece of furniture, copied to match.",
+    "madeBtn": "Request a prop"
   },
   "catalog": {
     "pageTitle": "Shop",
@@ -111,13 +132,15 @@
   "stock": {
     "in": "In stock",
     "low": "Last units",
-    "out": "Sold out"
+    "out": "Sold out",
+    "made": "Made to order"
   },
   "product": {
     "specs": "Datasheet",
     "related": "Related products",
     "backToCatalog": "Back to shop",
-    "notFound": "We couldn't find this product."
+    "notFound": "We couldn't find this product.",
+    "delivery": "We make it in Barcelona when you order it. Pickup in Barcelona or shipping: we confirm timing and cost by email before you pay."
   },
   "custom": {
     "title": "Custom props",
@@ -187,8 +210,8 @@
     "emptyAlert": "Add at least one product to the pack before requesting it.",
     "mailSubject": "Producing pack request",
     "mailIntro": "Hi! I'd like to set up a producing pack with these products:",
-    "accountTitle": "Accounts & recurring billing",
-    "accountText": "For recurring packs we'll create an account for your production and set up periodic billing through a secure payment gateway (we never store banking details on this website). Write to us with your configured pack and we'll send you the steps to activate the subscription.",
+    "accountTitle": "How payment works",
+    "accountText": "Each delivery is paid by bank transfer and comes with its invoice. Send us the pack you configured and we arrange it with you by email.",
     "cat_tools": "Tool pack",
     "cat_consumables": "Consumables pack",
     "cat_duration": "By duration",
@@ -354,9 +377,9 @@
     "title": "Legal notices"
   },
   "cookies": {
-    "text": "We use first-party technical cookies and payment-provider cookies, required for the shop to work.",
+    "text": "This site only stores your language and cart in your browser. No tracking cookies.",
     "more": "More info",
-    "accept": "Got it"
+    "accept": "OK"
   },
   "notfound": {
     "text": "This page doesn't exist (or we haven't built it yet).",
@@ -394,5 +417,66 @@
     "tooBig": "{name} is over 10 MB. Use the link field for large files.",
     "tooMany": "Up to 5 files.",
     "badType": "{name}: file type not accepted."
+  },
+  "ui": {
+    "skip": "Skip to content",
+    "close": "Close",
+    "remove": "Remove",
+    "prev": "Previous",
+    "next": "Next",
+    "team": "Team access",
+    "payCancel": "Payment cancelled. Your cart is still there.",
+    "payOk": "Payment received! Thank you for your order ({ref}).",
+    "payPending": "We've received your order ({ref}). If the payment doesn't show up, write to us."
+  },
+  "meta": {
+    "home": {
+      "title": "Props, tools and made-to-order pieces for film sets",
+      "desc": "Workshop in Barcelona: we design and make tools and props for film, TV, theatre and events, and make to order the pieces that do not exist."
+    },
+    "shop": {
+      "title": "Shop",
+      "desc": "Tools and props of our own design for film sets, tested on real productions. Made to order in Barcelona."
+    },
+    "request": {
+      "title": "Request a custom prop",
+      "desc": "Tell us what piece you need and when, attach photos or drawings, and we reply with a price and a timeline."
+    },
+    "about": {
+      "title": "About",
+      "desc": "A Barcelona workshop making the tools we were missing on set. Meet the team."
+    },
+    "contact": {
+      "title": "Contact",
+      "desc": "Email, call or WhatsApp us. We answer in Catalan, Spanish or English."
+    },
+    "faq": {
+      "title": "FAQ",
+      "desc": "Orders, payment, delivery, returns, guarantee and custom pieces: everything people usually ask us."
+    },
+    "legal": {
+      "title": "Legal",
+      "desc": "Legal notice, intellectual property, terms of sale, returns, guarantee, privacy and cookies."
+    },
+    "shipping": {
+      "title": "Shipping and returns",
+      "desc": "How we make and deliver your order, how payment works, 14-day returns and the 3-year guarantee."
+    },
+    "packs": {
+      "title": "Production packs",
+      "desc": "Packs of tools, consumables and materials for production crews."
+    },
+    "packConfig": {
+      "title": "Configure your pack",
+      "desc": "Choose products, frequency and duration for your production pack."
+    },
+    "product": {
+      "title": "Product",
+      "desc": ""
+    },
+    "notfound": {
+      "title": "Page not found",
+      "desc": ""
+    }
   }
 }

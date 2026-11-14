@@ -26,6 +26,18 @@ assets/img/custom/work-5.jpg     Square
 assets/img/custom/work-6.jpg     Square
 
 
+HOME PAGE (index.html) — "What we make to order" cards
+------------------------------------------------------
+assets/img/custom/example-1.jpg  Hand props. Landscape, 4:3 (e.g. 1600 x 1200).
+assets/img/custom/example-2.jpg  Mounts and fixings. Landscape, 4:3
+assets/img/custom/example-3.jpg  Multiples (the same piece many times). Landscape, 4:3
+assets/img/custom/example-4.jpg  Spare parts and fixes. Landscape, 4:3
+
+SHARE PICTURE (what WhatsApp / social networks show for a link)
+---------------------------------------------------------------
+assets/og-image.png              1200 x 630. Made from the logo + ATLAS; replace if you like.
+
+
 PACKS PAGE (packs.html) — page not decided yet, only if you keep it
 --------------------------------------------------------------------
 assets/img/packs/tool-essentials.jpg      Landscape, 4:3
@@ -51,7 +63,11 @@ assets/logo_mark.svg             Header logo. Current file is a provisional trac
 
 TEXTS WAITING FOR YOU (not pictures, same idea)
 -----------------------------------------------
-lang/ca.json, lang/es.json, lang/en.json  ->  "team": member1what, member1bio,
+lang/ca.json, lang/es.json, lang/en.json  ->  "home": t1…t3 + t1who…t3who are MADE-UP
+                                 testimonials: replace with real ones, then set
+                                 showTestimonials: true in js/config.js
+                                 (preview them meanwhile at propapropteu.com/?preview=1).
+                                 "team": member1what, member1bio,
                                  member2what, member2bio (now in [brackets]).
 legal.html                       Every [BRACKETED] field: legal name, NIF, address,
                                  days to pay an order. Have a gestor check it.
