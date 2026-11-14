@@ -634,7 +634,7 @@ function purgeTest(session, marker) {
   tbl_('orders').rows.forEach(function (o) { if (String(o.notes).indexOf(marker) >= 0) keys[String(o.key)] = true; });
   tbl_('pieces').rows.forEach(function (p) { if (keys[String(p.orderKey)]) p._test = marker; });
   purge('pieces', ['name', '_test']);
-  purge('orders', ['notes']);
+  purge('orders', ['notes', 'customerName']);
   purge('history', ['Product']);
   purge('deleted', ['Product', 'Order notes']);
   purge('finances', ['Products', 'Notes']);
@@ -643,6 +643,16 @@ function purgeTest(session, marker) {
     var rq = ss_('clients').getSheetByName('Requests');
     if (rq) { var rv = rq.getDataRange().getValues(), rn = 0; for (var ri = rv.length - 1; ri >= 1; ri--) if (rv[ri].join(' ').indexOf(marker) >= 0) { rq.deleteRow(ri + 1); rn++; } removed.requests = rn; }
   } catch (e) {}
+  // Test invoices and test request folders in Drive go to the bin (recoverable for 30 days).
+  try {
+    var root = DriveApp.getFolderById(prop('DRIVE_FOLDER_ID'));
+    var binned = 0, walk = function (folder) {
+      var fi = folder.getFiles(); while (fi.hasNext()) { var fl = fi.next(); if (/^TEST-/.test(fl.getName())) { fl.setTrashed(true); binned++; } }
+      var fo = folder.getFolders(); while (fo.hasNext()) { var sub = fo.next(); if (sub.getName().indexOf(marker) >= 0) { sub.setTrashed(true); binned++; } else walk(sub); }
+    };
+    ['Invoices', 'Requests'].forEach(function (n) { var it = root.getFoldersByName(n); if (it.hasNext()) walk(it.next()); });
+    removed.driveTest = binned;
+  } catch (e) { removed.driveTest = 'skipped: ' + e.message; }
   // The website checkout also writes its own row in the older Operations!Orders tab.
   try {
     var sh = tab_('ops', 'Orders'), v = sh.getDataRange().getValues(), n = 0;

@@ -152,13 +152,15 @@ function parseItems_(s) { try { return JSON.parse(String(s || '[]')) || []; } ca
 
 /* ============================ PAYMENT RECEIVED + INVOICE ============================ */
 
+function isTestOrder_(o) { return /ZZTEST/.test(String(o.customerName || '') + ' ' + String(o.notes || '')); }
+
 // The pre-filled email shown to the manager before sending (editable).
 function paymentDraft(session, key) {
   var o = byKey_(tbl_('orders'), 'key', key);
   if (!o) return { ok: false, error: 'notfound', message: 'Order not found.' };
   if (!o.email) return { ok: false, error: 'email', message: 'This order has no customer email.' };
   var lang = mailLang_(o.lang);
-  var invoice = String(o.invoiceNo || '') || ('F' + new Date().getFullYear() + '-' + ('0000' + (Number(getSetting_('INVOICE_SEQ', '0')) + 1)).slice(-4));
+  var invoice = String(o.invoiceNo || '') || (isTestOrder_(o) ? 'TEST-…' : null) || ('F' + new Date().getFullYear() + '-' + ('0000' + (Number(getSetting_('INVOICE_SEQ', '0')) + 1)).slice(-4));
   var v = { name: o.customerName, id: o.key, invoice: invoice };
   return { ok: true, to: String(o.email), subject: fill_(MAILS.paid.subject[lang], v), body: fill_(MAILS.paid.body[lang], v),
     invoiceNo: invoice, already: !!o.payEmailAt };
@@ -173,6 +175,8 @@ function confirmPayment(session, key, subject, body) {
   if (!o.email) return { ok: false, error: 'email', message: 'This order has no customer email.' };
   if (!String(subject || '').trim() || !String(body || '').trim()) return { ok: false, error: 'missing', message: 'The email needs a subject and a text.' };
 
+  // A test order (ZZTEST) never uses a real invoice number: the real series must stay consecutive.
+  if (!o.invoiceNo && isTestOrder_(o)) setRow_(ot, o, { invoiceNo: 'TEST-' + Utilities.formatDate(new Date(), 'Europe/Madrid', 'yyMMddHHmmss') });
   if (!o.invoiceNo) {
     var seq = Number(getSetting_('INVOICE_SEQ', '0')) + 1;
     setSetting_('INVOICE_SEQ', String(seq));

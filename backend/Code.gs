@@ -495,7 +495,7 @@ function placeOrder(req) {
   if (!lines.length) return { ok: false, error: 'noitems', message: 'Cap producte vàlid a la comanda.' };
 
   var profit = revenue - cost;
-  var payment = (['card', 'cash', 'transfer'].indexOf(String(req.payment || 'transfer')) >= 0) ? String(req.payment) : 'transfer';
+  var payment = (['card', 'cash', 'transfer'].indexOf(String(req.payment || 'transfer')) >= 0) ? String(req.payment || 'transfer') : 'transfer';
   // Cash (in-person via Yerai) is collected on the spot → mark it paid; transfer/card are pending.
   var status = (payment === 'cash') ? 'paid' : 'awaiting_payment';
   // IVA-inclusive prices: split the total into base + tax for the record (rate from Settings).
@@ -1216,7 +1216,7 @@ function logOps_(type, id, action, by, detail) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-15.1';
+var ENGINE_VERSION = '2026-11-15.3';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.
