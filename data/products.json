@@ -65,6 +65,7 @@
       "price": 50,
       "featured": true,
       "cutout": true,
+      "heroOrder": 1,
       "codename": "ATLAS",
       "heroImage": "assets/img/products/atlas.png",
       "labels": [
@@ -90,14 +91,14 @@
         "en": "Quick-hang system designed and tested in our workshop for fast set changes. Mount and remove paintings or flat elements in seconds, tool-free, without damaging the wall. Tested under continuous load for 72 h."
       },
       "heroTagline": {
+        "en": "Hang it, adjust it, keep rolling",
         "ca": "Penja, ajusta i segueix rodant",
-        "es": "Cuelga, ajusta y sigue rodando",
-        "en": "Hang it, adjust it, keep rolling"
+        "es": "Cuelga, ajusta y sigue rodando"
       },
       "heroDesc": {
+        "en": "Quick-hang system to mount and remove paintings and flat elements in seconds, tool-free, without damaging the set wall.",
         "ca": "Sistema de penjat ràpid per muntar i desmuntar quadres i elements plans en segons, sense eines i sense fer malbé la paret del decorat.",
-        "es": "Sistema de colgado rápido para montar y desmontar cuadros y elementos planos en segundos, sin herramientas y sin dañar la pared del decorado.",
-        "en": "Quick-hang system to mount and remove paintings and flat elements in seconds, tool-free, without damaging the set wall."
+        "es": "Sistema de colgado rápido para montar y desmontar cuadros y elementos planos en segundos, sin herramientas y sin dañar la pared del decorado."
       },
       "specs": [
         {
