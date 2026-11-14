@@ -140,16 +140,16 @@ if (sandbox.slug_) {
   eq(sandbox.slug_('ATLAS', { atlas: true }), 'atlas-2', 'slug stays unique');
 } else fail('slug_ not found');
 
-// Delivery dates (backend/Website.gs): print time + 24 h, weekend -> Monday, shipping +1..2 working days
+// Delivery dates (backend/Website.gs): print time + 48 h, weekend -> Monday, shipping +1..2 working days
 if (sandbox.deliveryEta_ && sandbox.dayText_) {
   const d = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
   const wed = new Date(2026, 10, 18, 10, 0), fri = new Date(2026, 10, 20, 10, 0);
   let e = sandbox.deliveryEta_(120, 'pickup', wed);
-  eq(d(e.from), '2026-11-19', 'pickup: Wednesday + 2 h print + 24 h = Thursday');
+  eq(d(e.from), '2026-11-20', 'pickup: Wednesday + 2 h print + 48 h = Friday');
   e = sandbox.deliveryEta_(120, 'shipping', wed);
-  eq(d(e.from) + ' ' + d(e.to), '2026-11-20 2026-11-23', 'shipping: Friday to Monday (skips the weekend)');
+  eq(d(e.from) + ' ' + d(e.to), '2026-11-23 2026-11-24', 'shipping: Monday to Tuesday (skips the weekend)');
   e = sandbox.deliveryEta_(0, 'pickup', fri);
-  eq(d(e.from), '2026-11-23', 'ready on Saturday moves to Monday');
+  eq(d(e.from), '2026-11-23', 'ready on Sunday moves to Monday');
   eq(sandbox.dayText_(new Date(2026, 3, 7), 'ca'), "dimarts 7 d'abril", 'Catalan date');
   eq(sandbox.dayText_(new Date(2026, 10, 19), 'es'), 'jueves 19 de noviembre', 'Spanish date');
 } else fail('deliveryEta_ not found');

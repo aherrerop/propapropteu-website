@@ -154,14 +154,14 @@ function parseItems_(s) { try { return JSON.parse(String(s || '[]')) || []; } ca
 
 /* ============================ DELIVERY DATES ============================ */
 // The rule (the website shows the same, js/layout.js Catalog.eta):
-//   ready  = now + printing time of everything ordered + 24 h for hiccups,
+//   ready  = now + printing time of everything ordered + 48 h of margin,
 //            moved to Monday if it falls on a weekend;
 //   pickup = the ready day, in Barcelona;
 //   shipping (free, mainland Spain) = 1 to 2 working days after the ready day.
 var SHIP_DAYS = [1, 2];
 function addWorkdays_(d, n) { d = new Date(d.getTime()); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6 !== 0) n--; } return d; }
 function deliveryEta_(printMin, delivery, now) {
-  var ready = new Date((now || new Date()).getTime() + (Number(printMin) || 0) * 60000 + 24 * 3600000);
+  var ready = new Date((now || new Date()).getTime() + (Number(printMin) || 0) * 60000 + 48 * 3600000);
   while (ready.getDay() % 6 === 0) ready.setDate(ready.getDate() + 1);
   return delivery === 'pickup' ? { from: ready, to: ready } : { from: addWorkdays_(ready, SHIP_DAYS[0]), to: addWorkdays_(ready, SHIP_DAYS[1]) };
 }

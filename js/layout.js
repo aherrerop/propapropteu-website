@@ -294,10 +294,10 @@ const Catalog = {
   },
 
   // Delivery dates — the same rule as the engine (backend/Website.gs deliveryEta_):
-  // ready = now + printing time + 24 h (weekend -> Monday); shipping = +1 to 2 working days.
+  // ready = now + printing time + 48 h (weekend -> Monday); shipping = +1 to 2 working days.
   eta(printMin, delivery) {
     const addWork = (d, n) => { d = new Date(d); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6 !== 0) n--; } return d; };
-    const ready = new Date(Date.now() + (Number(printMin) || 0) * 60000 + 24 * 3600000);
+    const ready = new Date(Date.now() + (Number(printMin) || 0) * 60000 + 48 * 3600000);
     while (ready.getDay() % 6 === 0) ready.setDate(ready.getDate() + 1);
     const [a, b] = SITE_CONFIG.shipDays || [1, 2];
     return delivery === "pickup" ? { from: ready, to: ready } : { from: addWork(ready, a), to: addWork(ready, b) };

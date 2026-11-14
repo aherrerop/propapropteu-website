@@ -347,7 +347,7 @@
     "a2_6": "Sí. Para cantidades mayores que un pedido normal, usa «Pide una pieza» o escríbenos y te enviaremos precio y plazo.",
     "g3": "Entrega",
     "q3_1": "¿Cuánto tarda?",
-    "a3_1": "Lo imprimimos cuando lo pides: contamos el tiempo de impresión de cada pieza más 24 h de margen. La ficha del producto y la cesta te dicen el día exacto antes de comprar. El máximo es de 30 días desde el pago.",
+    "a3_1": "Lo imprimimos cuando lo pides: contamos el tiempo de impresión de cada pieza más 48 h de margen. La ficha del producto y la cesta te dicen el día exacto antes de comprar. El máximo es de 30 días desde el pago.",
     "q3_2": "¿Hacéis envíos? ¿Puedo recogerlo?",
     "a3_2": "Sí, el envío a la Península es gratis y tarda 1–2 días laborables desde que el pedido está listo. También puedes recogerlo gratis en Barcelona. Para Baleares, Canarias, Ceuta, Melilla y el extranjero, escríbenos antes.",
     "g4": "Devoluciones y garantía",
@@ -485,7 +485,7 @@
     "title": "Entrega",
     "optShip": "Envío a domicilio (Península) · gratis",
     "optPickup": "Recogida en Barcelona · gratis",
-    "ifToday": "Fechas si pagas hoy. Contamos el tiempo de impresión de cada pieza más 24 h de margen."
+    "ifToday": "Fechas si pagas hoy. Contamos el tiempo de impresión de cada pieza más 48 h de margen."
   },
   "vat": {
     "base": "Base imponible",

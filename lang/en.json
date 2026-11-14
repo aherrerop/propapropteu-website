@@ -347,7 +347,7 @@
     "a2_6": "Yes. For quantities beyond a normal order, use \"Request a prop\" or write to us and we will send you a price and a timeline.",
     "g3": "Delivery",
     "q3_1": "How long does it take?",
-    "a3_1": "We print it when you order it: each piece's printing time plus 24 h of margin. The product page and the cart show you the exact day before you buy. The maximum is 30 days from payment.",
+    "a3_1": "We print it when you order it: each piece's printing time plus 48 h of margin. The product page and the cart show you the exact day before you buy. The maximum is 30 days from payment.",
     "q3_2": "Do you ship? Can I pick it up?",
     "a3_2": "Yes, shipping within mainland Spain is free and takes 1–2 working days once the order is ready. You can also pick it up for free in Barcelona. For the Balearic and Canary Islands, Ceuta, Melilla and abroad, write to us first.",
     "g4": "Returns and guarantee",
@@ -485,7 +485,7 @@
     "title": "Delivery",
     "optShip": "Home delivery (mainland Spain) · free",
     "optPickup": "Pickup in Barcelona · free",
-    "ifToday": "Dates if you pay today. We count each piece's printing time plus 24 h of margin."
+    "ifToday": "Dates if you pay today. We count each piece's printing time plus 48 h of margin."
   },
   "vat": {
     "base": "Subtotal before VAT",
