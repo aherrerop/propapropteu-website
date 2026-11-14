@@ -56,7 +56,7 @@ const I18N = {
       el.classList.toggle("visible", el.dataset.lang === this.lang);
     });
     /* Update switcher state */
-    document.querySelectorAll(".lang-switch button").forEach(b => {
+    document.querySelectorAll(".lang-switch button, .lang-menu button").forEach(b => {
       b.classList.toggle("active", b.dataset.lang === this.lang);
     });
   },

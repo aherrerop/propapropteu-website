@@ -165,6 +165,9 @@ details.more[open] { display: flex; flex-direction: column; gap: 16px; }
   .todo .card-main { flex: 1 1 100%; }
   .todo .actions { margin-left: auto; }
   .icon { width: 40px; height: 40px; }
+  .todo .icon { width: 36px; height: 38px; }
+  .todo .weight input { width: 62px; }
+  .group { padding: 10px; }
   .mat, .mat.editing { grid-template-columns: 18px 1fr auto; row-gap: 4px; padding: 10px 8px 10px 12px; }
   .mat .type { display: none; }
   .mat .num, .mat .cost { grid-column: 2; text-align: left; }
