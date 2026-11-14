@@ -6,12 +6,14 @@ described screens that no longer exist (they remain in git history, tag
 
 ## What it is
 
-The management page (`/admin.html`, after logging in at `/acceso.html`) has four
-sections and nothing else:
+The management page (`/admin.html`, after logging in at `/acceso.html`) has two areas,
+chosen in the top bar. **Workshop** has the four sections below. **Website** has
+*Highlights* (the featured products on the home page and shop: order, headline, text,
+picture) and *Clients* (people with a website account; information only).
 
 | Section | Who | What it does |
 |---|---|---|
-| **Products** | both | Add / edit / delete what is sold on the public website. Saving updates the website by itself (1–2 minutes). |
+| **Products** | both | Add / edit / delete what is sold on the public website: name, internal ID, price, printing time, weight, descriptions, pictures (in order), datasheet rows, and the material/colour a website order is printed in. Saving updates the website by itself (1–2 minutes). |
 | **Orders** | Yerai | Enter an order: type, agreed price, notes, and one line per product (existing product or external link, name, material, colour or "Color not important", copies). |
 | **To-do** | Albert | One list of everything to print, in red-outlined groups that can be printed together. |
 | **Materials** | both | Filament left, in grams, split into PLA / PETG / ABS. |
@@ -21,18 +23,22 @@ Albert and Yerai have identical permissions.
 ## The workflow
 
 1. **Yerai saves an order.** It appears in To-do and one email
-   ("New order added to the to-do list") goes to propapropteu@gmail.com. Editing or
+   ("New order added to the to-do list") goes to propapropteu@gmail.com. A website
+   checkout does the same with the subject "New WEBSITE order added to the to-do list",
+   already carrying the product's material, colour and weight. Editing or
    deleting never sends email. Saving twice by mistake updates the same order.
 2. **To-do groups the products** by material + colour. "Color not important" joins
    the smallest group of its material. Prepared items come first, then the heaviest
    group, then the oldest.
-3. **Albert works each card** with its four icons: pencil (edit), tick (prepared =
-   G-code sent; nothing is deducted), printer (printed), X (delete). He types the
+3. **Albert works each card** with its icons: pencil (edit), tick (prepared =
+   G-code sent; nothing is deducted), printer (printed), triangle (failed print: the
+   lost grams are deducted and recorded, the card stays), X (delete). He types the
    real weight in grams on the card; Printed is refused without it.
 4. **Printed** deducts the grams from that material and colour (for "Color not
    important" it asks which roll was used), writes a row in *Print history*, and the
    card disappears. When the last product of an order is printed, one row is written
-   in *Finances*: price, cost (grams × cost per roll ÷ 1000) and profit.
+   in *Finances*: price, cost (grams × cost per roll ÷ 1000, failed prints included) and
+   profit.
 5. **Deleted** products disappear too and are kept in the *Deleted* tab.
 
 ## Where the records are (Google Sheets)
@@ -55,7 +61,7 @@ customer accounts) are untouched.
 
 | File | Role |
 |---|---|
-| `admin.html`, `js/admin.js` | the four screens (they only draw and call the engine) |
+| `admin.html`, `js/admin.js`, `css/admin.css` | the management screens (they only draw and call the engine) |
 | `backend/Manage.gs` | everything the four screens do: products, orders, to-do grouping (`groupTodo_`), printed (`printPiece`), materials |
 | `backend/Code.gs` | login, the router (`dispatch_`), website checkout, customer accounts, contact form, publishing `data/products.json` |
 | `tools/run-tests.js` | `npm test` — syntax, duplicate functions, router check, and the grouping rules |
@@ -89,4 +95,4 @@ Drive `Backups` folder.
 | A product stays in To-do after pressing Printed | Press Printed again — it finishes the same transaction and never deducts twice. |
 | Stock looks wrong | `Print history` shows every deduction with the stock left after it. |
 | "Saved, but the website update failed" | The GitHub publish failed; save the product again. |
-| Website order shows "Material not set" | Normal: open it with the pencil and choose material and colour. |
+| Website order shows "Material not set" | That product has no website material yet: set it in Products ("Website orders are printed in"), and fix this order with the pencil. |
