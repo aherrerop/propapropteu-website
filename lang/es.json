@@ -427,7 +427,11 @@
     "team": "Acceso equipo",
     "payCancel": "Pago cancelado. Tu cesta sigue disponible.",
     "payOk": "¡Pago recibido! Gracias por tu pedido ({ref}).",
-    "payPending": "Hemos recibido tu pedido ({ref}). Si el pago no aparece, escríbenos."
+    "payPending": "Hemos recibido tu pedido ({ref}). Si el pago no aparece, escríbenos.",
+    "filters": "Filtrar y ordenar",
+    "backToCart": "Volver a la cesta",
+    "language": "Idioma",
+    "menu": "Menú"
   },
   "meta": {
     "home": {

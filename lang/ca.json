@@ -427,7 +427,11 @@
     "team": "Accés equip",
     "payCancel": "Pagament cancel·lat. La teva cistella continua disponible.",
     "payOk": "Pagament rebut! Gràcies per la comanda ({ref}).",
-    "payPending": "Hem rebut la teva comanda ({ref}). Si el pagament no apareix, escriu-nos."
+    "payPending": "Hem rebut la teva comanda ({ref}). Si el pagament no apareix, escriu-nos.",
+    "filters": "Filtrar i ordenar",
+    "backToCart": "Tornar a la cistella",
+    "language": "Idioma",
+    "menu": "Menú"
   },
   "meta": {
     "home": {

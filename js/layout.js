@@ -27,9 +27,14 @@ const Layout = {
     return location.pathname.split("/").pop() || "index.html";
   },
 
-  toggleNav() {
+  toggleNav(e) {
+    if (e) e.stopPropagation();
     const h = document.getElementById("site-header");
     const open = h.classList.toggle("nav-open");
+    if (open) {
+      const close = ev => { if (ev.type === "keydown" && ev.key !== "Escape") return; if (ev.type === "click" && h.contains(ev.target) && !ev.target.closest("a,button[data-lang]")) return; this.closeNav(); document.removeEventListener("click", close); document.removeEventListener("keydown", close); };
+      setTimeout(() => { document.addEventListener("click", close); document.addEventListener("keydown", close); }, 0);
+    }
     const btn = h.querySelector(".nav-toggle");
     if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
   },
@@ -48,6 +53,15 @@ const Layout = {
       const close = () => { l.classList.remove("open"); document.removeEventListener("click", close); };
       setTimeout(() => document.addEventListener("click", close), 0);
     }
+  },
+
+  // Phones: footer link groups fold under their heading (tap to open). Desktop ignores it (CSS).
+  footerFolds() {
+    document.querySelectorAll(".footer-grid > div:not(:first-child) > h4").forEach(h => {
+      h.setAttribute("role", "button"); h.setAttribute("tabindex", "0"); h.setAttribute("aria-expanded", "false");
+      const t = () => { const open = h.parentNode.classList.toggle("open"); h.setAttribute("aria-expanded", open ? "true" : "false"); };
+      h.addEventListener("click", t); h.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); t(); } });
+    });
   },
 
   // Current language code on the header button (EN / CA / ES).
@@ -75,7 +89,12 @@ const Layout = {
           <img class="logo-mark" src="${SITE_CONFIG.logo}" alt="">
           <span class="logo-type"><span class="lt-a">PROP<img class="lt-fig" src="assets/logo_a.svg" alt="a">PROP</span><span class="lt-b">TEU</span></span>
         </a>
-        <nav class="main-nav" onclick="Layout.closeNav()">${nav}</nav>
+        <nav class="main-nav">${nav}
+          <div class="nav-extra">
+            <div class="nav-langs" role="group" data-i18n-aria="ui.language">${SITE_CONFIG.languages.map(l => `<button data-lang="${l}" onclick="I18N.set('${l}')">${l.toUpperCase()}</button>`).join("")}</div>
+            <a class="nav-login" href="acceso.html" data-i18n="nav.login"></a>
+          </div>
+        </nav>
         <div class="header-tools">
           <div class="lang">
             <button class="lang-globe" aria-label="Language" aria-haspopup="true" onclick="Layout.toggleLang(event)">${globe}<span class="lang-code"></span><svg class="caret" viewBox="0 0 10 6" width="9" height="6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -85,11 +104,12 @@ const Layout = {
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
             <span data-i18n="nav.login"></span>
           </a>
-          <button class="cart-btn" onclick="Cart.open()">
-            <span data-i18n="nav.cart"></span>
+          <button class="cart-btn" onclick="Cart.open()" data-i18n-aria="nav.cart">
+            <svg class="cart-ico" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+            <span class="cart-label" data-i18n="nav.cart"></span>
             <span class="cart-count">0</span>
           </button>
-          <button class="nav-toggle" aria-label="Menu" aria-expanded="false" onclick="Layout.toggleNav()">
+          <button class="nav-toggle" data-i18n-aria="ui.menu" aria-expanded="false" onclick="Layout.toggleNav(event)">
             <span></span><span></span><span></span>
           </button>
         </div>
@@ -252,6 +272,7 @@ const Layout = {
     this.renderCookieBanner();
     this.loadSnipcart();
     I18N.apply();
+    this.footerFolds();
     this.showLang();
     this.setMeta();
     document.addEventListener("langchange", () => { this.showLang(); this.setMeta(); this.renderCanonical(); });
@@ -422,6 +443,7 @@ const Cart = {
   close() { const d = document.getElementById("cart-drawer"); if (d) d.hidden = true; document.body.style.overflow = ""; },
   render() {
     const body = document.getElementById("cart-body"), foot = document.getElementById("cart-foot");
+    document.querySelector(".cart-panel").classList.remove("is-checkout");
     const items = this.items;
     if (!items.length) { body.innerHTML = '<p class="cart-empty" data-i18n="cart.empty"></p>'; foot.innerHTML = ""; I18N.apply(body); return; }
     body.innerHTML = items.map(i => {
@@ -440,7 +462,9 @@ const Cart = {
   },
   checkout() {
     const foot = document.getElementById("cart-foot");
+    document.querySelector(".cart-panel").classList.add("is-checkout");
     foot.innerHTML =
+      '<button type="button" class="cart-back" onclick="Cart.render()">&larr; ' + I18N.t("ui.backToCart") + '</button>' +
       '<form id="cart-form" class="cart-form">' +
       '<input id="c-name" type="text" required placeholder="' + I18N.t("form.name") + '">' +
       '<input id="c-email" type="email" required placeholder="' + I18N.t("form.emailShort") + '">' +
@@ -463,6 +487,7 @@ const Cart = {
       '<button class="btn" type="submit" id="c-send">' + I18N.t("order.send") + '</button>' +
       '<p class="form-status" id="c-status" hidden></p></form>';
     I18N.apply(foot);
+    document.querySelector(".cart-panel").scrollTop = 0;
     const self = this, form = document.getElementById("cart-form");
     // Pickup: no delivery address needed.
     form.querySelectorAll('input[name="c-del"]').forEach(r => r.addEventListener("change", () => {

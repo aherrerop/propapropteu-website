@@ -66,6 +66,7 @@ customer accounts) are untouched.
 | `backend/Code.gs` | login, the router (`dispatch_`), website checkout, customer accounts, contact form, publishing `data/products.json` |
 | `backend/Website.gs` | tags (`TAGS`), Request a prop (files + request), customer emails, Payment received + invoice PDF |
 | `backend/Pages.gs` | one page per product (`p/<id>.html`, with its share picture) + `sitemap.xml` (all languages); written on every publish |
+| `tools/screenshots.js` | screenshots of the site as a phone (or any size) with the Edge on this PC, to check layouts |
 | `tools/build-pages.js` | builds the same product pages + sitemap locally from `data/products.json` |
 | `tools/run-tests.js` | `npm test` — syntax, duplicate functions, router check, and the grouping rules |
 

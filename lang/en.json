@@ -427,7 +427,11 @@
     "team": "Team access",
     "payCancel": "Payment cancelled. Your cart is still there.",
     "payOk": "Payment received! Thank you for your order ({ref}).",
-    "payPending": "We've received your order ({ref}). If the payment doesn't show up, write to us."
+    "payPending": "We've received your order ({ref}). If the payment doesn't show up, write to us.",
+    "filters": "Filter & sort",
+    "backToCart": "Back to cart",
+    "language": "Language",
+    "menu": "Menu"
   },
   "meta": {
     "home": {

@@ -1389,3 +1389,119 @@ body.shop .site-header { background: var(--color-hero); }
 .cart-form .co-delivery input { width: auto; margin-top: 4px; }
 .cart-form .co-delivery small { color: var(--color-muted); }
 .cart-form .co-note { font-size: 0.76rem; color: var(--color-muted); margin: 0; }
+
+/* ============================================================
+   PHONES & SMALL SCREENS — one place for the phone layout
+   ============================================================ */
+/* elements that only exist for phones */
+.nav-extra, .shop-toggle, .buy-bar, .cart-ico { display: none; }
+/* product pictures always whole (cut-outs and photos) */
+.gallery-main img { object-fit: contain; }
+/* placeholders / photos fill the square gallery tiles */
+.work-gallery .media-box img { width: 100%; height: 100%; object-fit: cover; }
+/* privacy checkbox next to its text, in every form */
+form.std-form label.cf-check { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; text-transform: none; letter-spacing: 0; font-size: 0.9rem; color: var(--color-ink); }
+form.std-form label.cf-check input { width: 18px; height: 18px; flex: none; margin-top: 2px; padding: 0; }
+/* checkout = its own step: the whole panel scrolls, the item list steps aside */
+.cart-panel.is-checkout { overflow-y: auto; }
+.cart-panel.is-checkout .cart-body { display: none; }
+.cart-panel.is-checkout .cart-foot { border-top: none; }
+.cart-back { align-self: flex-start; background: none; border: none; padding: 0; color: var(--color-muted); font-family: var(--font-body); font-size: 0.85rem; cursor: pointer; }
+.cart-back:hover { color: var(--color-ink); }
+
+/* tablets & phones (hamburger menu): keep the page margin left of the hamburger */
+@media (max-width: 1100px) {
+  .header-inner { padding-left: calc(var(--gutter) + 42px); }
+  .nav-toggle { left: var(--gutter); }
+  .p-hero-desc p, .sf-desc { text-align: left; }
+}
+
+@media (max-width: 600px) {
+  /* header: menu, logo, cart. Language and Acceso move into the menu. */
+  .header-tools .lang, .header-tools .login-link { display: none; }
+  .cart-label { display: none; }
+  .cart-ico { display: block; }
+  .cart-btn { padding: 9px 12px; gap: 6px; }
+  .nav-extra { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px var(--gutter); border-top: 1px solid var(--color-line); }
+  .nav-langs { display: inline-flex; border: 1px solid var(--color-line); border-radius: 999px; padding: 3px; }
+  .nav-langs button { border: none; background: none; border-radius: 999px; padding: 7px 14px; font-family: var(--font-body); font-size: 0.76rem; font-weight: 500; letter-spacing: 0.08em; color: var(--color-muted); cursor: pointer; }
+  .nav-langs button.active { background: var(--color-ink); color: #fff; }
+  nav.main-nav a.nav-login { width: auto; border: none; padding: 8px 0; font-size: 0.74rem; color: var(--color-muted); }
+
+  /* forms: 16px text so phones do not zoom in when typing */
+  form.std-form input, form.std-form textarea, form.std-form select,
+  .cf-field input, .cf-field textarea, .cart-form input, .cart-form textarea { font-size: 16px; }
+
+  /* home hero */
+  .p-arrow { width: 38px; height: 38px; font-size: 1.3rem; }
+  .p-saber { width: auto; aspect-ratio: auto; display: inline-flex; margin: 22px 0 0; padding: 13px 26px;
+    background: var(--color-ink); color: #fff; font-family: var(--font-body); font-size: 0.74rem; font-weight: 500; letter-spacing: var(--tracking-label); }
+
+  /* product grids: two columns, like most shops on a phone */
+  .shop-grid { grid-template-columns: repeat(2, 1fr); gap: 26px 12px; }
+  .sc-name { font-size: 0.72rem; }
+  .sc-price { font-size: 0.82rem; }
+
+  /* rows of cards swipe sideways instead of a long column */
+  .made-grid, .testi-grid { display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%;
+    gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: var(--gutter);
+    margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter) 8px; scrollbar-width: none; }
+  .made-grid::-webkit-scrollbar, .testi-grid::-webkit-scrollbar { display: none; }
+  .made, .testi { scroll-snap-align: start; }
+  .home-band { padding: 44px 0; }
+
+  /* shop: compact featured band, then one "Filter & sort" button */
+  .shop-featured { padding: 0 0 22px; }
+  .shop-featured-inner { min-height: 0; gap: 10px; }
+  .sf-media { order: -1; min-height: 190px; }
+  .sf-img { max-height: 190px; }
+  .sf-eyebrow { font-size: 0.95rem; margin-bottom: 8px; }
+  .sf-desc { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 14px; font-size: 0.92rem; }
+  .btn-grey { padding: 12px 20px; font-size: 0.9rem; }
+  .shop-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 20px 0 14px; padding: 12px;
+    border: 1px solid var(--color-line); border-radius: 999px; background: #fff; cursor: pointer; color: var(--color-ink);
+    font-family: var(--font-body); font-size: 0.76rem; font-weight: 500; text-transform: uppercase; letter-spacing: var(--tracking-label); }
+  .shop-toggle::after { content: "+"; font-size: 1rem; line-height: 1; }
+  .shop-toggle[aria-expanded="true"]::after { content: "\2212"; }
+  .shop-controls { display: none; }
+  .shop-controls.open { display: block; margin-bottom: 18px; }
+  .shop-sort { margin: 4px 0 14px; justify-content: flex-start; gap: 18px; }
+
+  /* product page: big add button, quiet "back" link, sticky buy bar once scrolled */
+  .buy-row .btn { flex: 1 1 100%; justify-content: center; text-align: center; padding-top: 15px; padding-bottom: 15px; }
+  .buy-row a.btn-outline { flex: none; border: none; background: none; padding: 4px 0; font-size: 0.74rem; text-decoration: underline; text-underline-offset: 3px; }
+  .buy-bar { display: flex; align-items: center; gap: 12px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+    background: #fff; border-top: 1px solid var(--color-line); padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+    transform: translateY(110%); transition: transform .25s ease; box-shadow: 0 -8px 24px rgba(0,0,0,.06); }
+  .buy-bar.show { transform: none; }
+  .buy-bar .bb-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+  .buy-bar .bb-name { font-size: 0.74rem; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .buy-bar strong { font-family: var(--font-display); font-weight: 400; font-size: 1.35rem; }
+  .buy-bar .btn { padding: 13px 18px; }
+  body.has-buybar .whatsapp-fab { bottom: 86px; }
+
+  /* cart: full screen on phones, bigger +/- */
+  .cart-panel { width: 100%; }
+  .cart-qty button { width: 36px; height: 36px; }
+  .cart-rm { font-size: 1.4rem; padding: 6px; }
+
+  /* about: photo beside the text, not a full-screen portrait */
+  .person { grid-template-columns: 112px 1fr; gap: 16px; }
+  .person img { max-width: none; }
+  .person h3 { font-size: 1.3rem; }
+
+  /* footer: link groups fold under their headings */
+  .footer-grid { gap: 0; }
+  .footer-grid > div:first-child { margin-bottom: 18px; }
+  .footer-grid > div:not(:first-child) > h4 { display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin: 0;
+    padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.15); }
+  .footer-grid > div:not(:first-child) > h4::after { content: "+"; font-size: 1.1rem; font-weight: 400; }
+  .footer-grid > div.open > h4::after { content: "\2212"; }
+  .footer-grid > div:not(:first-child) > a { display: none; }
+  .footer-grid > div.open > a { display: block; padding: 8px 0; }
+  .footer-grid > div.open { padding-bottom: 10px; }
+  .footer-bottom { margin-top: 16px; flex-direction: column; }
+
+  /* WhatsApp button a little smaller and tighter to the corner */
+  .whatsapp-fab { width: 50px; height: 50px; right: 16px; bottom: 16px; }
+}

@@ -44,6 +44,8 @@
 
     <!-- SORT TABS + GRID -->
     <div class="container">
+      <button class="shop-toggle" id="shop-toggle" aria-expanded="false" aria-controls="shop-controls"><span data-i18n="ui.filters"></span></button>
+      <div class="shop-controls" id="shop-controls">
       <nav class="shop-sort" id="shop-sort">
         <button data-sort="featured" class="active" data-i18n="catalog.sortRelevance"></button>
         <button data-sort="az" data-i18n="catalog.sortAz"></button>
@@ -51,6 +53,7 @@
       </nav>
       <div class="shop-tools">
         <div class="shop-filters" id="shop-filters"></div>
+      </div>
       </div>
       <div class="shop-grid" id="shop-grid"></div>
       <p class="admin-empty" id="shop-empty" hidden data-i18n="catalog.empty"></p>

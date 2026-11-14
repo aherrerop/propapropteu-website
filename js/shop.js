@@ -15,6 +15,9 @@ const ShopPage = {
     this.renderFilters();
     this.renderGrid();
 
+    // Phones: sorting and tags sit behind one button.
+    const tg = document.getElementById("shop-toggle");
+    if (tg) tg.addEventListener("click", () => { const open = document.getElementById("shop-controls").classList.toggle("open"); tg.setAttribute("aria-expanded", open ? "true" : "false"); });
     document.getElementById("shop-sort").addEventListener("click", e => {
       const b = e.target.closest("button[data-sort]"); if (!b) return;
       this.sort = b.dataset.sort;

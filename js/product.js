@@ -133,6 +133,17 @@ const ProductPage = {
     /* add to cart (checkout happens in the cart drawer) */
     const addBtn = document.getElementById("add-cart");
     if (addBtn && !out) addBtn.addEventListener("click", () => Cart.add(p.id));
+    let bar = document.getElementById("buy-bar");
+    if (!bar) { bar = document.createElement("div"); bar.id = "buy-bar"; bar.className = "buy-bar"; document.body.appendChild(bar); }
+    bar.innerHTML = '<div class="bb-text"><span class="bb-name"></span><strong>' + Catalog.formatPrice(p.price) + '</strong></div>' +
+      (out ? '' : '<button class="btn" type="button">' + I18N.t("catalog.addToCartFull") + '</button>');
+    bar.querySelector(".bb-name").textContent = I18N.pick(p.name);
+    if (!out) bar.querySelector("button").addEventListener("click", () => Cart.add(p.id));
+    if (this.io) this.io.disconnect();
+    if (addBtn && "IntersectionObserver" in window) {
+      this.io = new IntersectionObserver(([en]) => { const show = !en.isIntersecting && en.boundingClientRect.top < 0; bar.classList.toggle("show", show); document.body.classList.toggle("has-buybar", show); });
+      this.io.observe(addBtn);
+    }
 
     this.renderRelated();
   },
