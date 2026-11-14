@@ -367,7 +367,7 @@ async function renderOrders() {
       o.notes ? el("div", { class: "card-meta" }, [o.notes]) : null,
       o.printed ? el("div", { class: "card-meta" }, [o.open ? o.printed + " already printed" : "All printed"]) : null,
       o.source === "web" ? el("div", { class: "card-meta" }, [[o.customer, o.email, o.phone].filter(Boolean).join(" · ")]) : null,
-      o.source === "web" && o.address ? el("div", { class: "card-meta" }, ["Deliver to: " + o.address]) : null,
+      o.source === "web" ? el("div", { class: "card-meta" }, [o.delivery === "pickup" ? "Pickup in Barcelona" : "Ship (free) to: " + (o.address || "—")]) : null,
       o.source === "web" && o.company ? el("div", { class: "card-meta" }, ["Invoice to: " + o.company + (o.nif ? " · " + o.nif : "")]) : null,
       o.source === "web" ? el("div", { class: "pay-row" }, o.paid
         ? [el("span", { class: "tag ok" }, ["Paid"]), o.invoiceUrl ? el("a", { href: o.invoiceUrl, target: "_blank", rel: "noopener" }, ["Invoice " + o.invoiceNo]) : null]

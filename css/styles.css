@@ -1374,3 +1374,18 @@ body.shop .site-header { background: var(--color-hero); }
 .made p { color: var(--color-muted); font-size: 0.92rem; line-height: 1.5; }
 @media (max-width: 900px) { .testi-grid { grid-template-columns: 1fr; } .made-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .made-grid { grid-template-columns: 1fr; } }
+
+/* VAT + delivery dates (product page, cart) */
+.price-vat { display: block; font-size: 0.82rem; color: var(--color-muted); margin: -4px 0 10px; }
+.p-eta { font-size: 0.9rem; margin: 14px 0 6px; }
+.p-eta p { margin: 0 0 4px; color: var(--color-muted); }
+.p-eta ul { margin: 0; padding-left: 18px; }
+.p-eta li { margin: 2px 0; }
+.cart-sum { display: grid; gap: 3px; font-size: 0.86rem; color: var(--color-muted); margin-bottom: 6px; }
+.cart-line { display: flex; justify-content: space-between; }
+.cart-form .co-delivery { border: 1px solid var(--color-line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; margin: 0; }
+.cart-form .co-delivery legend { font-size: 0.78rem; text-transform: uppercase; letter-spacing: var(--tracking-label); padding: 0 4px; }
+.cart-form .co-delivery label { display: flex; gap: 8px; align-items: flex-start; font-size: 0.88rem; cursor: pointer; }
+.cart-form .co-delivery input { width: auto; margin-top: 4px; }
+.cart-form .co-delivery small { color: var(--color-muted); }
+.cart-form .co-note { font-size: 0.76rem; color: var(--color-muted); margin: 0; }

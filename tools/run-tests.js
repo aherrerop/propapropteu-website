@@ -140,6 +140,20 @@ if (sandbox.slug_) {
   eq(sandbox.slug_('ATLAS', { atlas: true }), 'atlas-2', 'slug stays unique');
 } else fail('slug_ not found');
 
+// Delivery dates (backend/Website.gs): print time + 24 h, weekend -> Monday, shipping +1..2 working days
+if (sandbox.deliveryEta_ && sandbox.dayText_) {
+  const d = x => x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+  const wed = new Date(2026, 10, 18, 10, 0), fri = new Date(2026, 10, 20, 10, 0);
+  let e = sandbox.deliveryEta_(120, 'pickup', wed);
+  eq(d(e.from), '2026-11-19', 'pickup: Wednesday + 2 h print + 24 h = Thursday');
+  e = sandbox.deliveryEta_(120, 'shipping', wed);
+  eq(d(e.from) + ' ' + d(e.to), '2026-11-20 2026-11-23', 'shipping: Friday to Monday (skips the weekend)');
+  e = sandbox.deliveryEta_(0, 'pickup', fri);
+  eq(d(e.from), '2026-11-23', 'ready on Saturday moves to Monday');
+  eq(sandbox.dayText_(new Date(2026, 3, 7), 'ca'), "dimarts 7 d'abril", 'Catalan date');
+  eq(sandbox.dayText_(new Date(2026, 10, 19), 'es'), 'jueves 19 de noviembre', 'Spanish date');
+} else fail('deliveryEta_ not found');
+
 // Product pages + sitemap (backend/Pages.gs)
 if (sandbox.productPageHtml_ && sandbox.sitemapXml_) {
   const tpl = '<!DOCTYPE html>\n<html lang="ca">\n<head>\n  <meta charset="UTF-8">\n  <title>x</title>\n</head>\n<body>\n</body>\n</html>';

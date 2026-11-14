@@ -140,7 +140,7 @@
     "related": "Productes relacionats",
     "backToCatalog": "Torna a la botiga",
     "notFound": "No hem trobat aquest producte.",
-    "delivery": "El fabriquem a Barcelona quan el demanes. Recollida a Barcelona o enviament: et confirmem termini i cost per correu abans de pagar."
+    "delivery": "El fabriquem a Barcelona quan el demanes:"
   },
   "custom": {
     "title": "Attrezzo a mida",
@@ -338,7 +338,7 @@
     "q2_2": "Com puc pagar?",
     "a2_2": "De moment, per transferència bancària. Aviat també amb targeta.",
     "q2_3": "Els preus inclouen l'IVA?",
-    "a2_3": "Sí, tots els preus inclouen l'IVA (21%). L'enviament no hi és inclòs: te'l confirmem per correu abans que paguis.",
+    "a2_3": "Sí, tots els preus inclouen l'IVA (21%); a la fitxa i a la cistella en veuràs el desglossament. L'enviament a la Península és gratuït.",
     "q2_4": "Feu factura?",
     "a2_4": "Sí, cada comanda pagada té la seva factura, que s'envia automàticament amb el correu de confirmació. Si la necessites a nom d'una empresa, marca «Necessito factura a nom d'una empresa» en fer la comanda i afegeix la raó social, el NIF i l'adreça de facturació.",
     "q2_5": "Puc triar el color?",
@@ -347,9 +347,9 @@
     "a2_6": "Sí. Per a quantitats més grans que una comanda normal, fes servir «Demana una peça» o escriu-nos i t'enviarem preu i termini.",
     "g3": "Lliurament",
     "q3_1": "Quant triga?",
-    "a3_1": "Moltes peces s'imprimeixen quan les demanes, així que el termini depèn de la comanda. Te'l confirmem per correu; el màxim és de 30 dies des del pagament, llevat que acordem un altre termini.",
+    "a3_1": "L'imprimim quan el demanes: comptem el temps d'impressió de cada peça més 24 h de marge. La fitxa del producte i la cistella et diuen el dia exacte abans de comprar. El màxim és de 30 dies des del pagament.",
     "q3_2": "Feu enviaments? Puc passar a recollir-ho?",
-    "a3_2": "Acordem l'enviament amb tu per correu i et diem el cost abans que paguis. També pots recollir la comanda a Barcelona.",
+    "a3_2": "Sí, l'enviament a la Península és gratuït i triga 1–2 dies laborables des que la comanda és a punt. També la pots recollir gratis a Barcelona. Per a Balears, Canàries, Ceuta, Melilla i l'estranger, escriu-nos abans.",
     "g4": "Devolucions i garantia",
     "q4_1": "Puc retornar un producte?",
     "a4_1": "Sí: si ets consumidor tens 14 dies naturals des del lliurament per retornar un producte de la botiga sense donar cap motiu. Les peces fetes segons les teves especificacions no es poden retornar. L'enviament de la devolució va a càrrec del client. Detalls a la pàgina legal.",
@@ -478,5 +478,21 @@
       "title": "Pàgina no trobada",
       "desc": ""
     }
+  },
+  "eta": {
+    "pickup": "A punt per recollir a Barcelona el {a}",
+    "ship": "Enviament gratuït: el reps entre el {a} i el {b}",
+    "title": "Lliurament",
+    "optShip": "Enviament a domicili (Península) · gratuït",
+    "optPickup": "Recollida a Barcelona · gratuït",
+    "ifToday": "Dates si pagues avui. Comptem el temps d'impressió de cada peça més 24 h de marge."
+  },
+  "vat": {
+    "base": "Base imposable",
+    "vat": "IVA ({p}%)",
+    "ship": "Enviament",
+    "free": "Gratuït",
+    "total": "Total (IVA inclòs)",
+    "line": "{b} + {v} d'IVA ({p}%)"
   }
 }

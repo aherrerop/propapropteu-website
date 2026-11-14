@@ -57,7 +57,10 @@ const SITE_CONFIG = {
   defaultLang: "es",       // Spanish first (per current design/reference)
   autoDetectLang: false,
   // Home testimonials: keep false until the texts in lang/*.json (home.t1…t3) are real.
-  showTestimonials: false,   // always start in Spanish until the visitor switches
+  showTestimonials: false,
+  // Prices include VAT; shipping (mainland Spain) is free and takes 1–2 working days once ready.
+  vatRate: 21,
+  shipDays: [1, 2],   // always start in Spanish until the visitor switches
 
   // --- CATALOG ---
   showPricesWithIva: true  // prices in products.json are IVA included
@@ -65,4 +68,4 @@ const SITE_CONFIG = {
 
 // Frontend build stamp — bump when you change manager JS/HTML. Shown in the dashboard
 // top bar and used to cache-bust the admin scripts (see admin.html ?v=).
-const SITE_VERSION = "2026-11-15.1";
+const SITE_VERSION = "2026-11-16.1";

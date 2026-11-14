@@ -94,6 +94,7 @@ const ProductPage = {
           <h1>${I18N.pick(p.name)}</h1>
           <p class="short">${I18N.pick(p.short)}</p>
           <span class="price">${Catalog.formatPrice(p.price)} <span class="iva">${I18N.t("catalog.iva")}</span></span>
+          <span class="price-vat">${(() => { const v = Catalog.vat(p.price); return I18N.t("vat.line").replace("{b}", Catalog.formatPrice(v.base)).replace("{v}", Catalog.formatPrice(v.vat)).replace("{p}", v.p); })()}</span>
           <span class="stock-flag ${stock.cls}">${I18N.t(stock.key)}</span>
           <div class="buy-row">
             <button class="btn" id="add-cart" ${out ? "disabled" : ""}>
@@ -101,7 +102,7 @@ const ProductPage = {
             </button>
             <a class="btn btn-outline" href="shop.html">${I18N.t("product.backToCatalog")}</a>
           </div>
-          <p class="of-nopay">${I18N.t("product.delivery")}</p>
+          <div class="p-eta"><p>${I18N.t("product.delivery")}</p><ul><li>${Catalog.etaText(p.printMin, "shipping")}</li><li>${Catalog.etaText(p.printMin, "pickup")}</li></ul></div>
           <p class="of-nopay">${I18N.t("order.nopay")}</p>
           <div class="description">${I18N.pick(p.description)}</div>
           ${specs}

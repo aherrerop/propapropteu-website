@@ -293,6 +293,29 @@ const Catalog = {
     return { cls: "stock-in", key: "stock.in" };
   },
 
+  // Delivery dates — the same rule as the engine (backend/Website.gs deliveryEta_):
+  // ready = now + printing time + 24 h (weekend -> Monday); shipping = +1 to 2 working days.
+  eta(printMin, delivery) {
+    const addWork = (d, n) => { d = new Date(d); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6 !== 0) n--; } return d; };
+    const ready = new Date(Date.now() + (Number(printMin) || 0) * 60000 + 24 * 3600000);
+    while (ready.getDay() % 6 === 0) ready.setDate(ready.getDate() + 1);
+    const [a, b] = SITE_CONFIG.shipDays || [1, 2];
+    return delivery === "pickup" ? { from: ready, to: ready } : { from: addWork(ready, a), to: addWork(ready, b) };
+  },
+  dayText(d) {
+    const loc = { es: "es-ES", ca: "ca-ES", en: "en-GB" }[I18N.lang] || "es-ES";
+    return d.toLocaleDateString(loc, { weekday: "long", day: "numeric", month: "long" }).replace(",", "");
+  },
+  etaText(printMin, delivery) {
+    const e = this.eta(printMin, delivery);
+    return I18N.t(delivery === "pickup" ? "eta.pickup" : "eta.ship").replace("{a}", this.dayText(e.from)).replace("{b}", this.dayText(e.to));
+  },
+  // VAT included in every price: split it for display.
+  vat(total) {
+    const p = SITE_CONFIG.vatRate || 21, base = total / (1 + p / 100);
+    return { p, base, vat: total - base };
+  },
+
   // Each product has its own page, p/<id>.html, so shared links show its picture and name.
   url(p) { return "p/" + encodeURIComponent(p.id) + ".html"; },
 
@@ -368,6 +391,14 @@ const Cart = {
     } catch (e) { banner(I18N.t("ui.payPending").replace("{ref}", paid), true); }
     strip();
   },
+  // Printing minutes of everything in the cart (for the delivery date).
+  printMin() { return this.items.reduce((s, i) => { const p = this.byId[i.id]; return s + (p ? (Number(p.printMin) || 0) * i.qty : 0); }, 0); },
+  // Subtotal before VAT, VAT, free shipping, total.
+  breakdown() {
+    const t = this.total(), v = Catalog.vat(t), row = (k, val, cls) => '<div class="cart-line' + (cls ? " " + cls : "") + '"><span>' + k + '</span><span>' + val + '</span></div>';
+    return '<div class="cart-sum">' + row(I18N.t("vat.base"), Catalog.formatPrice(v.base)) + row(I18N.t("vat.vat").replace("{p}", v.p), Catalog.formatPrice(v.vat)) +
+      row(I18N.t("vat.ship"), I18N.t("vat.free")) + '</div><div class="cart-total"><span>' + I18N.t("vat.total") + '</span><strong>' + Catalog.formatPrice(t) + '</strong></div>';
+  },
   total() { return this.items.reduce((s, i) => { const p = this.byId[i.id]; return s + (p ? p.price * i.qty : 0); }, 0); },
   ensureDrawer() {
     if (document.getElementById("cart-drawer")) return;
@@ -402,7 +433,7 @@ const Cart = {
         '<span>' + i.qty + '</span><button aria-label="+" onclick="Cart.setQty(\'' + p.id + '\',' + (i.qty + 1) + ')">+</button></div>' +
         '<button class="cart-rm" data-i18n-aria="ui.remove" onclick="Cart.setQty(\'' + p.id + '\',0)">&times;</button></div>';
     }).join("");
-    foot.innerHTML = '<div class="cart-total"><span data-i18n="cart.total"></span><strong>' + Catalog.formatPrice(this.total()) + '</strong></div>' +
+    foot.innerHTML = this.breakdown() +
       '<button class="btn" onclick="Cart.checkout()" data-i18n="cart.checkout"></button>' +
       '<button class="cart-continue" onclick="Cart.close()" data-i18n="cart.continue"></button>';
     I18N.apply(document.getElementById("cart-drawer"));
@@ -414,7 +445,11 @@ const Cart = {
       '<input id="c-name" type="text" required placeholder="' + I18N.t("form.name") + '">' +
       '<input id="c-email" type="email" required placeholder="' + I18N.t("form.emailShort") + '">' +
       '<input id="c-phone" type="tel" placeholder="' + I18N.t("form.phoneLabel") + '">' +
-      '<textarea id="c-address" rows="2" required placeholder="' + I18N.t("order.addressPh") + '"></textarea>' +
+      '<fieldset class="co-delivery"><legend>' + I18N.t("eta.title") + '</legend>' +
+      '<label><input type="radio" name="c-del" value="shipping" checked> <span><strong>' + I18N.t("eta.optShip") + '</strong><br><small>' + Catalog.etaText(this.printMin(), "shipping") + '</small></span></label>' +
+      '<label><input type="radio" name="c-del" value="pickup"> <span><strong>' + I18N.t("eta.optPickup") + '</strong><br><small>' + Catalog.etaText(this.printMin(), "pickup") + '</small></span></label>' +
+      '<p class="co-note">' + I18N.t("eta.ifToday") + '</p></fieldset>' +
+      '<textarea id="c-address" rows="2" required placeholder="' + I18N.t("order.address") + '"></textarea>' +
       '<label class="co-check"><input type="checkbox" id="c-co"> ' + I18N.t("order.invoiceCompany") + '</label>' +
       '<div id="c-co-fields" hidden>' +
       '<input id="c-company" type="text" placeholder="' + I18N.t("order.company") + '">' +
@@ -424,11 +459,16 @@ const Cart = {
       '<textarea id="c-note" placeholder="' + I18N.t("order.note") + '"></textarea>' +
       '<input id="c-hp" class="hp-field" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">' +
       '<p class="of-nopay">' + I18N.t("order.nopay") + '</p>' +
-      '<div class="cart-total"><span data-i18n="cart.total"></span><strong>' + Catalog.formatPrice(this.total()) + '</strong></div>' +
+      this.breakdown() +
       '<button class="btn" type="submit" id="c-send">' + I18N.t("order.send") + '</button>' +
       '<p class="form-status" id="c-status" hidden></p></form>';
     I18N.apply(foot);
     const self = this, form = document.getElementById("cart-form");
+    // Pickup: no delivery address needed.
+    form.querySelectorAll('input[name="c-del"]').forEach(r => r.addEventListener("change", () => {
+      const ship = form.querySelector('input[name="c-del"]:checked').value === "shipping", a = document.getElementById("c-address");
+      a.hidden = !ship; a.required = ship;
+    }));
     // Company invoice: show (and require) the company fields only when ticked.
     document.getElementById("c-co").addEventListener("change", e => {
       const on = e.target.checked;
@@ -444,7 +484,7 @@ const Cart = {
       let r;
       try {
         r = await (await fetch(SITE_CONFIG.adminApi, { method: "POST", redirect: "follow",
-          body: JSON.stringify({ action: "placeOrder", lang: I18N.lang, name: g("c-name"), email: g("c-email"), phone: g("c-phone"),
+          body: JSON.stringify({ action: "placeOrder", lang: I18N.lang, delivery: form.querySelector('input[name="c-del"]:checked').value, name: g("c-name"), email: g("c-email"), phone: g("c-phone"),
             address: g("c-address"), note: g("c-note"), company_hp: g("c-hp"), items: self.items,
             company: co ? g("c-company") : "", nif: co ? g("c-nif") : "", billingAddress: co ? g("c-billing") : "" }) })).json();
       } catch (err) { r = { ok: false }; }

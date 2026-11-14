@@ -111,26 +111,26 @@ var MAILS = {
   received: {
     subject: { es: 'Pedido {id} recibido — Prop a Prop Teu', ca: 'Comanda {id} rebuda — Prop a Prop Teu', en: 'Order {id} received — Prop a Prop Teu' },
     body: {
-      es: 'Hola {name},\n\nGracias por tu pedido. Estos son los detalles:\n\n{lines}\nTotal: {total} € (IVA incluido)\n\n' +
+      es: 'Hola {name},\n\nGracias por tu pedido. Estos son los detalles:\n\n{lines}\n{vat}\n\n{eta} (si pagas hoy).\n\n' +
           'Para completar la compra, haz una transferencia bancaria por el importe total:\n\nTitular: {holder}\nIBAN: {iban}\nConcepto: {id}\n\n' +
-          'Cuando recibamos la transferencia, te enviaremos un email confirmando la compra, con la factura adjunta. Después te escribiremos para acordar el envío o la recogida.\n\n' +
+          'Cuando recibamos la transferencia, te enviaremos un email confirmando la compra, con la factura adjunta, y nos ponemos a fabricarlo.\n\n' +
           'Si tienes cualquier duda, responde a este correo.\n\nUn saludo,\nProp a Prop Teu',
-      ca: 'Hola {name},\n\nGràcies per la teva comanda. Aquests són els detalls:\n\n{lines}\nTotal: {total} € (IVA inclòs)\n\n' +
+      ca: 'Hola {name},\n\nGràcies per la teva comanda. Aquests són els detalls:\n\n{lines}\n{vat}\n\n{eta} (si pagues avui).\n\n' +
           'Per completar la compra, fes una transferència bancària per l\'import total:\n\nTitular: {holder}\nIBAN: {iban}\nConcepte: {id}\n\n' +
-          'Quan rebem la transferència, t\'enviarem un correu confirmant la compra, amb la factura adjunta. Després t\'escriurem per acordar l\'enviament o la recollida.\n\n' +
+          'Quan rebem la transferència, t\'enviarem un correu confirmant la compra, amb la factura adjunta, i ens posem a fabricar-la.\n\n' +
           'Si tens qualsevol dubte, respon aquest correu.\n\nUna salutació,\nProp a Prop Teu',
-      en: 'Hello {name},\n\nThank you for your order. Here are the details:\n\n{lines}\nTotal: {total} € (VAT included)\n\n' +
+      en: 'Hello {name},\n\nThank you for your order. Here are the details:\n\n{lines}\n{vat}\n\n{eta} (if you pay today).\n\n' +
           'To complete the purchase, please make a bank transfer for the total amount:\n\nAccount holder: {holder}\nIBAN: {iban}\nReference: {id}\n\n' +
-          'Once we receive the transfer, we\'ll email you to confirm the purchase, with the invoice attached. We\'ll then get in touch to arrange delivery or pickup.\n\n' +
+          'Once we receive the transfer, we\'ll email you to confirm the purchase, with the invoice attached, and start making it.\n\n' +
           'If you have any questions, just reply to this email.\n\nBest regards,\nProp a Prop Teu'
     }
   },
   paid: {
     subject: { es: 'Pago recibido — pedido {id}', ca: 'Pagament rebut — comanda {id}', en: 'Payment received — order {id}' },
     body: {
-      es: 'Hola {name},\n\nHemos recibido el pago de tu pedido {id}. ¡Muchas gracias!\n\nTe adjuntamos la factura {invoice}.\n\nEn breve te escribimos para acordar el envío o la recogida.\n\nUn saludo,\nProp a Prop Teu',
-      ca: 'Hola {name},\n\nHem rebut el pagament de la teva comanda {id}. Moltes gràcies!\n\nT\'adjuntem la factura {invoice}.\n\nAviat t\'escriurem per acordar l\'enviament o la recollida.\n\nUna salutació,\nProp a Prop Teu',
-      en: 'Hello {name},\n\nWe\'ve received the payment for your order {id}. Thank you very much!\n\nPlease find invoice {invoice} attached.\n\nWe\'ll be in touch shortly to arrange delivery or pickup.\n\nBest regards,\nProp a Prop Teu'
+      es: 'Hola {name},\n\nHemos recibido el pago de tu pedido {id}. ¡Muchas gracias!\n\nTe adjuntamos la factura {invoice}.\n\n{eta}.\n\nUn saludo,\nProp a Prop Teu',
+      ca: 'Hola {name},\n\nHem rebut el pagament de la teva comanda {id}. Moltes gràcies!\n\nT\'adjuntem la factura {invoice}.\n\n{eta}.\n\nUna salutació,\nProp a Prop Teu',
+      en: 'Hello {name},\n\nWe\'ve received the payment for your order {id}. Thank you very much!\n\nPlease find invoice {invoice} attached.\n\n{eta}.\n\nBest regards,\nProp a Prop Teu'
     }
   }
 };
@@ -144,11 +144,51 @@ function orderLines_(items) {
 function sendOrderReceived_(order) {
   if (!order.email) return false;
   var lang = mailLang_(order.lang), items = parseItems_(order.items);
+  var delivery = String(order.delivery || 'shipping'), eta = deliveryEta_(Number(order.printMin || 0), delivery);
   var v = { name: order.customerName, id: order.key, lines: orderLines_(items), total: Number(order.price || 0).toFixed(2),
+    vat: vatLines_(Number(order.price || 0), lang), eta: etaText_(eta, delivery, lang),
     holder: getSetting_('BANK_HOLDER', 'Prop a Prop Teu'), iban: getSetting_('BANK_IBAN', '[IBAN]') };
   return sendMail_({ to: order.email, name: 'Prop a Prop Teu', subject: fill_(MAILS.received.subject[lang], v), body: fill_(MAILS.received.body[lang], v) }, 'customer');
 }
 function parseItems_(s) { try { return JSON.parse(String(s || '[]')) || []; } catch (e) { return []; } }
+
+/* ============================ DELIVERY DATES ============================ */
+// The rule (the website shows the same, js/layout.js Catalog.eta):
+//   ready  = now + printing time of everything ordered + 24 h for hiccups,
+//            moved to Monday if it falls on a weekend;
+//   pickup = the ready day, in Barcelona;
+//   shipping (free, mainland Spain) = 1 to 2 working days after the ready day.
+var SHIP_DAYS = [1, 2];
+function addWorkdays_(d, n) { d = new Date(d.getTime()); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6 !== 0) n--; } return d; }
+function deliveryEta_(printMin, delivery, now) {
+  var ready = new Date((now || new Date()).getTime() + (Number(printMin) || 0) * 60000 + 24 * 3600000);
+  while (ready.getDay() % 6 === 0) ready.setDate(ready.getDate() + 1);
+  return delivery === 'pickup' ? { from: ready, to: ready } : { from: addWorkdays_(ready, SHIP_DAYS[0]), to: addWorkdays_(ready, SHIP_DAYS[1]) };
+}
+var DAY_NAMES_ = { es: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'], ca: ['diumenge', 'dilluns', 'dimarts', 'dimecres', 'dijous', 'divendres', 'dissabte'], en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] };
+var MONTH_NAMES_ = { es: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+  ca: ['gener', 'febrer', 'març', 'abril', 'maig', 'juny', 'juliol', 'agost', 'setembre', 'octubre', 'novembre', 'desembre'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
+function dayText_(d, lang) {
+  lang = mailLang_(lang);
+  return lang === 'en' ? DAY_NAMES_.en[d.getDay()] + ' ' + d.getDate() + ' ' + MONTH_NAMES_.en[d.getMonth()]
+    : DAY_NAMES_[lang][d.getDay()] + ' ' + d.getDate() + (lang === 'ca' && /^[ao]/.test(MONTH_NAMES_.ca[d.getMonth()]) ? " d'" : ' de ') + MONTH_NAMES_[lang][d.getMonth()];
+}
+// "Ready for pickup in Barcelona on Tuesday 18 November" / "Delivered between … and …"
+function etaText_(eta, delivery, lang) {
+  lang = mailLang_(lang);
+  var a = dayText_(eta.from, lang), b = dayText_(eta.to, lang);
+  if (delivery === 'pickup') return { es: 'Listo para recoger en Barcelona el ' + a, ca: 'A punt per recollir a Barcelona el ' + a, en: 'Ready for pickup in Barcelona on ' + a }[lang];
+  return { es: 'Envío gratuito: lo recibes entre el ' + a + ' y el ' + b, ca: 'Enviament gratuït: el reps entre el ' + a + ' i el ' + b, en: 'Free shipping: delivered between ' + a + ' and ' + b }[lang];
+}
+// Price lines with the VAT spelled out (prices are VAT-inclusive).
+function vatLines_(total, lang) {
+  lang = mailLang_(lang);
+  var pct = Number(getSetting_('IVA', '21')) || 21, base = total / (1 + pct / 100), vat = total - base;
+  var L = { es: ['Base imponible', 'IVA', 'Envío', 'gratis', 'Total (IVA incluido)'], ca: ['Base imposable', 'IVA', 'Enviament', 'gratuït', 'Total (IVA inclòs)'], en: ['Subtotal before VAT', 'VAT', 'Shipping', 'free', 'Total (VAT included)'] }[lang];
+  return L[0] + ': ' + base.toFixed(2) + ' €\n' + L[1] + ' (' + pct + '%): ' + vat.toFixed(2) + ' €\n' +
+    L[2] + ': ' + L[3] + '\n' + L[4] + ': ' + total.toFixed(2) + ' €';
+}
 
 /* ============================ PAYMENT RECEIVED + INVOICE ============================ */
 
@@ -161,7 +201,8 @@ function paymentDraft(session, key) {
   if (!o.email) return { ok: false, error: 'email', message: 'This order has no customer email.' };
   var lang = mailLang_(o.lang);
   var invoice = String(o.invoiceNo || '') || (isTestOrder_(o) ? 'TEST-…' : null) || ('F' + new Date().getFullYear() + '-' + ('0000' + (Number(getSetting_('INVOICE_SEQ', '0')) + 1)).slice(-4));
-  var v = { name: o.customerName, id: o.key, invoice: invoice };
+  var delivery = String(o.delivery || 'shipping');
+  var v = { name: o.customerName, id: o.key, invoice: invoice, eta: etaText_(deliveryEta_(Number(o.printMin || 0), delivery), delivery, lang) };
   return { ok: true, to: String(o.email), subject: fill_(MAILS.paid.subject[lang], v), body: fill_(MAILS.paid.body[lang], v),
     invoiceNo: invoice, already: !!o.payEmailAt };
 }
@@ -214,7 +255,8 @@ function makeInvoicePdf_(o) {
     '<p class="muted">Nº <strong>' + esc(o.invoiceNo) + '</strong> · Fecha ' + Utilities.formatDate(new Date(), 'Europe/Madrid', 'dd/MM/yyyy') + ' · Pedido ' + esc(o.key) + '</p>' +
     '<table style="margin-top:6px"><tr><td style="border:none;vertical-align:top;width:50%"><strong>' + esc(f.name) + '</strong><br>NIF: ' + esc(f.nif) + '<br>' + esc(f.addr) + '<br>' + esc(f.email) + '</td>' +
     '<td style="border:none;vertical-align:top"><span class="muted">Cliente</span><br>' + client + '</td></tr></table>' +
-    '<table><tr><th>Ud.</th><th>Concepto</th><th class="r">Precio</th><th class="r">Importe</th></tr>' + rows + '</table>' +
+    '<table><tr><th>Ud.</th><th>Concepto</th><th class="r">Precio</th><th class="r">Importe</th></tr>' + rows +
+    '<tr><td></td><td>' + (String(o.delivery) === 'pickup' ? 'Recogida en Barcelona' : 'Envío' + (o.address ? ' a ' + esc(o.address) : '')) + '</td><td class="r">0.00 €</td><td class="r">0.00 €</td></tr></table>' +
     '<table class="tot" style="width:45%;margin-left:auto;margin-top:12px">' +
     '<tr><td>Base imponible</td><td class="r">' + base.toFixed(2) + ' €</td></tr>' +
     '<tr><td>IVA (' + ivaPct + '%)</td><td class="r">' + iva.toFixed(2) + ' €</td></tr>' +

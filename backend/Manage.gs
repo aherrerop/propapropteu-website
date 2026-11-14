@@ -23,7 +23,7 @@ var ORDER_TYPES = ['Product', 'Prototype', 'Personal'];
 // The tabs this file owns: [spreadsheet, tab name, columns]. New columns go at the END only.
 var MG = {
   orders:    ['ops', 'Order list', ['key', 'no', 'created', 'by', 'type', 'price', 'notes', 'source', 'status', 'completedAt', 'emailSent',
-              'customerName', 'email', 'phone', 'address', 'company', 'nif', 'billingAddress', 'lang', 'items', 'paidAt', 'invoiceNo', 'invoiceUrl', 'payEmailAt']],
+              'customerName', 'email', 'phone', 'address', 'company', 'nif', 'billingAddress', 'lang', 'items', 'paidAt', 'invoiceNo', 'invoiceUrl', 'payEmailAt', 'delivery', 'printMin']],
   pieces:    ['ops', 'Pieces', ['id', 'orderKey', 'orderNo', 'created', 'productId', 'name', 'link', 'material', 'color', 'anyColor', 'copies', 'grams', 'status', 'preparedAt', 'printedAt', 'roll', 'cost', 'deducted']],
   history:   ['ops', 'Print history', ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Grams', 'Cost (EUR)', 'Stock left (g)', 'By', 'Piece ID', 'Result']],
   deleted:   ['ops', 'Deleted', ['Date', 'Order', 'Type', 'Product', 'Link', 'Copies', 'Material', 'Color', 'Order notes', 'By', 'Piece ID']],
@@ -271,7 +271,7 @@ function listOrders() {
       notes: String(o.notes || ''), source: String(o.source || ''), pieces: byOrder[String(o.key)] || [], printed: printed[String(o.key)] || 0,
       open: String(o.status) === 'active', customer: String(o.customerName || ''), email: String(o.email || ''), phone: String(o.phone || ''),
       address: String(o.address || ''), company: String(o.company || ''), nif: String(o.nif || ''),
-      paid: !!o.payEmailAt, invoiceNo: String(o.invoiceNo || ''), invoiceUrl: String(o.invoiceUrl || '') });
+      paid: !!o.payEmailAt, invoiceNo: String(o.invoiceNo || ''), invoiceUrl: String(o.invoiceUrl || ''), delivery: String(o.delivery || '') });
   });
   out.sort(function (a, b) { return b.no - a.no; });
   return { ok: true, data: out };

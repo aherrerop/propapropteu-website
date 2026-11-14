@@ -140,7 +140,7 @@
     "related": "Productos relacionados",
     "backToCatalog": "Volver a la tienda",
     "notFound": "No hemos encontrado este producto.",
-    "delivery": "Lo fabricamos en Barcelona cuando lo pides. Recogida en Barcelona o envío: te confirmamos plazo y coste por email antes de pagar."
+    "delivery": "Lo fabricamos en Barcelona cuando lo pides:"
   },
   "custom": {
     "title": "Atrezo a medida",
@@ -338,7 +338,7 @@
     "q2_2": "¿Cómo puedo pagar?",
     "a2_2": "De momento, por transferencia bancaria. Pronto también con tarjeta.",
     "q2_3": "¿Los precios incluyen el IVA?",
-    "a2_3": "Sí, todos los precios incluyen el IVA (21%). El envío no está incluido: te lo confirmamos por correo antes de que pagues.",
+    "a2_3": "Sí, todos los precios incluyen el IVA (21%); en la ficha y en la cesta verás el desglose. El envío a la Península es gratis.",
     "q2_4": "¿Hacéis factura?",
     "a2_4": "Sí, cada pedido pagado tiene su factura, que se envía automáticamente con el correo de confirmación. Si la necesitas a nombre de una empresa, marca «Necesito factura a nombre de una empresa» al hacer el pedido y añade la razón social, el NIF y la dirección de facturación.",
     "q2_5": "¿Puedo elegir el color?",
@@ -347,9 +347,9 @@
     "a2_6": "Sí. Para cantidades mayores que un pedido normal, usa «Pide una pieza» o escríbenos y te enviaremos precio y plazo.",
     "g3": "Entrega",
     "q3_1": "¿Cuánto tarda?",
-    "a3_1": "Muchas piezas se imprimen cuando las pides, así que el plazo depende del pedido. Te lo confirmamos por correo; el máximo es de 30 días desde el pago, salvo que acordemos otro.",
+    "a3_1": "Lo imprimimos cuando lo pides: contamos el tiempo de impresión de cada pieza más 24 h de margen. La ficha del producto y la cesta te dicen el día exacto antes de comprar. El máximo es de 30 días desde el pago.",
     "q3_2": "¿Hacéis envíos? ¿Puedo recogerlo?",
-    "a3_2": "Acordamos el envío contigo por correo y te decimos el coste antes de que pagues. También puedes recoger el pedido en Barcelona.",
+    "a3_2": "Sí, el envío a la Península es gratis y tarda 1–2 días laborables desde que el pedido está listo. También puedes recogerlo gratis en Barcelona. Para Baleares, Canarias, Ceuta, Melilla y el extranjero, escríbenos antes.",
     "g4": "Devoluciones y garantía",
     "q4_1": "¿Puedo devolver un producto?",
     "a4_1": "Sí: si eres consumidor tienes 14 días naturales desde la entrega para devolver un producto de la tienda sin dar ningún motivo. Las piezas hechas según tus especificaciones no se pueden devolver. El envío de la devolución corre a cargo del cliente. Detalles en la página legal.",
@@ -478,5 +478,21 @@
       "title": "Página no encontrada",
       "desc": ""
     }
+  },
+  "eta": {
+    "pickup": "Listo para recoger en Barcelona el {a}",
+    "ship": "Envío gratuito: lo recibes entre el {a} y el {b}",
+    "title": "Entrega",
+    "optShip": "Envío a domicilio (Península) · gratis",
+    "optPickup": "Recogida en Barcelona · gratis",
+    "ifToday": "Fechas si pagas hoy. Contamos el tiempo de impresión de cada pieza más 24 h de margen."
+  },
+  "vat": {
+    "base": "Base imponible",
+    "vat": "IVA ({p}%)",
+    "ship": "Envío",
+    "free": "Gratis",
+    "total": "Total (IVA incluido)",
+    "line": "{b} + {v} de IVA ({p}%)"
   }
 }

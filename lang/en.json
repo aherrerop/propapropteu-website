@@ -140,7 +140,7 @@
     "related": "Related products",
     "backToCatalog": "Back to shop",
     "notFound": "We couldn't find this product.",
-    "delivery": "We make it in Barcelona when you order it. Pickup in Barcelona or shipping: we confirm timing and cost by email before you pay."
+    "delivery": "We make it in Barcelona when you order it:"
   },
   "custom": {
     "title": "Custom props",
@@ -338,7 +338,7 @@
     "q2_2": "How can I pay?",
     "a2_2": "By bank transfer for now. Card payment is coming soon.",
     "q2_3": "Do prices include VAT?",
-    "a2_3": "Yes, all prices include Spanish VAT (21%). Shipping is not included: we confirm it by email before you pay.",
+    "a2_3": "Yes, all prices include Spanish VAT (21%); the product page and the cart show the breakdown. Shipping within mainland Spain is free.",
     "q2_4": "Do you issue invoices?",
     "a2_4": "Yes, every paid order gets an invoice, sent automatically with the confirmation email. If you need it in a company's name, tick \"I need an invoice for a company\" at checkout and add the company name, tax ID and billing address.",
     "q2_5": "Can I choose the colour?",
@@ -347,9 +347,9 @@
     "a2_6": "Yes. For quantities beyond a normal order, use \"Request a prop\" or write to us and we will send you a price and a timeline.",
     "g3": "Delivery",
     "q3_1": "How long does it take?",
-    "a3_1": "Many pieces are printed when you order them, so the time depends on the order. We confirm it by email; the maximum is 30 days from payment unless we agree otherwise.",
+    "a3_1": "We print it when you order it: each piece's printing time plus 24 h of margin. The product page and the cart show you the exact day before you buy. The maximum is 30 days from payment.",
     "q3_2": "Do you ship? Can I pick it up?",
-    "a3_2": "We arrange shipping with you by email and tell you the cost before you pay. You can also pick up your order in Barcelona.",
+    "a3_2": "Yes, shipping within mainland Spain is free and takes 1–2 working days once the order is ready. You can also pick it up for free in Barcelona. For the Balearic and Canary Islands, Ceuta, Melilla and abroad, write to us first.",
     "g4": "Returns and guarantee",
     "q4_1": "Can I return a product?",
     "a4_1": "Yes: if you are a consumer you have 14 calendar days from delivery to return a shop product without giving a reason. Pieces made to your specifications cannot be returned. Return shipping is paid by the customer. Details in the legal page.",
@@ -478,5 +478,21 @@
       "title": "Page not found",
       "desc": ""
     }
+  },
+  "eta": {
+    "pickup": "Ready for pickup in Barcelona on {a}",
+    "ship": "Free shipping: delivered between {a} and {b}",
+    "title": "Delivery",
+    "optShip": "Home delivery (mainland Spain) · free",
+    "optPickup": "Pickup in Barcelona · free",
+    "ifToday": "Dates if you pay today. We count each piece's printing time plus 24 h of margin."
+  },
+  "vat": {
+    "base": "Subtotal before VAT",
+    "vat": "VAT ({p}%)",
+    "ship": "Shipping",
+    "free": "Free",
+    "total": "Total (VAT included)",
+    "line": "{b} + {v} VAT ({p}%)"
   }
 }

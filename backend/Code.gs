@@ -484,11 +484,11 @@ function placeOrder(req) {
   // The order id is made first so each filament usage row can reference it.
   var id = uid_('ORD-');
   var byId = {}; readProducts().forEach(function (p) { byId[p.id] = p; });
-  var lines = [], units = 0, revenue = 0, cost = 0;
+  var lines = [], units = 0, revenue = 0, cost = 0, printMin = 0;
   for (var i = 0; i < items.length; i++) {
     var p = byId[items[i].id]; if (!p) continue;
     var qty = Math.max(1, Math.floor(Number(items[i].qty || 1)));
-    units += qty; revenue += p.price * qty; cost += (p.cost || 0) * qty;
+    units += qty; revenue += p.price * qty; cost += (p.cost || 0) * qty; printMin += (Number(p.printTimeMin) || 0) * qty;
     var lang = String(req.lang || 'es'), nm = p.name || {};
     lines.push({ id: p.id, name: (typeof nm === 'string' ? nm : (nm[lang] || nm.es || nm.ca || nm.en)) || p.id, qty: qty, price: p.price, cost: p.cost || 0 });
   }
@@ -521,7 +521,8 @@ function placeOrder(req) {
     if (!o) return false;
     setRow_(ot, o, { customerName: name, email: email, phone: String(req.phone || '').trim(), address: String(req.address || '').trim(),
       company: String(req.company || '').trim(), nif: String(req.nif || '').trim(), billingAddress: String(req.billingAddress || '').trim(),
-      lang: String(req.lang || 'es'), items: JSON.stringify(lines.map(function (l) { return { id: l.id, name: l.name, qty: l.qty, price: l.price }; })) });
+      lang: String(req.lang || 'es'), items: JSON.stringify(lines.map(function (l) { return { id: l.id, name: l.name, qty: l.qty, price: l.price }; })),
+      delivery: req.delivery === 'pickup' ? 'pickup' : 'shipping', printMin: printMin });
     return sendOrderReceived_(o);
   });
 
@@ -682,7 +683,9 @@ function publish(session) {
   var existing = sha ? JSON.parse(Utilities.newBlob(Utilities.base64Decode(JSON.parse(get.getContentText()).content)).getDataAsString()) : {};
   // Publish only visible products; strip internal-only fields (cost, bom, active).
   var publicProducts = readProducts().filter(function (p) { return p.active !== false; }).map(function (p) {
-    var c = {}; for (var k in p) { if (['cost', 'bom', 'active', 'printTimeMin', 'prodNotes', 'weightG', 'webMaterial', 'webColor', 'webAnyColor'].indexOf(k) < 0) c[k] = p[k]; } return c;
+    var c = {}; for (var k in p) { if (['cost', 'bom', 'active', 'printTimeMin', 'prodNotes', 'weightG', 'webMaterial', 'webColor', 'webAnyColor'].indexOf(k) < 0) c[k] = p[k]; }
+    c.printMin = Number(p.printTimeMin) || 0;   // for the delivery date shown on the website
+    return c;
   });
   var payload = {
     _readme: existing._readme || 'Managed from the admin dashboard. Edit via acceso.html.',
@@ -1217,7 +1220,7 @@ function logOps_(type, id, action, by, detail) {
 /* ================= RESILIENCE: version, health, self-test, recovery, visibility ================= */
 
 // Bump on every backend deploy so the dashboard can show which engine it's talking to.
-var ENGINE_VERSION = '2026-11-16.1';
+var ENGINE_VERSION = '2026-11-16.2';
 
 // Run a labelled phase: a failure is LOGGED (visible in Estat) and returned as a flag, never thrown.
 // Lets a multi-step action keep its critical result when a non-critical step fails.
