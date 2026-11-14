@@ -803,8 +803,9 @@ body.has-cookie .whatsapp-fab { bottom: calc(var(--cookie-h, 64px) + 20px); tran
   .pay-options { flex-direction: column; }
 }
 
-/* Mobile: hamburger top-left, tabs collapse into a dropdown */
-@media (max-width: 860px) {
+/* Mobile + narrow screens: hamburger top-left, tabs collapse into a dropdown
+   (1100px: below that the five tabs no longer fit on one line) */
+@media (max-width: 1100px) {
   .nav-toggle { display: flex; position: absolute; left: 0; top: 50%; transform: translateY(-50%); }
   .header-inner { padding-left: 42px; gap: 12px; }
   .logo-link { margin-right: auto; }
