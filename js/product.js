@@ -30,6 +30,9 @@ const ProductPage = {
     const images = p.images && p.images.length ? p.images : ["assets/img/placeholder.svg"];
 
     document.title = `${I18N.pick(p.name)} — ${SITE_CONFIG.businessName}`;
+    // Google: the product's own page (p/<id>.html) is the address to index, in this language.
+    const canon = document.querySelector('link[rel="canonical"]');
+    if (canon) canon.href = new URL(Catalog.url(p), location.origin + "/").href + (I18N.lang !== SITE_CONFIG.defaultLang ? "?lang=" + I18N.lang : "");
 
     /* SEO: meta description + Product structured data (JSON-LD) */
     const desc = I18N.pick(p.short) || I18N.pick(p.name);
